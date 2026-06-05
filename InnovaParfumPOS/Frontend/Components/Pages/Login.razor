@@ -1,0 +1,165 @@
+@page "/"
+@layout EmptyLayout
+@using InnovaParfumPOS.Backend.Services
+@implements IDisposable
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject ConfiguracionService ConfigService
+@inject IJSRuntime JSRuntime
+@inject AppState AppState
+
+<PageTitle>@empresaNombre - Iniciar Sesión</PageTitle>
+
+<style>
+    :root {
+        --color-fondo-login: @AppState.ColorFondoLogin;
+        --primary-color: @AppState.ColorPrimario;
+    }
+</style>
+
+<div class="login-screen">
+    <div class="login-glass-card text-center">
+        <!-- Logo -->
+        <div class="login-logo-container">
+            <div class="login-brand-logo">
+                <img src="@(string.IsNullOrEmpty(empresaLogo) ? "images/logo.png" : empresaLogo)" alt="@empresaNombre" class="w-100 h-100 object-fit-contain" />
+            </div>
+        </div>
+
+        <!-- Titulos -->
+        <h1 class="login-title-premium">@empresaNombre.ToUpper()</h1>
+        <span class="login-subtitle-premium">SISTEMA POS DE FACTURACIÓN</span>
+
+        <!-- Mensaje de Error -->
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-toast-premium">
+                <i class="fas fa-exclamation-circle fa-lg"></i>
+                <div class="text-start">
+                    <div class="fw-bold">Acceso Denegado</div>
+                    <div class="small">@errorMessage</div>
+                </div>
+            </div>
+        }
+
+        <!-- Formulario -->
+        <form @onsubmit="HandleLogin" autocomplete="off">
+            <div class="text-start">
+                <div class="login-input-group">
+                    <label>Usuario / Cédula</label>
+                    <div class="login-field-wrapper">
+                        <i class="fas fa-id-card field-icon"></i>
+                        <input type="text" 
+                               class="login-control-premium" 
+                               @bind="username" 
+                               placeholder="Ingrese su identificación" 
+                               disabled="@isProcessing" />
+                    </div>
+                </div>
+
+                <div class="login-input-group">
+                    <label>Contraseña</label>
+                    <div class="login-field-wrapper">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="@(showPassword ? "text" : "password")" 
+                               class="login-control-premium" 
+                               @bind="password" 
+                               placeholder="••••••••" 
+                               disabled="@isProcessing" />
+                        <button type="button" class="btn-toggle-pass" @onclick="TogglePassword">
+                            <i class="fas @(showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login-premium" disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Autenticando...</span>
+                }
+                else
+                {
+                    <span>INGRESAR AL SISTEMA</span>
+                }
+            </button>
+        </form>
+    </div>
+</div>
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string? errorMessage;
+    private bool isProcessing = false;
+    private bool showPassword = false;
+
+    private string empresaNombre = "INNOVATEC";
+    private string empresaLogo = "images/logo.png";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var settings = await ConfigService.GetAllSettingsAsync();
+            empresaNombre = settings.GetValueOrDefault("Empresa_Nombre", "INNOVATEC");
+            empresaLogo = settings.GetValueOrDefault("Empresa_Logo", "images/logo.png");
+            
+            AppState.UpdateFromDictionary(settings);
+            AppState.OnChange += StateHasChanged;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar configuraciones en Login: {ex.Message}");
+        }
+    }
+
+
+
+    private void TogglePassword() => showPassword = !showPassword;
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Debe completar todos los campos obligatorios.";
+            return;
+        }
+
+        errorMessage = null;
+        isProcessing = true;
+
+        try
+        {
+            // Normalizar entrada (quitar guiones y espacios)
+            string cleanUsername = username.Replace("-", "").Replace(" ", "").ToUpper();
+            
+            var result = await AuthService.IniciarSesionAsync(cleanUsername, password);
+
+            if (result.Success == 1)
+            {
+                Navigation.NavigateTo("/ventas");
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "No se pudo establecer conexión con el servidor.";
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}
+

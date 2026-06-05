@@ -1,0 +1,54 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject IReportService ReportService
+
+<div class="report-card">
+    <div class="report-card-title">Panel de Alertas Inteligentes</div>
+    
+    @if (alerts == null)
+    {
+        <div class="skeleton" style="height: 100px; margin-bottom: 10px;"></div>
+        <div class="skeleton" style="height: 100px;"></div>
+    }
+    else if (!alerts.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-50"></i>
+            <p>No hay alertas críticas en este momento. ¡Buen trabajo!</p>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var alert in alerts)
+            {
+                <div class="alert-item p-3 rounded-4 border-start border-4 @(GetAlertClass(alert.Tipo))">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="fw-bold mb-1">@alert.Titulo</h6>
+                        <small class="text-muted">@alert.Fecha.ToString("HH:mm")</small>
+                    </div>
+                    <p class="m-0 small">@alert.Mensaje</p>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .alert-danger-soft { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+    .alert-warning-soft { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
+    .alert-info-soft { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+</style>
+
+@code {
+    private List<SystemAlertDTO>? alerts;
+    protected override async Task OnInitializedAsync() => alerts = await ReportService.GetSystemAlertsAsync();
+
+    private string GetAlertClass(string tipo) => tipo switch
+    {
+        "danger" => "alert-danger-soft",
+        "warning" => "alert-warning-soft",
+        _ => "alert-info-soft"
+    };
+}
+

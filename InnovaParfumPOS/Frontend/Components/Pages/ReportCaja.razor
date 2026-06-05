@@ -1,0 +1,368 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IReportService ReportService
+
+@if (arqueos == null)
+{
+    <div class="text-center py-5">
+        <div class="skeleton" style="height: 200px; border-radius: 20px;"></div>
+    </div>
+}
+else
+{
+    <div class="report-card mb-4 shadow-sm" style="border-radius: 16px; border: none; overflow: hidden;">
+        <div class="report-card-title px-4 py-3 bg-white fw-bold" style="font-size: 1.1rem; color: var(--text-dark); border-bottom: 1px solid #f1f3f5;">
+            <span>
+                <i class="fas fa-audit me-2 text-primary"></i>Auditoría de Arqueos y Turnos
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size: 0.82rem;">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th class="ps-3 py-2 text-uppercase small fw-bold text-muted text-nowrap">Turno</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-nowrap">Cajero</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-nowrap">Apertura</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-nowrap">Cierre</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Inicial</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Efectivo</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Transf.</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Tarj.</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Teórico</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Real</th>
+                        <th class="pe-3 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!arqueos.Any())
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center py-5 text-muted">
+                                <i class="fas fa-receipt fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">No hay registros para este período</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var a in arqueos.Skip((currentPage - 1) * pageSize).Take(pageSize))
+                        {
+                            <tr style="transition: all 0.2s; cursor: pointer;" 
+                                class="@(selectedTurnoId == a.IdTurno ? "table-primary" : "")"
+                                @onclick="() => SelectTurno(a.IdTurno)">
+                                <td class="ps-3 py-2 fw-bold text-primary text-nowrap">#@a.IdTurno</td>
+                                <td class="px-2 py-2 fw-semibold text-nowrap">@a.Usuario</td>
+                                <td class="px-2 py-2 text-muted text-nowrap">@a.Apertura.ToString("dd/MM HH:mm")</td>
+                                <td class="px-2 py-2 text-nowrap">
+                                    @if (a.Cierre == null)
+                                    {
+                                        <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill fw-bold" style="font-size: 0.65rem;">
+                                            <i class="fas fa-spinner fa-spin me-1"></i> EN CURSO
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">@a.Cierre?.ToString("dd/MM HH:mm")</span>
+                                    }
+                                </td>
+                                <td class="px-2 py-2 text-end fw-semibold text-nowrap">@AppState.CurrencySymbol&nbsp;@a.MontoInicial.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end fw-semibold text-nowrap">@AppState.CurrencySymbol&nbsp;@a.VentasEfectivo.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.VentasTransferencia > 0 ? "text-info" : "")">
+                                    @(a.VentasTransferencia > 0 ? $"@AppState.CurrencySymbol {a.VentasTransferencia:N2}".Replace(" ", "\u00A0") : "--")
+                                </td>
+                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.VentasTarjeta > 0 ? "text-info" : "")">
+                                    @(a.VentasTarjeta > 0 ? $"@AppState.CurrencySymbol {a.VentasTarjeta:N2}".Replace(" ", "\u00A0") : "--")
+                                </td>
+                                <td class="px-2 py-2 text-end fw-bold text-nowrap">@AppState.CurrencySymbol&nbsp;@a.SaldoTeorico.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end fw-semibold text-nowrap">@AppState.CurrencySymbol&nbsp;@a.SaldoReal.ToString("N2")</td>
+                                <td class="pe-3 py-2 text-end fw-bold text-nowrap @(a.Diferencia < 0 ? "text-danger" : a.Diferencia > 0 ? "text-warning" : "text-success")">
+                                    @AppState.CurrencySymbol&nbsp;@a.Diferencia.ToString("N2")
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (arqueos != null && arqueos.Count > pageSize)
+        {
+            var totalPages = (int)Math.Ceiling((double)arqueos.Count / pageSize);
+            <div class="pagination-container p-3 border-top bg-white d-flex justify-content-center align-items-center position-relative">
+                <div class="position-absolute start-0 ps-4 d-none d-lg-block">
+                    <span class="small text-muted">Mostrando @(Math.Min(arqueos.Count, (currentPage - 1) * pageSize + 1)) a @(Math.Min(arqueos.Count, currentPage * pageSize)) de @arqueos.Count registros</span>
+                </div>
+                <div class="pagination-carousel-container">
+                    <ul class="pagination pagination-premium mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage - 1)" title="Anterior">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </li>
+                        
+                        @{
+                            int maxVisible = 5;
+                            int startPage = Math.Max(1, Math.Min(currentPage - 2, totalPages - maxVisible + 1));
+                            int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
+                            
+                            if (totalPages > maxVisible && endPage == totalPages) startPage = Math.Max(1, totalPages - maxVisible + 1);
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                var pageNum = i;
+                                <li class="page-item @(currentPage == pageNum ? "active" : "") page-item-animated" @key="pageNum">
+                                    <button class="page-link" @onclick="() => SetPage(pageNum)">@pageNum</button>
+                                </li>
+                            }
+
+                            if (endPage < totalPages)
+                            {
+                                if (endPage < totalPages - 1)
+                                {
+                                    <li class="pagination-ellipsis">...</li>
+                                }
+                                <li class="page-item @(currentPage == totalPages ? "active" : "") page-item-animated">
+                                    <button class="page-link" @onclick="() => SetPage(totalPages)">@totalPages</button>
+                                </li>
+                            }
+                        }
+
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage + 1)" title="Siguiente">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Historial de movimientos por turno -->
+    <div class="report-card mb-4 shadow-sm animate__animated animate__fadeInUp" style="border-radius: 16px; border: none; overflow: hidden;">
+        <div class="report-card-title px-4 py-3 bg-white d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #f1f3f5;">
+            <span class="fw-bold" style="font-size: 1.1rem; color: var(--text-dark);">
+                <i class="fas fa-history me-2 text-primary"></i>
+                @(selectedTurnoId == null ? "Seleccione un turno para ver historial de movimientos" : $"Historial de movimientos por turno #{selectedTurnoId}")
+            </span>
+            @if (loadingMovimientos)
+            {
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            }
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Tipo</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Referencia</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Hora</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Cliente</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Monto</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Método Pago</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted pe-4">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (selectedTurnoId == null)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-mouse-pointer fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">Haga clic en un turno de la tabla superior para ver sus detalles</p>
+                            </td>
+                        </tr>
+                    }
+                    else if (loadingMovimientos)
+                    {
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            <tr>
+                                <td colspan="8" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
+                            </tr>
+                        }
+                    }
+                    else if (movimientosTurno == null || !movimientosTurno.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-info-circle fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">No se encontraron movimientos para este turno</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var v in movimientosTurno.Skip((currentPageMovimientos - 1) * pageSizeMovimientos).Take(pageSizeMovimientos))
+                        {
+                            <tr>
+                                <td class="ps-4 py-3 fw-bold">
+                                    @if (v.TipoMovimiento == "Venta")
+                                    {
+                                        <span class="badge bg-primary bg-opacity-10 text-primary px-2 rounded">VENTA</span>
+                                    }
+                                    else if (v.TipoMovimiento == "Ingreso")
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success px-2 rounded">INGRESO</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-2 rounded">EGRESO</span>
+                                    }
+                                </td>
+                                <td class="py-3 fw-bold">@v.Referencia</td>
+                                <td class="py-3 text-muted">@v.Fecha.ToString("hh:mm tt")</td>
+                                <td class="py-3">
+                                    @if(v.Cliente == "N/A")
+                                    {
+                                        <span class="text-muted fst-italic">--</span>
+                                    }
+                                    else
+                                    {
+                                        @v.Cliente
+                                    }
+                                </td>
+                                <td class="py-3 text-end fw-bold @(v.TipoMovimiento == "Egreso" ? "text-danger" : "text-primary")">
+                                    @(v.TipoMovimiento == "Egreso" ? "-" : "")@AppState.CurrencySymbol @v.Monto.ToString("N2")
+                                </td>
+                                <td class="py-3 text-end fw-semibold text-success">
+                                    @(v.Vuelto > 0 ? $"@AppState.CurrencySymbol {v.Vuelto.ToString("N2")}" : "--")
+                                </td>
+                                <td class="py-3">
+                                    <span class="small">@v.MetodoPago</span>
+                                </td>
+                                <td class="py-3 pe-4">
+                                    @if (v.Estado == "ANULADA")
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">ANULADA</span>
+                                    }
+                                    else if (v.Estado == "EFECTUADA")
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">EFECTUADA</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">COMPLETADO</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (movimientosTurno != null && movimientosTurno.Count > pageSizeMovimientos)
+        {
+            var totalPages = (int)Math.Ceiling((double)movimientosTurno.Count / pageSizeMovimientos);
+            <div class="pagination-container p-3 border-top bg-white d-flex justify-content-center align-items-center position-relative">
+                <div class="position-absolute start-0 ps-4 d-none d-lg-block">
+                    <span class="small text-muted">Mostrando @(Math.Min(movimientosTurno.Count, (currentPageMovimientos - 1) * pageSizeMovimientos + 1)) a @(Math.Min(movimientosTurno.Count, currentPageMovimientos * pageSizeMovimientos)) de @movimientosTurno.Count registros</span>
+                </div>
+                <div class="pagination-carousel-container">
+                    <ul class="pagination pagination-premium mb-0">
+                        <li class="page-item @(currentPageMovimientos == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPageMovimientos(currentPageMovimientos - 1)" title="Anterior">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </li>
+                        
+                        @{
+                            int maxVisible = 5;
+                            int startPage = Math.Max(1, Math.Min(currentPageMovimientos - 2, totalPages - maxVisible + 1));
+                            int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
+                            
+                            if (totalPages > maxVisible && endPage == totalPages) startPage = Math.Max(1, totalPages - maxVisible + 1);
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                var pageNum = i;
+                                <li class="page-item @(currentPageMovimientos == pageNum ? "active" : "") page-item-animated" @key="@("m-" + pageNum)">
+                                    <button class="page-link" @onclick="() => SetPageMovimientos(pageNum)">@pageNum</button>
+                                </li>
+                            }
+
+                            if (endPage < totalPages)
+                            {
+                                if (endPage < totalPages - 1)
+                                {
+                                    <li class="pagination-ellipsis">...</li>
+                                }
+                                <li class="page-item @(currentPageMovimientos == totalPages ? "active" : "") page-item-animated">
+                                    <button class="page-link" @onclick="() => SetPageMovimientos(totalPages)">@totalPages</button>
+                                </li>
+                            }
+                        }
+
+                        <li class="page-item @(currentPageMovimientos == totalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPageMovimientos(currentPageMovimientos + 1)" title="Siguiente">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public DateTime StartDate { get; set; }
+    [Parameter] public DateTime EndDate { get; set; }
+    private List<ArqueoInsightDTO>? arqueos;
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    private int? selectedTurnoId;
+    private List<MovimientoTurnoDTO>? movimientosTurno;
+    private bool loadingMovimientos = false;
+    private int currentPageMovimientos = 1;
+    private int pageSizeMovimientos = 10;
+
+    protected override async Task OnParametersSetAsync() 
+    {
+        currentPage = 1; // Reset al cambiar fechas
+        selectedTurnoId = null;
+        movimientosTurno = null;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        arqueos = null;
+        StateHasChanged();
+        arqueos = await ReportService.GetArqueoInsightsAsync(StartDate, EndDate);
+        StateHasChanged();
+    }
+
+    private async Task SelectTurno(int idTurno)
+    {
+        if (selectedTurnoId == idTurno) return;
+        
+        selectedTurnoId = idTurno;
+        currentPageMovimientos = 1;
+        loadingMovimientos = true;
+        movimientosTurno = null;
+        StateHasChanged();
+        
+        movimientosTurno = await ReportService.GetMovimientosPorTurnoAsync(idTurno);
+        loadingMovimientos = false;
+        StateHasChanged();
+    }
+
+    private void SetPage(int page)
+    {
+        currentPage = page;
+        StateHasChanged();
+    }
+
+    private void SetPageMovimientos(int page)
+    {
+        currentPageMovimientos = page;
+        StateHasChanged();
+    }
+}
+

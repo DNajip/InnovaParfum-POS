@@ -1,0 +1,137 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Frontend.Components.UI
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IReportService ReportService
+
+<div class="report-clientes-view animate__animated animate__fadeIn">
+    @if (clientes == null || dashboardStats == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Analizando fidelidad y comportamiento de clientes...</p>
+        </div>
+    }
+    else
+    {
+        <!-- KPI Grid de Clientes -->
+        <div class="kpi-grid mb-4">
+            <InnovaKpiCard Title="Total Clientes" Value="dashboardStats.TotalClientes" Format="N0" IconClass="fas fa-users" IconBg="#e0f2fe" IconColor="#0ea5e9" Loading="loading" />
+            <InnovaKpiCard Title="Garantías Activas" Value="dashboardStats.TotalGarantiasActivas" Format="N0" IconClass="fas fa-shield-alt" IconBg="#fef9c3" IconColor="#ca8a04" Loading="loading" />
+            <InnovaKpiCard Title="Compras Recientes" Value="dashboardStats.ClientesConComprasRecientes" Format="N0" IconClass="fas fa-shopping-bag" IconBg="#dcfce7" IconColor="#16a34a" Loading="loading" />
+            <InnovaKpiCard Title="Ticket Promedio" Value="clientes.Any() ? clientes.Average(c => c.MontoTotal / (c.TotalCompras > 0 ? c.TotalCompras : 1)) : 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-receipt" IconBg="#f3e8ff" IconColor="#9333ea" Loading="loading" />
+        </div>
+
+        <div class="report-card shadow-premium border-0" style="border-radius: 24px;">
+            <div class="report-card-title d-flex justify-content-between align-items-center mb-4">
+                <span><i class="fas fa-crown text-warning me-2"></i>Top 10 Clientes VIP</span>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">Periodo Seleccionado</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light border-0">
+                        <tr>
+                            <th class="ps-4 py-3 border-0 text-muted small fw-bold">CLIENTE</th>
+                            <th class="text-center py-3 border-0 text-muted small fw-bold">TRANSACCIONES</th>
+                            <th class="text-end py-3 border-0 text-muted small fw-bold">MONTO ACUMULADO</th>
+                            <th class="text-center py-3 border-0 text-muted small fw-bold pe-4">NIVEL FIDELIDAD</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in clientes)
+                        {
+                            <tr style="transition: all 0.2s;">
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle me-3" style="background: @GetAvatarBg(c.Nombre);">@c.Nombre[0]</div>
+                                        <span class="fw-bold text-dark">@c.Nombre</span>
+                                    </div>
+                                </td>
+                                <td class="text-center py-3">
+                                    <span class="badge bg-light text-dark border rounded-pill px-3">@c.TotalCompras</span>
+                                </td>
+                                <td class="text-end py-3">
+                                    <span class="fw-extrabold text-primary" style="font-size: 1.05rem;">@AppState.CurrencySymbol @c.MontoTotal.ToString("N2")</span>
+                                </td>
+                                <td class="text-center py-3 pe-4">
+                                    @if (c.MontoTotal > 50000) 
+                                    { 
+                                        <div class="fidelity-badge platinum"><i class="fas fa-gem me-1"></i> PLATINUM</div> 
+                                    }
+                                    else if (c.MontoTotal > 20000) 
+                                    { 
+                                        <div class="fidelity-badge gold"><i class="fas fa-star me-1"></i> GOLD</div> 
+                                    }
+                                    else 
+                                    { 
+                                        <div class="fidelity-badge regular">REGULAR</div> 
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .fidelity-badge {
+        padding: 6px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        display: inline-block;
+        letter-spacing: 0.5px;
+    }
+
+    .platinum { background: #1e293b; color: #e2e8f0; }
+    .gold { background: #fef9c3; color: #a16207; border: 1px solid #fde047; }
+    .regular { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+    .fw-extrabold { font-weight: 800; }
+</style>
+
+@code {
+    [Parameter] public DateTime StartDate { get; set; }
+    [Parameter] public DateTime EndDate { get; set; }
+
+    private List<ClientInsightDTO>? clientes;
+    private VClienteDashboardStat? dashboardStats;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        clientes = await ReportService.GetClientInsightsAsync(StartDate, EndDate);
+        dashboardStats = await ReportService.GetClienteDashboardStatsAsync();
+        loading = false;
+        StateHasChanged();
+    }
+
+    private string GetAvatarBg(string name)
+    {
+        var colors = new[] { "#2563eb", "#7c3aed", "#db2777", "#ea580c", "#16a34a", "#0891b2" };
+        int index = Math.Abs(name.GetHashCode()) % colors.Length;
+        return colors[index];
+    }
+}
+

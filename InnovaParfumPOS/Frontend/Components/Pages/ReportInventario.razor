@@ -1,0 +1,255 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject IReportService ReportService
+
+@if (insight == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Analizando inventario y rotación...</p>
+    </div>
+}
+else
+{
+    <div class="report-row">
+        <!-- Stock Crítico -->
+        <div class="report-card">
+            <div class="report-card-title">
+                <span><i class="fas fa-exclamation-triangle text-danger me-2"></i> Stock Crítico</span>
+                <span class="badge bg-danger">@insight.StockCritico.Count ítems</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover small">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th class="text-center">Stock Actual</th>
+                            <th class="text-center">Mínimo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in insight.StockCritico.Take(10))
+                        {
+                            <tr>
+                                <td class="fw-bold">@p.Nombre</td>
+                                <td>@p.Categoria</td>
+                                <td class="text-center">@p.StockActual</td>
+                                <td class="text-center">@p.StockMinimo</td>
+                                <td>
+                                    <span class="badge @(p.StockActual == 0 ? "bg-danger" : "bg-warning text-dark")">
+                                        @p.EstadoStock
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Productos Sin Movimiento -->
+        <div class="report-card">
+            <div class="report-card-title">
+                <span><i class="fas fa-snowflake text-primary me-2"></i> Inventario "Muerto"</span>
+            </div>
+            <p class="text-muted small">Productos sin ventas en los últimos 30 días.</p>
+            <div class="list-group list-group-flush">
+                @foreach (var p in insight.SinMovimiento)
+                {
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">@p.Nombre</div>
+                            <div class="text-muted x-small">Última venta: @(p.UltimaVenta?.ToString("dd/MM/yyyy") ?? "Nunca")</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-light text-dark rounded-pill border">@p.DiasSinVenta días</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Nueva Sección: Kardex Global -->
+    <div class="report-card mt-4">
+        <div class="report-card-title d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-history text-secondary me-2"></i> Movimientos de Inventario (Kardex Global)</span>
+            <span class="badge bg-light text-dark border">@(movimientos?.Count ?? 0) registros</span>
+        </div>
+        
+        <div class="table-responsive mt-3 custom-scrollbar" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-hover small mb-0 table-sm align-middle">
+                <thead class="sticky-top bg-white shadow-sm" style="z-index: 1;">
+                    <tr>
+                        <th class="text-nowrap text-muted text-uppercase" style="font-size: 0.75rem;">FECHA</th>
+                        <th class="text-nowrap text-muted text-uppercase" style="font-size: 0.75rem;">PRODUCTO</th>
+                        <th class="text-center text-nowrap text-muted text-uppercase" style="font-size: 0.75rem;">OPERACIÓN</th>
+                        <th class="text-center text-nowrap text-muted text-uppercase" style="font-size: 0.75rem;">CANT.</th>
+                        <th class="text-center text-nowrap text-muted text-uppercase" style="font-size: 0.75rem;">STOCK FINAL</th>
+                        <th class="text-nowrap text-muted text-uppercase" style="font-size: 0.75rem;">REFERENCIA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (movimientos != null && movimientos.Any())
+                    {
+                        var paginatedMovimientos = movimientos.Skip((currentPage - 1) * pageSize).Take(pageSize);
+                        @foreach (var mov in paginatedMovimientos)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@mov.FechaMov.ToString("dd/MM/yyyy")</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">@mov.FechaMov.ToString("hh:mm tt")</div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-truncate" style="max-width: 200px;">@(mov.IdProductoNavigation?.Nombre ?? "N/A")</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">@(mov.IdProductoNavigation?.Marca ?? "")</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill border @GetBadgeClass(mov.IdTipoMovNavigation?.Nombre)">
+                                        @((mov.IdTipoMovNavigation?.Nombre ?? "DESCONOCIDO").Replace("_", " "))
+                                    </span>
+                                </td>
+                                <td class="text-center fw-bold @(mov.Cantidad > 0 ? "text-success" : "text-danger")">
+                                    @(mov.Cantidad > 0 ? "+" + mov.Cantidad : mov.Cantidad.ToString())
+                                </td>
+                                <td class="text-center fw-bold">
+                                    @mov.StockDespues
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 150px;">@(mov.Observacion ?? mov.TablaReferencia ?? "Ajuste de sistema")</div>
+                                    @if (mov.IdReferencia != null)
+                                    {
+                                        <div class="text-muted" style="font-size: 0.75rem;">Ref: @mov.IdReferencia</div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else if (movimientos != null)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No se encontraron movimientos en este periodo.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <div class="spinner-border spinner-border-sm text-primary"></div> Cargando...
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (movimientos != null && movimientos.Count > pageSize)
+        {
+            var totalPages = (int)Math.Ceiling((double)movimientos.Count / pageSize);
+            <div class="pagination-container p-3 border-top bg-white d-flex justify-content-center align-items-center position-relative">
+                <div class="position-absolute start-0 ps-4 d-none d-lg-block">
+                    <span class="small text-muted">Mostrando @(Math.Min(movimientos.Count, (currentPage - 1) * pageSize + 1)) a @(Math.Min(movimientos.Count, currentPage * pageSize)) de @movimientos.Count registros</span>
+                </div>
+                <div class="pagination-carousel-container">
+                    <ul class="pagination pagination-premium mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage - 1)" title="Anterior">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </li>
+                        
+                        @{
+                            int maxVisible = 5;
+                            int startPage = Math.Max(1, Math.Min(currentPage - 2, totalPages - maxVisible + 1));
+                            int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
+                            
+                            if (totalPages > maxVisible && endPage == totalPages) startPage = Math.Max(1, totalPages - maxVisible + 1);
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                var pageNum = i;
+                                <li class="page-item @(currentPage == pageNum ? "active" : "") page-item-animated" @key="pageNum">
+                                    <button class="page-link" @onclick="() => SetPage(pageNum)">@pageNum</button>
+                                </li>
+                            }
+
+                            if (endPage < totalPages)
+                            {
+                                if (endPage < totalPages - 1)
+                                {
+                                    <li class="pagination-ellipsis">...</li>
+                                }
+                                <li class="page-item @(currentPage == totalPages ? "active" : "") page-item-animated">
+                                    <button class="page-link" @onclick="() => SetPage(totalPages)">@totalPages</button>
+                                </li>
+                            }
+                        }
+
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage + 1)" title="Siguiente">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public DateTime StartDate { get; set; }
+    
+    [Parameter]
+    public DateTime EndDate { get; set; }
+
+    private InventoryInsightDTO? insight;
+    private List<Movimiento>? movimientos;
+
+    // Paginación
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        insight = await ReportService.GetInventoryInsightsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Recargar datos que dependen de la fecha
+        movimientos = await ReportService.GetKardexGlobalAsync(StartDate, EndDate);
+        currentPage = 1; // Resetear a la primera página al cambiar las fechas
+    }
+
+    private void SetPage(int page)
+    {
+        if (movimientos == null) return;
+        int totalPages = (int)Math.Ceiling((double)movimientos.Count / pageSize);
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+        }
+    }
+
+    private string GetBadgeClass(string? tipoOperacion)
+    {
+        if (string.IsNullOrEmpty(tipoOperacion)) return "bg-light text-dark";
+
+        tipoOperacion = tipoOperacion.ToUpper();
+        if (tipoOperacion.Contains("ENTRADA") || tipoOperacion.Contains("COMPRA") || tipoOperacion.Contains("DEVOLUCION"))
+        {
+            return "bg-success bg-opacity-10 text-success border-success";
+        }
+        if (tipoOperacion.Contains("SALIDA") || tipoOperacion.Contains("VENTA") || tipoOperacion.Contains("MERMA"))
+        {
+            return "bg-danger bg-opacity-10 text-danger border-danger";
+        }
+
+        return "bg-secondary bg-opacity-10 text-secondary border-secondary";
+    }
+}
+

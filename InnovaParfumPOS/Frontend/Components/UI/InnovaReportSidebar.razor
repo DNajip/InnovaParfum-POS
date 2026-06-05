@@ -1,0 +1,39 @@
+@inject NavigationManager Navigation
+
+<div class="report-sidebar">
+    <div class="report-sidebar-header">
+        <i class="fas fa-chart-line"></i>
+        <span>REPORTES</span>
+    </div>
+    
+    <nav class="report-nav">
+        <button class="report-nav-item @(ActiveSection == "dashboard" ? "active" : "")" @onclick='() => SetSection("dashboard")'>
+            <i class="fas fa-home"></i> Dashboard
+        </button>
+        <button class="report-nav-item @(ActiveSection == "ventas" ? "active" : "")" @onclick='() => SetSection("ventas")'>
+            <i class="fas fa-file-invoice-dollar"></i> Ventas
+        </button>
+        <button class="report-nav-item @(ActiveSection == "arqueos" ? "active" : "")" @onclick='() => SetSection("arqueos")'>
+            <i class="fas fa-cash-register"></i> Caja y Arqueos
+        </button>
+        <button class="report-nav-item @(ActiveSection == "cajeros" ? "active" : "")" @onclick='() => SetSection("cajeros")'>
+            <i class="fas fa-user-tie"></i> Cajeros
+        </button>
+        <button class="report-nav-item @(ActiveSection == "inventario" ? "active" : "")" @onclick='() => SetSection("inventario")'>
+            <i class="fas fa-boxes"></i> Inventario
+        </button>
+        <button class="report-nav-item @(ActiveSection == "clientes" ? "active" : "")" @onclick='() => SetSection("clientes")'>
+            <i class="fas fa-users"></i> Clientes
+        </button>
+    </nav>
+</div>
+
+@code {
+    [Parameter] public string ActiveSection { get; set; } = "dashboard";
+    [Parameter] public EventCallback<string> OnSectionChanged { get; set; }
+
+    private async Task SetSection(string section)
+    {
+        await OnSectionChanged.InvokeAsync(section);
+    }
+}

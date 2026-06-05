@@ -1,0 +1,70 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IReportService ReportService
+
+@if (auditoria == null)
+{
+    <div class="skeleton" style="height: 400px; border-radius: 20px;"></div>
+}
+else
+{
+    <div class="report-card">
+        <div class="report-card-title">Desempeño por Cajero / Vendedor</div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Cajero</th>
+                        <th class="text-center">Facturas</th>
+                        <th class="text-end">Ventas Totales</th>
+                        <th class="text-end">Descuentos</th>
+                        <th class="text-center">Participación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var maxVentas = auditoria.Any() ? auditoria.Max(x => x.TotalVentas) : 1;
+                    }
+                    @foreach (var c in auditoria)
+                    {
+                        var percentage = (double)(c.TotalVentas / (maxVentas > 0 ? maxVentas : 1) * 100);
+                        <tr>
+                            <td class="fw-bold">
+                                <i class="fas fa-user-circle me-2 text-muted"></i>@c.Cajero
+                            </td>
+                            <td class="text-center">@c.Facturas</td>
+                            <td class="text-end fw-bold">@AppState.CurrencySymbol @c.TotalVentas.ToString("N2")</td>
+                            <td class="text-end text-danger">-@AppState.CurrencySymbol @c.Descuentos.ToString("N2")</td>
+                            <td style="min-width: 150px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px; border-radius: 10px; background: #f1f5f9;">
+                                        <div class="progress-bar bg-primary" style="width: @percentage.ToString("0")%; border-radius: 10px;"></div>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 10px; width: 30px;">@percentage.ToString("0")%</small>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public DateTime StartDate { get; set; }
+    [Parameter] public DateTime EndDate { get; set; }
+    private List<CashierAuditDTO>? auditoria;
+
+    protected override async Task OnParametersSetAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        auditoria = null;
+        StateHasChanged();
+        auditoria = await ReportService.GetCashierAuditAsync(StartDate, EndDate);
+        StateHasChanged();
+    }
+}
+

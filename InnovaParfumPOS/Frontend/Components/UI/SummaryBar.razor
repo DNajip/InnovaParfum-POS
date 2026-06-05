@@ -1,0 +1,56 @@
+@using InnovaParfumPOS.Backend.Services
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@implements IDisposable
+@inject SaleService SaleService
+@inject UserSession UserSession
+
+<section class="summary-bar">
+    <div class="summary-stats-group">
+        <div class="stat-item">
+            <span class="stat-label">Unidades</span>
+            <span class="stat-value">@SaleService.TotalUnits</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Sub Total</span>
+            <span class="stat-value text-muted">@AppState.CurrencySymbol @SaleService.SubTotal.ToString("N2")</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Aplicar descuento</span>
+            <div class="input-group input-group-sm discount-input-group">
+                <span class="input-group-text">-@AppState.CurrencySymbol</span>
+                <input type="number" class="form-control" @bind="SaleService.Discount" @bind:event="oninput" step="0.01" placeholder="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="checkout-area">
+        <div class="total-box">
+            <p class="total-label">Total</p>
+            <span class="total-amount">@AppState.CurrencySymbol @SaleService.Total.ToString("N2")</span>
+        </div>
+        <button class="btn btn-checkout" @onclick="SaleService.RequestCheckout" disabled="@(UserSession.ActiveShift == null)">
+            <i class="fas fa-file-invoice me-2"></i>
+            FACTURAR
+        </button>
+    </div>
+</section>
+
+@code {
+    protected override void OnInitialized()
+    {
+        SaleService.PropertyChanged += OnServicePropertyChanged;
+        UserSession.OnChange += StateHasChanged;
+    }
+
+    private void OnServicePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        SaleService.PropertyChanged -= OnServicePropertyChanged;
+        UserSession.OnChange -= StateHasChanged;
+    }
+}
+

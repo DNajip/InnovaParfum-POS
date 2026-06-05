@@ -1,0 +1,393 @@
+@page "/facturas"
+@using Microsoft.EntityFrameworkCore
+@inject InnovaParfumDbContext DbContext
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+@inject UserSession UserSession
+@inject AppState AppState
+
+<PageTitle>Facturas - InnovaTec</PageTitle>
+
+<div class="cli-container">
+    <!-- Header -->
+    <div class="cli-header">
+        <div class="inv-title-group">
+            <h2>Historial de Facturas</h2>
+            <p>Consulta de ventas realizadas y reimpresión</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="cli-search-bar d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="d-flex align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <label class="fw-bold small text-muted mb-0">Desde:</label>
+                <input type="date" class="form-control form-control-sm rounded-pill" @bind="startDate" />
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="fw-bold small text-muted mb-0">Hasta:</label>
+                <input type="date" class="form-control form-control-sm rounded-pill" @bind="endDate" />
+            </div>
+            <button class="btn btn-primary btn-sm rounded-pill px-3" @onclick="LoadData">
+                <i class="fas fa-filter me-1"></i> Filtrar
+            </button>
+        </div>
+
+        <!-- Barra de Búsqueda -->
+        <div class="search-box-container" style="min-width: 300px;">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0 rounded-start-pill border-secondary border-opacity-25">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 rounded-end-pill border-secondary border-opacity-25" 
+                       placeholder="Buscar factura o cliente..." 
+                       @bind="searchQuery" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="cli-table-card">
+        <table class="pos-table">
+            <thead>
+                <tr>
+                    <th>N° Factura</th>
+                    <th>Fecha / Hora</th>
+                    <th>Cliente</th>
+                    <th>Vendedor</th>
+                    <th>Total</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ventas == null)
+                {
+                    <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                }
+                else if (!ventas.Any())
+                {
+                    <tr><td colspan="6" class="text-center py-5 text-muted">No se encontraron ventas en este rango de fechas.</td></tr>
+                }
+                else
+                {
+                    @foreach (var v in ventas.Skip((currentPage - 1) * pageSize).Take(pageSize))
+                    {
+                        <tr>
+                            <td><span class="fw-bold text-primary">@v.NumeroFactura</span></td>
+                            <td>@v.FechaVenta.ToString("dd/MM/yyyy hh:mm tt")</td>
+                            <td>@(v.IdPersonaNavigation != null ? v.IdPersonaNavigation.NombreCompleto : "Cliente General")</td>
+                            <td>@(v.IdUsuarioNavigation != null ? v.IdUsuarioNavigation.Username : "N/A")</td>
+                            <td class="fw-bold">@AppState.CurrencySymbol @v.TotalNio.ToString("N2")</td>
+                            <td class="text-end">
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @onclick="() => ShowInvoiceDetails(v)">
+                                    <i class="fas fa-print me-1"></i> Reimprimir Factura
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <!-- Paginación Premium tipo Carrusel -->
+        @if (ventas != null && ventas.Count > pageSize)
+        {
+            var totalPages = (int)Math.Ceiling((double)ventas.Count / pageSize);
+            <div class="pagination-container d-flex align-items-center p-3 border-top">
+                <div class="flex-grow-1">
+                    <span class="small text-muted">Mostrando @(Math.Min(ventas.Count, (currentPage - 1) * pageSize + 1)) a @(Math.Min(ventas.Count, currentPage * pageSize)) de @ventas.Count facturas</span>
+                </div>
+                <div class="pagination-carousel-container">
+                    <ul class="pagination pagination-premium mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage - 1)" title="Anterior">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </li>
+                        
+                        @{
+                            // Lógica de ventana deslizante (Carrusel de 6 números)
+                            int maxVisible = 6;
+                            int startPage = Math.Max(1, Math.Min(currentPage - 2, totalPages - maxVisible + 1));
+                            int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
+                            
+                            // Re-ajustar si estamos cerca del final
+                            if (totalPages > maxVisible && endPage == totalPages) startPage = Math.Max(1, totalPages - maxVisible + 1);
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                var pageNum = i;
+                                <li class="page-item @(currentPage == pageNum ? "active" : "") page-item-animated" @key="pageNum">
+                                    <button class="page-link" @onclick="() => SetPage(pageNum)">@pageNum</button>
+                                </li>
+                            }
+
+                            // Mostrar Elipsis y Última Página si es necesario
+                            if (endPage < totalPages)
+                            {
+                                if (endPage < totalPages - 1)
+                                {
+                                    <li class="pagination-ellipsis">...</li>
+                                }
+                                <li class="page-item @(currentPage == totalPages ? "active" : "") page-item-animated">
+                                    <button class="page-link" @onclick="() => SetPage(totalPages)">@totalPages</button>
+                                </li>
+                            }
+                        }
+
+                        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage + 1)" title="Siguiente">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="flex-grow-1 text-end"></div> <!-- Espaciador para centrar el carrusel -->
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal: Vista Previa de Factura -->
+@if (showPreviewModal && selectedVenta != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold m-0"><i class="fas fa-file-invoice me-2"></i>Vista Previa</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <!-- Ticket Layout for Print -->
+                    <div class="print-section p-3 bg-white text-dark" style="font-family: 'Courier New', Courier, monospace; font-size: 13px;">
+                        <div class="text-center mb-3">
+                            <img src="@AppState.BusinessLogo" alt="Logo" style="max-width: 80px; height: auto; margin-bottom: 10px; border-radius: 8px;" />
+                            <h5 class="fw-bold m-0" style="font-family: 'Outfit', sans-serif;">@AppState.BusinessName</h5>
+                            <p class="small m-0">@AppState.BusinessRuc</p>
+                            @if (!string.IsNullOrEmpty(AppState.BusinessAddress))
+                            {
+                                <p class="x-small m-0" style="font-size: 10px;">@AppState.BusinessAddress</p>
+                            }
+                            <hr style="border-top: 1px dashed #000; margin: 10px 0;" />
+                        </div>
+
+                        <div class="mb-2">
+                            <div><strong>Factura:</strong> @selectedVenta.NumeroFactura</div>
+                            <div><strong>Fecha:</strong> @selectedVenta.FechaVenta.ToString("dd/MM/yyyy HH:mm")</div>
+                            <div><strong>Cliente:</strong> @(selectedVenta.IdPersonaNavigation != null ? selectedVenta.IdPersonaNavigation.NombreCompleto : "Cliente General")</div>
+                            <div><strong>Vendedor:</strong> @(selectedVenta.IdUsuarioNavigation != null ? selectedVenta.IdUsuarioNavigation.Username : "N/A")</div>
+                        </div>
+
+                        <hr style="border-top: 1px dashed #000; margin: 10px 0;" />
+
+                        <table class="w-100 mb-2" style="font-size: 12px;">
+                            <thead>
+                                <tr class="border-bottom">
+                                    <th class="text-start">Cant</th>
+                                    <th class="text-start">Desc</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var groupedDetails = selectedVenta.VentaDetalles
+                                        .GroupBy(d => new { d.DescripcionSnap, d.PrecioUnitarioNio })
+                                        .Select(g => new {
+                                            Cantidad = g.Sum(x => x.Cantidad),
+                                            Descripcion = g.Key.DescripcionSnap,
+                                            Total = g.Sum(x => x.SubtotalNio)
+                                        });
+
+                                    foreach (var d in groupedDetails)
+                                    {
+                                            <tr>
+                                                <td class="align-top">@d.Cantidad</td>
+                                                <td>@d.Descripcion</td>
+                                                <td class="text-end align-top">@AppState.CurrencySymbol @d.Total.ToString("N2")</td>
+                                            </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+
+                        <hr style="border-top: 1px dashed #000; margin: 10px 0;" />
+
+                        <div class="d-flex justify-content-between fw-bold mb-1">
+                            <span>Subtotal:</span>
+                            <span>@AppState.CurrencySymbol @selectedVenta.SubtotalNio.ToString("N2")</span>
+                        </div>
+                        @if (selectedVenta.DescuentoNio > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Descuento:</span>
+                                <span>-@AppState.CurrencySymbol @selectedVenta.DescuentoNio.ToString("N2")</span>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between fw-bold fs-6">
+                            <span>TOTAL:</span>
+                            <span>@AppState.CurrencySymbol @selectedVenta.TotalNio.ToString("N2")</span>
+                        </div>
+
+                        <hr style="border-top: 1px dashed #000; margin: 15px 0 5px 0;" />
+                        <div class="text-center small mt-2">
+                            <p class="m-0">@AppState.TicketMessage</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 justify-content-center">
+                    <button type="button" class="btn btn-light rounded-pill px-4" @onclick="CloseModal">Cerrar</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" @onclick="PrintInvoice">
+                        <i class="fas fa-print me-2"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    /* Estilos para impresión */
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        .print-section, .print-section * {
+            visibility: visible;
+        }
+        .print-section {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .modal-backdrop, .modal {
+            background: none !important;
+            position: static !important;
+        }
+    }
+</style>
+
+@code {
+    private DateTime startDate = DateTime.Today;
+    private DateTime endDate = DateTime.Today;
+    private string searchQuery = "";
+    private List<Venta>? ventas;
+    private Venta? selectedVenta;
+    private bool showPreviewModal = false;
+
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            currentPage = 1; // Reset page on filter
+            ventas = null;
+            StateHasChanged();
+
+            // Ajustar fechas para cubrir todo el día
+            var start = startDate.Date;
+            var end = endDate.Date.AddDays(1).AddTicks(-1);
+
+            var query = DbContext.Ventas
+                .Include(v => v.IdPersonaNavigation)
+                .Include(v => v.IdUsuarioNavigation)
+                .Include(v => v.VentaDetalles)
+                .Where(v => v.FechaVenta >= start && v.FechaVenta <= end);
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                query = query.Where(v => (v.NumeroFactura != null && v.NumeroFactura.Contains(searchQuery)) || 
+                                       (v.IdPersonaNavigation != null && v.IdPersonaNavigation.NombreCompleto != null && v.IdPersonaNavigation.NombreCompleto.Contains(searchQuery)));
+            }
+
+            ventas = await query.OrderByDescending(v => v.FechaVenta).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al cargar facturas: " + ex.Message);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ShowInvoiceDetails(Venta venta)
+    {
+        selectedVenta = venta;
+        showPreviewModal = true;
+    }
+
+    private void SetPage(int page)
+    {
+        currentPage = page;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        showPreviewModal = false;
+        selectedVenta = null;
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task PrintInvoice()
+    {
+        if (selectedVenta == null) return;
+
+        var invoiceData = new
+        {
+            numeroFactura = selectedVenta.NumeroFactura,
+            fecha = selectedVenta.FechaVenta.ToString("dd/MM/yyyy HH:mm"),
+            nombreNegocio = AppState.BusinessName,
+            ruc = AppState.BusinessRuc,
+            direccion = AppState.BusinessAddress,
+            telefono = AppState.BusinessPhone,
+            logoPath = AppState.BusinessLogo,
+            mensajeTicket = AppState.TicketMessage,
+            abrirCajon = false, // Nunca abrir caja al reimprimir
+            simboloMoneda = "@AppState.CurrencySymbol ",
+            cliente = selectedVenta.IdPersonaNavigation?.NombreCompleto ?? "Cliente General",
+            vendedor = selectedVenta.IdUsuarioNavigation?.Username ?? "N/A",
+            subtotal = selectedVenta.SubtotalNio,
+            descuento = selectedVenta.DescuentoNio,
+            total = selectedVenta.TotalNio,
+            detalles = selectedVenta.VentaDetalles
+                .GroupBy(d => new { d.DescripcionSnap, d.PrecioUnitarioNio })
+                .Select(g => new {
+                    cantidad = g.Sum(x => x.Cantidad),
+                    descripcion = g.Key.DescripcionSnap,
+                    total = g.Sum(x => x.SubtotalNio)
+                }).ToList()
+        };
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("qzPrintInvoice", invoiceData, AppState.PrinterName);
+            ToastService.ShowSuccess("Comprobante enviado a la impresora.");
+        }
+
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al imprimir: " + ex.Message);
+        }
+    }
+}
+

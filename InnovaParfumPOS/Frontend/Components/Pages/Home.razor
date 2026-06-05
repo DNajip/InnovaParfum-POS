@@ -1,0 +1,327 @@
+@page "/ventas"
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Frontend.Components.UI
+@using System.ComponentModel
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@implements IDisposable
+@inject SaleService SaleService
+@inject IProductService ProductService
+@inject IShiftService ShiftService
+@inject UserSession UserSession
+@inject ToastService ToastService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Ventas - InnovaTec</PageTitle>
+
+<div class="p-3 bg-white border-bottom d-flex justify-content-start align-items-center">
+    <div class="search-container position-relative ms-2" style="max-width: 800px; flex: 1;">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="form-control pos-input" 
+               placeholder="Escanear o ingresar nombre del producto"
+               @bind="SearchTerm" 
+               @bind:event="oninput" 
+               @onkeyup="HandleSearch" />
+        
+        @if (SearchResults != null && SearchResults.Any())
+        {
+            <div class="search-results-dropdown position-absolute w-100 bg-white border rounded mt-1 shadow-lg" style="z-index: 1050; max-height: 400px; overflow-y: auto;">
+                <ul class="list-group list-group-flush">
+                    @foreach (var prod in SearchResults)
+                    {
+                        <li class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => SelectProduct(prod)">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold">@prod.Nombre</span>
+                                    <small class="text-muted">Cód: @prod.CodigoBarras | Disp: @prod.StockActual</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="d-block text-primary fw-bold">@AppState.CurrencySymbol @prod.PrecioVenta.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="table-container flex-grow-1 overflow-auto">
+    <table class="pos-table">
+        <thead>
+            <tr>
+                <th style="width: 40px;"></th>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th class="text-end">Precio Unit.</th>
+                <th class="text-center">Cant.</th>
+                <th class="text-end">Subtotal</th>
+                <th class="text-center">Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!SaleService.Items.Any())
+            {
+                <tr><td colspan="7" class="text-center py-5 text-muted"> <i class="fas fa-shopping-cart fa-3x mb-3 d-block"></i> El carrito está vacío</td></tr>
+            }
+            @foreach (var item in SaleService.Items)
+            {
+                <tr>
+                    <td><i class="fas fa-chevron-right text-muted" style="font-size: 0.8rem;"></i></td>
+                    <td><span class="item-code">@item.Code</span></td>
+                    <td><strong>@item.Description</strong></td>
+                    <td class="text-end font-monospace">@AppState.CurrencySymbol @item.UnitPrice.ToString("N2")</td>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                             <button class="btn btn-sm btn-outline-secondary px-2 py-0" @onclick="() => DecrementQuantity(item)">-</button>
+                             <input type="number" class="form-control form-control-sm qty-input m-0" value="@item.Quantity" @oninput="(e) => HandleQuantityInput(item, e)" min="1" />
+                             <button class="btn btn-sm btn-outline-secondary px-2 py-0" @onclick="() => IncrementQuantity(item)">+</button>
+                        </div>
+                    </td>
+                    <td class="text-end fw-bold">@AppState.CurrencySymbol @item.SubTotal.ToString("N2")</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm text-danger" @onclick="() => SaleService.RemoveItem(item)"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (showCheckoutModal)
+{
+    <CheckoutModal Items="SaleService.Items" 
+                   SubTotal="SaleService.SubTotal" 
+                   Discount="SaleService.Discount ?? 0" 
+                   Total="SaleService.Total" 
+                   OnClose="() => showCheckoutModal = false"
+                   OnSuccess="HandleSaleSuccess" />
+}
+
+@code {
+    private string SearchTerm { get; set; } = "";
+    private List<InnovaParfumPOS.Backend.Models.Producto>? SearchResults;
+    private System.Timers.Timer debounceTimer = new System.Timers.Timer(300);
+    private bool showCheckoutModal = false;
+    private DotNetObjectReference<Home>? objRef;
+
+    protected override void OnInitialized()
+    {
+        if (!UserSession.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        debounceTimer.AutoReset = false;
+        debounceTimer.Elapsed += async (s, e) => await OnSearchTimerElapsed();
+        
+        SaleService.PropertyChanged += OnServicePropertyChanged;
+        SaleService.OnCheckoutRequested += HandleCheckoutRequest;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerBarcodeScanner", objRef);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnBarcodeScanned(string barcode)
+    {
+        SearchTerm = barcode;
+        await ScannerLookup();
+        SearchTerm = "";
+        StateHasChanged();
+    }
+
+    private async void HandleCheckoutRequest()
+    {
+        if (!UserSession.UserId.HasValue) return;
+
+        var activeShift = await ShiftService.GetActiveShiftAsync(UserSession.UserId.Value);
+        if (activeShift == null)
+        {
+            ToastService.ShowWarning("Debe abrir caja antes de facturar. Use el botón verde en la parte inferior.");
+            return;
+        }
+
+        showCheckoutModal = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleSaleSuccess()
+    {
+        showCheckoutModal = false;
+        SaleService.Clear();
+        StateHasChanged();
+    }
+
+    private async Task HandleSearch(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            debounceTimer.Stop();
+            await ScannerLookup();
+        }
+        else
+        {
+            debounceTimer.Stop();
+            debounceTimer.Start();
+        }
+    }
+
+    private async Task ScannerLookup()
+    {
+        if (string.IsNullOrWhiteSpace(SearchTerm)) return;
+        var term = SearchTerm.Trim();
+
+        var exactProduct = await ProductService.GetProductByBarcodeAsync(term);
+        if (exactProduct != null)
+        {
+            SelectProduct(exactProduct);
+            return;
+        }
+
+        var results = await ProductService.SearchProductsAsync(term, onlyInStock: true);
+        if (results != null && results.Count == 1)
+        {
+            SelectProduct(results[0]);
+        }
+        else if (results != null && results.Count > 1)
+        {
+            SearchResults = results;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearchTimerElapsed()
+    {
+        await InvokeAsync(async () => 
+        {
+            try 
+            {
+                if (SearchTerm.Length >= 2)
+                {
+                    SearchResults = await ProductService.SearchProductsAsync(SearchTerm, onlyInStock: true);
+                }
+                else
+                {
+                    SearchResults = null;
+                }
+            } 
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Search error: {ex.Message}");
+                SearchResults = null;
+            }
+            StateHasChanged();
+        });
+    }
+
+    private void SelectProduct(InnovaParfumPOS.Backend.Models.Producto prod)
+    {
+        if (prod.StockActual <= 0)
+        {
+            ToastService.ShowError($"El producto '{prod.Nombre}' no cuenta con existencias disponibles.");
+            return;
+        }
+
+        var existingItem = SaleService.Items.FirstOrDefault(i => i.IdProducto == prod.IdProducto);
+        
+        bool requiresImei = false;
+
+        if (existingItem != null)
+        {
+            if (existingItem.Quantity + 1 > existingItem.StockMax)
+            {
+                ToastService.ShowError($"El stock actual del producto es: {existingItem.StockMax}. No puedes agregar más cantidades al carrito.");
+                return;
+            }
+            existingItem.Quantity++;
+            SaleService.NotifyAll();
+        }
+        else
+        {
+            SaleService.AddItem(new CartItem
+            {
+                IdProducto = prod.IdProducto,
+                Code = prod.CodigoBarras ?? "",
+                Description = prod.Nombre,
+                UnitPrice = prod.PrecioVenta,
+                Quantity = 1,
+                IdCategoria = prod.IdCategoria,
+                RequiresImei = requiresImei,
+                StockMax = prod.StockActual
+            });
+        }
+
+        SearchTerm = "";
+        SearchResults = null;
+        StateHasChanged();
+    }
+
+    private void IncrementQuantity(CartItem item)
+    {
+        if (item.Quantity + 1 > item.StockMax)
+        {
+            ToastService.ShowError($"El stock actual del producto es: {item.StockMax}. No puedes agregar más cantidades al carrito.");
+            return;
+        }
+        item.Quantity++;
+    }
+
+    private void DecrementQuantity(CartItem item)
+    {
+        if (item.Quantity > 1)
+        {
+            item.Quantity--;
+        }
+    }
+
+    private void HandleQuantityInput(CartItem item, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int qty))
+        {
+            if (qty < 1)
+            {
+                item.Quantity = 1;
+            }
+            else if (qty > item.StockMax)
+            {
+                ToastService.ShowError($"El stock actual del producto es: {item.StockMax}. No puedes agregar más cantidades al carrito.");
+                item.Quantity = item.StockMax;
+                StateHasChanged();
+            }
+            else
+            {
+                item.Quantity = qty;
+            }
+        }
+    }
+
+    private void OnServicePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        SaleService.PropertyChanged -= OnServicePropertyChanged;
+        SaleService.OnCheckoutRequested -= HandleCheckoutRequest;
+        debounceTimer?.Stop();
+        debounceTimer?.Dispose();
+        
+        if (objRef != null)
+        {
+            try { JSRuntime.InvokeVoidAsync("unregisterBarcodeScanner"); } catch { }
+            objRef.Dispose();
+        }
+    }
+}
+

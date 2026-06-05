@@ -1,0 +1,811 @@
+@page "/etiquetas"
+@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Frontend.Components.UI
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IProductService ProductService
+@inject UserSession Session
+@inject NavigationManager Navigation
+@inject ToastService Toast
+@inject IJSRuntime JS
+@inject ILabelService LabelService
+
+<div class="etiquetas-premium-container animate__animated animate__fadeIn">
+    <!-- Header Refinado -->
+    <div class="etiquetas-header-glass">
+        <div class="header-left">
+            <div class="brand-icon">
+                <i class="fas fa-barcode"></i>
+            </div>
+            <div class="header-titles">
+                <h1>Gestión de Etiquetas</h1>
+                <p>Genera y asocia códigos de barras para optimizar tu facturación</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-premium-action" @onclick="() => showNewProductModal = true">
+                <i class="fas fa-plus-circle me-2"></i> Nuevo Producto
+            </button>
+        </div>
+    </div>
+
+    <div class="etiquetas-workspace">
+        <!-- Panel Izquierdo: Generador -->
+        <div class="workspace-panel panel-generator">
+            <div class="panel-card shadow-premium">
+                <div class="panel-header">
+                    <h3><i class="fas fa-magic me-2"></i> Generador de Código</h3>
+                </div>
+                <div class="panel-body text-center">
+                    <div class="barcode-preview-area mx-auto">
+                        @if (!string.IsNullOrEmpty(generatedBarcode))
+                        {
+                            <div class="barcode-visual mx-auto">
+                                <svg id="barcode-canvas" style="width: 100%; max-height: 140px;"></svg>
+                                <span class="barcode-number">@generatedBarcode</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="barcode-placeholder">
+                                <i class="fas fa-qrcode mb-2"></i>
+                                <span>Presiona generar para comenzar</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="generator-controls d-flex flex-column align-items-center">
+                        <button class="btn btn-primary mb-3 py-2 px-4 rounded-pill shadow-sm fw-bold" style="width: auto; min-width: 200px;" @onclick="GenerateCode">
+                            <i class="fas fa-sync-alt me-2"></i> Generar Nuevo Código
+                        </button>
+                        
+                        <div class="input-group-premium w-100" style="max-width: 280px;">
+                            <label class="d-block mb-1 small fw-bold text-muted text-uppercase">Código Manual</label>
+                            <input type="text" class="form-control text-center fw-bold" @bind="generatedBarcode" @bind:after="UpdateBarcode" placeholder="Escribir aquí..." />
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer bg-light border-top-0 pt-0 pb-3">
+                    <div class="alert alert-info py-2 px-3 rounded-4 small mb-0 border-0 mx-auto" style="max-width: 320px; font-size: 0.75rem;">
+                        <i class="fas fa-info-circle me-1"></i> Genera un código único para asociarlo a un producto.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Central: Asociación -->
+        <div class="workspace-panel panel-association">
+            <div class="panel-card shadow-premium">
+                <div class="panel-header">
+                    <h3><i class="fas fa-link me-2"></i> Vincular con Producto</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="search-box-premium mb-4" style="max-width: 400px;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Buscar producto..." 
+                               @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
+                    </div>
+
+                    <div class="product-selection-list custom-scrollbar mx-auto w-100" style="max-height: 250px;">
+                        @if (isSearching)
+                        {
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                            </div>
+                        }
+                        else if (!PagedResults.Any())
+                        {
+                            <div class="empty-results py-4 text-center">
+                                <i class="fas fa-box-open text-muted opacity-30"></i>
+                                <p class="text-muted small">Sin resultados.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var prod in PagedResults)
+                            {
+                                <div class="product-item @(selectedProduct?.IdProducto == prod.IdProducto ? "selected" : "")" 
+                                     @onclick="() => SelectProduct(prod)">
+                                    <div class="product-info d-flex flex-column align-items-start">
+                                        <span class="product-name mb-0">@prod.Nombre</span>
+                                        <span class="product-meta opacity-75">@(prod.Marca ?? "") | @(prod.CodigoBarras ?? "Sin Código")</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                        <div class="pagination-container d-flex align-items-center p-2 border-top w-100">
+                            <div class="pagination-carousel-container">
+                                <ul class="pagination pagination-premium mb-0">
+                                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                        <button class="page-link py-1" @onclick="() => SetPage(currentPage - 1)">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                    </li>
+                                    @{
+                                        int maxVisible = 4;
+                                        int startPage = Math.Max(1, Math.Min(currentPage - 1, TotalPages - maxVisible + 1));
+                                        int endPage = Math.Min(TotalPages, startPage + maxVisible - 1);
+                                        for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            var pageNum = i;
+                                            <li class="page-item @(currentPage == pageNum ? "active" : "")" @key="pageNum">
+                                                <button class="page-link py-1" @onclick="() => SetPage(pageNum)">@pageNum</button>
+                                            </li>
+                                        }
+                                    }
+                                    <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
+                                        <button class="page-link py-1" @onclick="() => SetPage(currentPage + 1)">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                </div>
+                <div class="panel-footer bg-light border-top-0 pt-0 pb-3 text-center">
+                    <button class="btn btn-success btn-sm w-100 rounded-pill fw-bold shadow" 
+                            disabled="@(!CanAssociate)" @onclick="AssociateCode">
+                        <i class="fas fa-check-circle me-1"></i> ASOCIAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TERCER PANEL: IMPRESIÓN -->
+        <div class="workspace-panel panel-print">
+            <div class="panel-card shadow-premium border-primary-subtle">
+                <div class="panel-header bg-primary text-white py-2" style="border-radius: 20px 20px 0 0;">
+                    <h3 class="text-white"><i class="fas fa-print me-2"></i> Imprimir Etiquetas</h3>
+                </div>
+                <div class="panel-body custom-scrollbar">
+                    <div class="print-panel-controls mb-3">
+                        <div class="print-control-group">
+                            <label><i class="fas fa-print me-1"></i> Impresora</label>
+                            <select class="form-select form-select-sm rounded-3" @bind="selectedPrinter">
+                                <option value="pdf">Descargar como PDF</option>
+                                @foreach (var printer in availablePrinters)
+                                {
+                                    <option value="@printer">@printer</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="print-control-group mt-2">
+                            <label><i class="fas fa-search me-1"></i> Buscar Producto</label>
+                            <div class="search-box-premium" style="width: 100%;">
+                                <input type="text" class="form-control form-control-sm rounded-3" placeholder="Nombre del producto..." 
+                                       @bind="printSearchTerm" @bind:event="oninput" @onkeyup="HandlePrintSearch" />
+                            </div>
+                        </div>
+
+                        @if (printSearchResults.Any())
+                        {
+                            <div class="print-search-dropdown shadow-sm rounded-3 border mt-1">
+                                @foreach (var prod in printSearchResults)
+                                {
+                                    <div class="print-search-item p-2 border-bottom @(printSelectedProduct?.IdProducto == prod.IdProducto ? "bg-primary-subtle" : "")" 
+                                         @onclick="async () => await SelectPrintProduct(prod)">
+                                        <div class="small fw-bold">@prod.Nombre</div>
+                                        <div class="smaller text-muted">@(prod.CodigoBarras ?? "Sin Código") | @AppState.CurrencySymbol @prod.PrecioVenta:N2</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <div class="print-control-group mt-2">
+                            <label><i class="fas fa-layer-group me-1"></i> Plantilla</label>
+                            <select class="form-select form-select-sm rounded-3" @bind="selectedTemplate" @bind:after="UpdatePrintPreview">
+                                <option value="mini">Mini (80x20mm)</option>
+                                <option value="mediana">Mediana (80x30mm)</option>
+                                <option value="grande">Grande (80x35mm)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Preview Area -->
+                    <div class="label-template-container mb-3">
+                        @if (printSelectedProduct != null)
+                        {
+                            <div class="label-preview-box label-preview-@selectedTemplate" id="label-preview-render">
+                                <p class="label-product-name">@printSelectedProduct.Nombre</p>
+                                
+                                @if (selectedTemplate == "grande")
+                                {
+                                    <p class="label-product-meta">
+                                        @(printSelectedProduct.Genero ?? "N/A") | @(printSelectedProduct.Concentracion ?? "N/A")
+                                    </p>
+                                }
+
+                                @if (selectedTemplate != "mini")
+                                {
+                                    <div class="label-price-container">
+                                        @if (selectedTemplate == "grande") { <span class="label-price-label">Precio:</span> }
+                                        <span class="label-price-value">@AppState.CurrencySymbol @printSelectedProduct.PrecioVenta.ToString("N2")</span>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(printSelectedProduct.CodigoBarras))
+                                {
+                                    <svg class="label-barcode-svg" id="print-barcode-canvas"></svg>
+                                    <span style="font-size: 7pt; font-family: monospace;">@printSelectedProduct.CodigoBarras</span>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning py-1 px-2 small mt-2">Sin código de barras</div>
+                                }
+
+                                @if (selectedTemplate == "grande")
+                                {
+                                    <div class="label-footer">
+                                        <span>InnovaTec POS</span>
+                                        <span>@DateTime.Now.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted opacity-50">
+                                <i class="fas fa-eye fa-2x mb-2"></i>
+                                <p class="small">Selecciona un producto para previsualizar</p>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="print-control-group">
+                        <label><i class="fas fa-sort-numeric-up me-1"></i> Cantidad</label>
+                        <input type="number" class="form-control form-control-sm text-center fw-bold" @bind="printQuantity" min="1" max="100" />
+                    </div>
+
+                    <button class="btn-print-submit w-100 mt-3" disabled="@(printSelectedProduct == null)" @onclick="ExecutePrint">
+                        @if (isPrinting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Procesando...</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-print me-2"></i>
+                            <span>@(selectedPrinter == "pdf" ? "GENERAR PDF" : "IMPRIMIR")</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ProductRegisterForm @bind-IsVisible="showNewProductModal" Categorias="categorias" InitialBarcode="@generatedBarcode" OnProductSaved="HandleNewProductSaved" />
+
+<style>
+    .etiquetas-premium-container {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        min-height: 90vh;
+    }
+
+    .etiquetas-header-glass {
+        background: white;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        margin-bottom: 1rem;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .brand-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 10px rgba(26, 42, 108, 0.2);
+    }
+
+    .header-titles h1 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #1a2a6c;
+        margin-bottom: 0;
+    }
+
+    .header-titles p {
+        margin-bottom: 0;
+        color: #6c757d;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+
+    .btn-premium-action {
+        background: #1a2a6c;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(26, 42, 108, 0.3);
+    }
+
+    .btn-premium-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(26, 42, 108, 0.4);
+        background: #1e3a8a;
+    }
+
+    .etiquetas-workspace {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.2rem;
+        align-items: start;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .panel-card {
+        background: white;
+        border-radius: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .panel-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .panel-header h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2d3436;
+        margin: 0;
+    }
+
+    .panel-body {
+        padding: 1rem 1.25rem;
+        flex-grow: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .panel-footer {
+        padding: 1rem 1.25rem;
+        background: #fdfdfd;
+        border-top: 1px solid #eee;
+    }
+
+    /* Generator Area */
+    .barcode-preview-area {
+        background: #f1f3f5;
+        border-radius: 12px;
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        border: 2px dashed #dee2e6;
+        padding: 1rem;
+    }
+
+    .barcode-visual {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-align: center;
+        width: 100%;
+        max-width: 320px;
+        border: 1px solid #eee;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .barcode-lines {
+        display: none; /* Reemplazado por SVG */
+    }
+
+    #barcode-canvas {
+        margin-bottom: 0.5rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 100%;
+    }
+
+    .barcode-number {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 700;
+        font-size: 1.3rem;
+        letter-spacing: 4px;
+        color: #2d3436;
+        display: block;
+    }
+
+    .barcode-placeholder {
+        color: #adb5bd;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+
+    /* Search Box */
+    .search-box-premium {
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3.5rem;
+        border-radius: 15px;
+        border: 1px solid #eee;
+        background: #f8f9fa;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        background: white;
+        border-color: #1a2a6c;
+        box-shadow: 0 0 0 4px rgba(26, 42, 108, 0.1);
+        outline: none;
+    }
+
+    /* Product List */
+    .product-selection-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .product-item {
+        padding: 0.4rem 1rem;
+        background: #fff;
+        border-radius: 10px;
+        margin-bottom: 0.4rem;
+        border: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .product-item:hover {
+        background: #f1f3f5;
+        border-color: #dee2e6;
+    }
+
+    .product-item.selected {
+        background: #eef2ff;
+        border-color: #1a2a6c;
+        box-shadow: 0 4px 12px rgba(26, 42, 108, 0.1);
+    }
+
+    .product-name {
+        font-weight: 700;
+        color: #2d3436;
+        font-size: 0.9rem;
+    }
+
+    .product-meta {
+        font-size: 0.75rem;
+        color: #636e72;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #dee2e6;
+        border-radius: 10px;
+    }
+
+    .shadow-premium {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    /* Ajustes para la paginación premium dentro del panel */
+    .pagination-container {
+        padding: 1rem !important;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 0.8rem;
+    }
+
+    .pagination-carousel-container {
+        background: #f8f9fa !important;
+        padding: 4px !important;
+        box-shadow: none !important;
+        border: 1px solid #eee !important;
+    }
+
+    .pagination-premium .page-link {
+        width: 25px !important;
+        height: 25px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Print Panel Specific Styles */
+    .print-search-dropdown {
+        background: white;
+        max-height: 150px;
+        overflow-y: auto;
+        z-index: 100;
+    }
+
+    .print-search-item {
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .print-search-item:hover {
+        background: #f8f9fa;
+    }
+
+    .smaller {
+        font-size: 0.7rem;
+    }
+</style>
+
+@code {
+    private string generatedBarcode = "";
+    private string searchTerm = "";
+    private List<Producto> searchResults = new();
+    private List<Categoria> categorias = new();
+    private Producto? selectedProduct;
+    private bool isSearching = false;
+    private bool showNewProductModal = false;
+    private int currentPage = 1;
+    private int pageSize = 5;
+
+    // Estados de Impresión
+    private List<string> availablePrinters = new();
+    private string selectedPrinter = "pdf";
+    private string selectedTemplate = "mediana";
+    private int printQuantity = 1;
+    private string printSearchTerm = "";
+    private List<Producto> printSearchResults = new();
+    private Producto? printSelectedProduct;
+    private bool isPrinting = false;
+
+    private IEnumerable<Producto> PagedResults => searchResults
+        .OrderByDescending(p => p.IdProducto)
+        .Skip((currentPage - 1) * pageSize)
+        .Take(pageSize);
+
+    private int TotalPages => (int)Math.Ceiling((double)searchResults.Count / pageSize);
+
+    private bool CanAssociate => !string.IsNullOrEmpty(generatedBarcode) && selectedProduct != null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        categorias = await ProductService.GetCategoriasAsync();
+        // Cargar productos iniciales sin código de barras para facilitar el uso
+        var allProds = await ProductService.SearchProductsAsync("");
+        searchResults = allProds.Where(p => string.IsNullOrEmpty(p.CodigoBarras)).ToList();
+
+        // Cargar impresoras
+        try 
+        {
+            availablePrinters = await JS.InvokeAsync<List<string>>("qzListPrinters");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("QZ Tray no detectado: " + ex.Message);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!string.IsNullOrEmpty(generatedBarcode))
+        {
+            await JS.InvokeVoidAsync("generateBarcode", "barcode-canvas", generatedBarcode);
+        }
+
+        if (printSelectedProduct != null && !string.IsNullOrEmpty(printSelectedProduct.CodigoBarras))
+        {
+            await JS.InvokeVoidAsync("generateBarcode", "print-barcode-canvas", printSelectedProduct.CodigoBarras);
+        }
+    }
+
+    private async Task UpdateBarcode()
+    {
+        if (!string.IsNullOrEmpty(generatedBarcode))
+        {
+            await JS.InvokeVoidAsync("generateBarcode", "barcode-canvas", generatedBarcode);
+        }
+    }
+
+    private async Task UpdatePrintPreview()
+    {
+        StateHasChanged();
+        if (printSelectedProduct != null && !string.IsNullOrEmpty(printSelectedProduct.CodigoBarras))
+        {
+             await Task.Delay(50); // Pequeño delay para que el DOM se actualice
+             await JS.InvokeVoidAsync("generateBarcode", "print-barcode-canvas", printSelectedProduct.CodigoBarras);
+        }
+    }
+
+    private async Task GenerateCode()
+    {
+        var random = new Random();
+        bool isUnique = false;
+        string newCode = "";
+        
+        while (!isUnique)
+        {
+            newCode = DateTime.Now.ToString("yyMMdd") + random.Next(100000, 999999).ToString();
+            isUnique = await ProductService.IsBarcodeUniqueAsync(newCode);
+        }
+        
+        generatedBarcode = newCode;
+        await JS.InvokeVoidAsync("generateBarcode", "barcode-canvas", generatedBarcode);
+        Toast.ShowSuccess("Código generado", "Se ha creado un código único y verificado.");
+    }
+
+    private async Task HandleSearch()
+    {
+        if (searchTerm.Length < 2 && searchTerm.Length > 0) return;
+        
+        isSearching = true;
+        currentPage = 1;
+        StateHasChanged();
+        
+        try 
+        {
+            var results = await ProductService.SearchProductsAsync(searchTerm);
+            searchResults = results.Where(p => string.IsNullOrEmpty(p.CodigoBarras)).ToList();
+        }
+        finally 
+        {
+            isSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandlePrintSearch()
+    {
+        if (printSearchTerm.Length < 3)
+        {
+            printSearchResults.Clear();
+            return;
+        }
+
+        printSearchResults = await ProductService.SearchProductsAsync(printSearchTerm);
+    }
+
+    private async Task SelectPrintProduct(Producto prod)
+    {
+        printSelectedProduct = prod;
+        printSearchResults.Clear();
+        printSearchTerm = prod.Nombre;
+        await UpdatePrintPreview();
+    }
+
+    private void SetPage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+        {
+            currentPage = page;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectProduct(Producto prod)
+    {
+        selectedProduct = prod;
+    }
+
+    private async Task AssociateCode()
+    {
+        if (selectedProduct == null || string.IsNullOrEmpty(generatedBarcode)) return;
+
+        try 
+        {
+            bool isUnique = await ProductService.IsBarcodeUniqueAsync(generatedBarcode);
+            if (!isUnique)
+            {
+                Toast.ShowError("Código Duplicado", "El código ingresado ya está asignado a otro producto en el sistema.");
+                return;
+            }
+
+            var prodToUpdate = await ProductService.GetProductByIdAsync(selectedProduct.IdProducto);
+            if (prodToUpdate != null)
+            {
+                prodToUpdate.CodigoBarras = generatedBarcode;
+                await ProductService.UpdateProductAsync(prodToUpdate);
+                
+                Toast.ShowSuccess("Asociación Exitosa", $"{prodToUpdate.Nombre} ahora tiene el código {generatedBarcode}");
+                
+                // Limpiar estado
+                generatedBarcode = "";
+                selectedProduct = null;
+                searchTerm = "";
+                await HandleSearch();
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError("Error de asociación", ex.Message);
+        }
+    }
+
+    private async Task ExecutePrint()
+    {
+        if (printSelectedProduct == null) return;
+        
+        isPrinting = true;
+        StateHasChanged();
+
+        try 
+        {
+            if (selectedPrinter == "pdf")
+            {
+                // Descargar PDF con todas las etiquetas en un solo archivo
+                byte[] pdfBytes = LabelService.GenerateLabelPdf(printSelectedProduct, selectedTemplate, printQuantity);
+                await JS.InvokeVoidAsync("downloadFile", $"Etiquetas_{printSelectedProduct.Nombre.Replace(" ", "_")}.pdf", "application/pdf", pdfBytes);
+                Toast.ShowSuccess("Descarga Iniciada", "El PDF con las etiquetas se ha generado correctamente.");
+            }
+            else
+            {
+                // Imprimir vía QZ: generar 1 sola etiqueta y enviarla N veces como trabajos separados para que corte entre cada una
+                byte[] pdfBytes = LabelService.GenerateLabelPdf(printSelectedProduct, selectedTemplate, 1);
+                string base64Pdf = Convert.ToBase64String(pdfBytes);
+                await JS.InvokeVoidAsync("qzPrintLabelPdf", base64Pdf, selectedPrinter, selectedTemplate, printQuantity);
+                Toast.ShowSuccess("Impresión Enviada", $"Se han enviado {printQuantity} etiquetas a la impresora {selectedPrinter}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError("Error de Impresión", ex.Message);
+        }
+        finally
+        {
+            isPrinting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleNewProductSaved(Producto newProd)
+    {
+        await HandleSearch();
+        Toast.ShowInfo("Inventario Actualizado", "El nuevo producto ya está disponible.");
+    }
+}
+

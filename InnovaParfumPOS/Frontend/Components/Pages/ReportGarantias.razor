@@ -1,0 +1,66 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject IReportService ReportService
+
+@if (stats == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+}
+else
+{
+    <div class="kpi-grid">
+        <div class="innova-kpi-card">
+            <div class="kpi-card-header">
+                <span class="kpi-card-title">Garantías Activas</span>
+                <div class="kpi-card-icon" style="background: #dcfce7; color: #16a34a;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </div>
+            <div class="kpi-card-value">@stats.Activas</div>
+        </div>
+        <div class="innova-kpi-card">
+            <div class="kpi-card-header">
+                <span class="kpi-card-title">Por Vencer (7 días)</span>
+                <div class="kpi-card-icon" style="background: #fef9c3; color: #ca8a04;">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+            </div>
+            <div class="kpi-card-value">@stats.PorVencer</div>
+        </div>
+    </div>
+
+    <div class="report-card">
+        <div class="report-card-title">Historial Reciente de Garantías</div>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Factura</th>
+                    <th>Producto</th>
+                    <th>Vencimiento</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var g in stats.Recientes)
+                {
+                    <tr>
+                        <td>@g.Factura</td>
+                        <td>@g.Producto</td>
+                        <td>@g.Vencimiento.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <span class="badge @(g.Estado == "Activa" ? "bg-success" : "bg-secondary")">@g.Estado</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private GarantiaInsightDTO? stats;
+    protected override async Task OnInitializedAsync() => stats = await ReportService.GetGarantiaStatsAsync();
+}
+

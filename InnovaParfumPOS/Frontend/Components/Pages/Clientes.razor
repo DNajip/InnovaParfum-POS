@@ -1,0 +1,541 @@
+@page "/clientes"
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.DTOs
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IClienteService ClienteService
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>Clientes - InnovaTec</PageTitle>
+
+<div class="cli-container">
+    <!-- Header -->
+    <div class="cli-header">
+        <div class="inv-title-group">
+            <h2>Gestión de Clientes</h2>
+            <p>Directorio de clientes y seguimiento de garantías</p>
+        </div>
+        <div class="inv-actions">
+            <button class="btn btn-primary d-inline-flex align-items-center gap-2" @onclick="OpenAddModal">
+                <i class="fas fa-plus"></i> Nuevo Cliente
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="cli-kpi-grid">
+        <div class="inv-kpi-card kpi-blue">
+            <div class="kpi-icon"><i class="fas fa-users"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Total Clientes</span>
+                <span class="kpi-value">@stats.TotalClientes</span>
+            </div>
+        </div>
+        <div class="inv-kpi-card kpi-green">
+            <div class="kpi-icon"><i class="fas fa-shield-alt"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Garantías Activas</span>
+                <span class="kpi-value">@stats.ConGarantiasActivas</span>
+            </div>
+        </div>
+        <div class="inv-kpi-card kpi-yellow">
+            <div class="kpi-icon"><i class="fas fa-shopping-bag"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Compras Recientes</span>
+                <span class="kpi-value">@stats.ConComprasRecientes</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="cli-search-bar">
+        <div class="search-container flex-grow-1">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="pos-input" placeholder="Buscar por nombre, cédula o teléfono..." 
+                   @bind="SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="cli-table-card">
+        <table class="pos-table">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Identificación</th>
+                    <th>Contacto</th>
+                    <th class="text-center">Compras</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (clientes == null)
+                {
+                    <tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                }
+                else if (!clientes.Any())
+                {
+                    <tr><td colspan="5" class="text-center py-5 text-muted">No se encontraron clientes</td></tr>
+                }
+                else
+                {
+                    @foreach (var c in clientes.Skip((currentPage - 1) * pageSize).Take(pageSize))
+                    {
+                        <tr>
+                            <td>
+                                <div class="client-name-cell">
+                                    <span class="client-full-name">@c.NombreCompleto</span>
+                                    <span class="client-id">ID: #@c.IdPersona</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">@FormatIdentification(c.NumIdentificacion)</span>
+                                    <span class="small text-muted">@c.IdTipo?.DescTipo</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span><i class="fas fa-phone-alt me-2 small"></i>@(c.Telefono ?? "N/A")</span>
+                                    <span class="small text-muted">@(c.Email ?? "Sin correo")</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="cli-badge-count">@c.Venta.Count()</span>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn-action" title="Ver Detalles" @onclick="() => OpenDetailsModal(c)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action" title="Editar" @onclick="() => OpenEditModal(c)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <!-- Paginación Premium tipo Carrusel -->
+        @if (clientes != null && clientes.Count > pageSize)
+        {
+            var totalPages = (int)Math.Ceiling((double)clientes.Count / pageSize);
+            <div class="pagination-container d-flex align-items-center p-3 border-top">
+                <div class="flex-grow-1">
+                    <span class="small text-muted">Mostrando @(Math.Min(clientes.Count, (currentPage - 1) * pageSize + 1)) a @(Math.Min(clientes.Count, currentPage * pageSize)) de @clientes.Count clientes</span>
+                </div>
+                <div class="pagination-carousel-container">
+                    <ul class="pagination pagination-premium mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage - 1)" title="Anterior">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </li>
+                        
+                        @{
+                            // Lógica de ventana deslizante (Carrusel de 6 números)
+                            int maxVisible = 6;
+                            int startPage = Math.Max(1, Math.Min(currentPage - 2, totalPages - maxVisible + 1));
+                            int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
+                            
+                            // Re-ajustar si estamos cerca del final
+                            if (totalPages > maxVisible && endPage == totalPages) startPage = Math.Max(1, totalPages - maxVisible + 1);
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                var pageNum = i;
+                                <li class="page-item @(currentPage == pageNum ? "active" : "") page-item-animated" @key="pageNum">
+                                    <button class="page-link" @onclick="() => SetPage(pageNum)">@pageNum</button>
+                                </li>
+                            }
+
+                            // Mostrar Elipsis y Última Página si es necesario
+                            if (endPage < totalPages)
+                            {
+                                if (endPage < totalPages - 1)
+                                {
+                                    <li class="pagination-ellipsis">...</li>
+                                }
+                                <li class="page-item @(currentPage == totalPages ? "active" : "") page-item-animated">
+                                    <button class="page-link" @onclick="() => SetPage(totalPages)">@totalPages</button>
+                                </li>
+                            }
+                        }
+
+                        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPage(currentPage + 1)" title="Siguiente">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="flex-grow-1 text-end"></div> <!-- Espaciador para centrar el carrusel -->
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal: Agregar/Editar Cliente -->
+@if (showAddEditModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon kpi-blue" style="width: 40px; height: 40px; font-size: 1rem;">
+                            <i class="fas @(editingClientId == 0 ? "fa-user-plus" : "fa-user-edit")"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold m-0">@(editingClientId == 0 ? "Nuevo Cliente" : "Editar Cliente")</h5>
+                            <p class="text-muted small m-0">Complete los datos personales</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" @onclick="CloseModals"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Primer Nombre</label>
+                            <input type="text" class="form-control" @bind="tempPersona.PrimerNombre" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Segundo Nombre</label>
+                            <input type="text" class="form-control" @bind="tempPersona.SegundoNombre" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Primer Apellido</label>
+                            <input type="text" class="form-control" @bind="tempPersona.PrimerApellido" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Segundo Apellido</label>
+                            <input type="text" class="form-control" @bind="tempPersona.SegundoApellido" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Tipo Identificación</label>
+                            <select class="form-select" @bind="tempPersona.IdTipoId">
+                                <option value="0">Seleccionar...</option>
+                                @foreach (var t in tiposID)
+                                {
+                                    <option value="@t.IdTipo">@t.DescTipo</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">N° Identificación</label>
+                            <input type="text" class="form-control" @bind="tempPersona.NumIdentificacion" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Teléfono</label>
+                            <input type="text" class="form-control" @bind="tempPersona.Telefono" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" class="form-control" @bind="tempPersona.Email" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Dirección</label>
+                            <textarea class="form-control" rows="2" @bind="tempPersona.Direccion"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" @onclick="CloseModals">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" @onclick="SaveClient">
+                        <i class="fas fa-save me-2"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal: Detalles del Cliente -->
+@if (showDetailsModal && currentClient != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon kpi-blue" style="width: 40px; height: 40px; font-size: 1rem;">
+                            <i class="fas fa-address-card"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold m-0">@currentClient.NombreCompleto</h5>
+                            <p class="text-muted small m-0">@FormatIdentification(currentClient.NumIdentificacion) | @(currentClient.Telefono ?? "Sin Teléfono")</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" @onclick="CloseModals"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <!-- Tabs -->
+                    <ul class="nav cli-nav-tabs mb-4">
+                        <li class="nav-item">
+                            <button class="nav-link @(activeTab == "compras" ? "active" : "")" @onclick='() => activeTab = "compras"'>
+                                <i class="fas fa-shopping-cart me-2"></i>Historial de Compras
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link @(activeTab == "garantias" ? "active" : "")" @onclick='() => activeTab = "garantias"'>
+                                <i class="fas fa-shield-alt me-2"></i>Garantías Activas
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" style="max-height: 450px; overflow-y: auto;">
+                        @if (activeTab == "compras")
+                        {
+                            @if (clientSales == null)
+                            {
+                                <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+                            }
+                            else if (!clientSales.Any())
+                            {
+                                <div class="text-center py-5 text-muted">No hay registros de compras</div>
+                            }
+                            else
+                            {
+                                @foreach (var sale in clientSales)
+                                {
+                                    <div class="purchase-history-card p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold text-primary">@sale.NumeroFactura</span>
+                                            <span class="small text-muted">@sale.FechaVenta.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-8">
+                                                @foreach (var detail in sale.VentaDetalles)
+                                                {
+                                                    <div class="small fw-600">• @detail.IdProductoNavigation?.Nombre x @detail.Cantidad</div>
+                                                }
+                                            </div>
+                                            <div class="col-4 text-end">
+                                                <div class="text-muted small">Total Pagado</div>
+                                                <div class="fw-bold">@AppState.CurrencySymbol @sale.TotalNio.ToString("N2")</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            @if (clientWarranties == null)
+                            {
+                                <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+                            }
+                            else if (!clientWarranties.Any())
+                            {
+                                <div class="text-center py-5 text-muted">No hay garantías registradas</div>
+                            }
+                            else
+                            {
+                                @foreach (var g in clientWarranties)
+                                {
+                                    var percent = GetWarrantyProgress(g);
+                                    var statusClass = GetWarrantyStatusClass(g);
+                                    <div class="purchase-history-card p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="fw-bold">@g.IdProductoNavigation?.Nombre</span>
+                                            <span class="badge @(g.EstadoGarantia == "ACTIVA" ? "bg-success" : "bg-secondary")">@g.EstadoGarantia</span>
+                                        </div>
+                                        <div class="small text-muted mb-2">@g.IdProductoNavigation?.Marca - @g.IdProductoNavigation?.Concentracion</div>
+                                        
+                                        <div class="warranty-timeline">
+                                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                                <span>Inicio: @g.FechaInicio.ToString("dd/MM/yy")</span>
+                                                <span>Fin: @g.FechaVencimiento.ToString("dd/MM/yy")</span>
+                                            </div>
+                                            <div class="warranty-bar-outer">
+                                                <div class="warranty-bar-inner @statusClass" style="width: @(percent)%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Persona>? clientes;
+    private List<TipoIdentificacion> tiposID = new();
+    private ClienteStatsDto stats = new();
+    private Persona? currentClient;
+    private Persona tempPersona = new();
+    private List<Venta>? clientSales;
+    private List<Garantia>? clientWarranties;
+
+    private string SearchTerm = "";
+    private string activeTab = "compras";
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int editingClientId = 0;
+
+    private bool showAddEditModal = false;
+    private bool showDetailsModal = false;
+    private System.Timers.Timer? debounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        debounceTimer = new System.Timers.Timer(500);
+        debounceTimer.Elapsed += async (s, e) => await HandleSearch();
+        debounceTimer.AutoReset = false;
+
+        tiposID = await ClienteService.GetTiposIdentificacionAsync();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        stats = await ClienteService.GetClienteStatsAsync();
+        clientes = await ClienteService.GetAllClientesAsync(SearchTerm);
+        StateHasChanged();
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            debounceTimer?.Stop();
+            _ = HandleSearch();
+        }
+        else
+        {
+            debounceTimer?.Stop();
+            debounceTimer?.Start();
+        }
+    }
+
+    private async Task HandleSearch()
+    {
+        currentPage = 1;
+        clientes = await ClienteService.GetAllClientesAsync(SearchTerm);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SetPage(int page) => currentPage = page;
+
+    private void OpenAddModal()
+    {
+        editingClientId = 0;
+        tempPersona = new Persona { IdTipoId = tiposID.FirstOrDefault()?.IdTipo ?? 0 };
+        showAddEditModal = true;
+    }
+
+    private void OpenEditModal(Persona p)
+    {
+        editingClientId = p.IdPersona;
+        tempPersona = new Persona
+        {
+            IdPersona = p.IdPersona,
+            PrimerNombre = p.PrimerNombre,
+            SegundoNombre = p.SegundoNombre,
+            PrimerApellido = p.PrimerApellido,
+            SegundoApellido = p.SegundoApellido,
+            IdTipoId = p.IdTipoId,
+            NumIdentificacion = p.NumIdentificacion,
+            Telefono = p.Telefono,
+            Email = p.Email,
+            Direccion = p.Direccion
+        };
+        showAddEditModal = true;
+    }
+
+    private async Task OpenDetailsModal(Persona p)
+    {
+        currentClient = p;
+        activeTab = "compras";
+        clientSales = null;
+        clientWarranties = null;
+        showDetailsModal = true;
+        
+        clientSales = await ClienteService.GetComprasClienteAsync(p.IdPersona);
+        clientWarranties = await ClienteService.GetGarantiasClienteAsync(p.IdPersona);
+        StateHasChanged();
+    }
+
+    private void CloseModals()
+    {
+        showAddEditModal = false;
+        showDetailsModal = false;
+    }
+
+    private async Task SaveClient()
+    {
+        if (string.IsNullOrWhiteSpace(tempPersona.PrimerNombre) || string.IsNullOrWhiteSpace(tempPersona.PrimerApellido) || 
+            string.IsNullOrWhiteSpace(tempPersona.NumIdentificacion) || tempPersona.IdTipoId == 0)
+        {
+            ToastService.ShowWarning("Por favor complete los campos obligatorios");
+            return;
+        }
+
+        try
+        {
+            if (editingClientId == 0)
+                await ClienteService.CreateClienteAsync(tempPersona);
+            else
+                await ClienteService.UpdateClienteAsync(tempPersona);
+
+            ToastService.ShowSuccess(editingClientId == 0 ? "Cliente registrado con éxito" : "Datos actualizados correctamente");
+            showAddEditModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al guardar cliente: " + ex.Message);
+        }
+    }
+
+    private double GetWarrantyProgress(Garantia g)
+    {
+        var total = (g.FechaVencimiento.ToDateTime(TimeOnly.MinValue) - g.FechaInicio.ToDateTime(TimeOnly.MinValue)).TotalDays;
+        var elapsed = (DateTime.Now - g.FechaInicio.ToDateTime(TimeOnly.MinValue)).TotalDays;
+        
+        if (elapsed < 0) return 0;
+        if (elapsed >= total) return 100;
+        return (elapsed / total) * 100;
+    }
+
+    private string GetWarrantyStatusClass(Garantia g)
+    {
+        if (g.EstadoGarantia != "ACTIVA") return "status-expired";
+        
+        var total = (g.FechaVencimiento.ToDateTime(TimeOnly.MinValue) - g.FechaInicio.ToDateTime(TimeOnly.MinValue)).TotalDays;
+        var elapsed = (DateTime.Now - g.FechaInicio.ToDateTime(TimeOnly.MinValue)).TotalDays;
+        var remaining = total - elapsed;
+
+        if (remaining <= 0) return "status-expired";
+        if (remaining <= 30) return "status-warning";
+        return "status-active";
+    }
+
+    private string FormatIdentification(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return "";
+        id = id.Replace("-", "").Replace(" ", "").ToUpper();
+        
+        // Formato para Cédula Nicaragüense (14 caracteres)
+        if (id.Length == 14)
+        {
+            return $"{id.Substring(0, 3)}-{id.Substring(3, 6)}-{id.Substring(9)}";
+        }
+        
+        return id;
+    }
+
+    public void Dispose()
+    {
+        debounceTimer?.Stop();
+        debounceTimer?.Dispose();
+    }
+}
+

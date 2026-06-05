@@ -1,0 +1,204 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IReportService ReportService
+
+@if (stats == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Calculando inteligencia de negocio...</p>
+    </div>
+}
+else
+{
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+        <InnovaKpiCard Title="Ventas Brutas" Value="stats?.VentasBrutas ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-dollar-sign" IconBg="#dcfce7" IconColor="#16a34a" Trend="stats?.PorcentajeVentas ?? 0" Loading="loading" />
+        <InnovaKpiCard Title="Utilidad Neta" Value="stats?.UtilidadNeta ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-chart-line" IconBg="#fef9c3" IconColor="#ca8a04" Trend="stats?.PorcentajeUtilidad ?? 0" Loading="loading" />
+        <InnovaKpiCard Title="Facturas" Value="stats?.TotalFacturas ?? 0" Format="N0" IconClass="fas fa-file-invoice" IconBg="#ffedd5" IconColor="#ea580c" Trend="stats?.PorcentajeFacturas ?? 0" Loading="loading" />
+        <InnovaKpiCard Title="Ticket Promedio" Value="stats?.TicketPromedio ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-receipt" IconBg="#f3e8ff" IconColor="#9333ea" Trend="stats?.PorcentajeTicket ?? 0" Loading="loading" />
+    </div>
+
+    <div class="report-row">
+        <!-- Tendencia de Ventas -->
+        <div class="report-card">
+            <div class="report-card-title">
+                <span>Tendencia de Ventas</span>
+                <select class="form-select form-select-sm" style="width: auto;">
+                    <option>Diario</option>
+                </select>
+            </div>
+            <div class="chart-container" style="height: 300px; position: relative;">
+                @if (trends != null && trends.Any())
+                {
+                    <svg viewBox="0 0 1000 300" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+                        <defs>
+                            <linearGradient id="gradSales" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.2" />
+                                <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                        
+                        @{
+                            var max = trends.Max(t => t.ValorNio);
+                            if (max == 0) max = 1;
+                            
+                            int count = trends.Count;
+                            var points = count > 1 
+                                ? string.Join(" ", trends.Select((t, i) => $"{i * (1000 / (count - 1))},{300 - (t.ValorNio / max * 250 + 20)}"))
+                                : $"500,{300 - (trends[0].ValorNio / max * 250 + 20)}";
+                                
+                            var areaPoints = count > 1 
+                                ? points + $" {1000},300 0,300"
+                                : $"500,{300 - (trends[0].ValorNio / max * 250 + 20)} 500,300";
+                        }
+                        
+                        @if (count > 1)
+                        {
+                            <polyline points="@points" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" />
+                            <polygon points="@areaPoints" fill="url(#gradSales)" />
+                        }
+                        
+                        @foreach (var (t, i) in trends.Select((v, i) => (v, i)))
+                        {
+                            var x = count > 1 ? i * (1000 / (count - 1)) : 500;
+                            var y = 300 - (t.ValorNio / max * 250 + 20);
+                            <circle cx="@x" cy="@y" r="6" fill="white" stroke="#3b82f6" stroke-width="2" class="chart-point">
+                                <title>@t.Label: @AppState.CurrencySymbol @t.ValorNio.ToString("N2")</title>
+                            </circle>
+                            @((MarkupString)$"<text x='{x}' y='295' font-size='12' fill='#64748b' text-anchor='middle'>{t.Label}</text>")
+                        }
+                    </svg>
+                }
+            </div>
+        </div>
+
+        <!-- Ventas por Moneda -->
+        <div class="report-card">
+            <div class="report-card-title">Ventas por Moneda</div>
+            <div class="donut-chart-container d-flex flex-column align-items-center">
+                @{
+                    var nioTotal = trends?.Sum(t => t.ValorNio) ?? 0;
+                    var usdTotal = trends?.Sum(t => t.ValorUsd) ?? 0;
+                    var totalGlobal = nioTotal + (usdTotal * 36.5m);
+                    var nioPct = totalGlobal > 0 ? (double)(nioTotal / totalGlobal * 100) : 100;
+                    var usdPct = 100 - nioPct;
+                    var dashArray = $"{nioPct} {usdPct}";
+                }
+                <svg width="180" height="180" viewBox="0 0 42 42">
+                    <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#e2e8f0" stroke-width="5"></circle>
+                    <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#3b82f6" stroke-width="5" stroke-dasharray="@dashArray" stroke-dashoffset="25"></circle>
+                </svg>
+                <div class="mt-4 w-100">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small"><i class="fas fa-circle text-primary me-2"></i> Córdobas (@AppState.CurrencySymbol)</span>
+                        <span class="fw-bold">@nioPct.ToString("N0")%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="small"><i class="fas fa-circle text-muted me-2"></i> Dólares (US$)</span>
+                        <span class="fw-bold">@usdPct.ToString("N0")%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-row">
+        <!-- Top Productos -->
+        <div class="report-card">
+            <div class="report-card-title">Top 5 Productos Más Vendidos</div>
+            <table class="table table-hover mt-3">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Unidades</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in topProductos)
+                    {
+                        <tr>
+                            <td>@p.Nombre</td>
+                            <td class="text-center">@p.Unidades</td>
+                            <td class="text-end fw-bold">@AppState.CurrencySymbol @p.TotalVentas.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Heatmap -->
+        <div class="report-card">
+            <div class="report-card-title">Ventas por Hora (@GetRangeLabel())</div>
+            <div class="heatmap-container mt-3">
+                @for (int h = 7; h <= 21; h++)
+                {
+                    <div class="text-muted" style="font-size: 10px; text-align: center;">@h</div>
+                    @for (int d = 0; d < 7; d++)
+                    {
+                        var stats = hourlySales?.FirstOrDefault(s => s.DayOfWeek == d && s.Hour == h);
+                        var intensity = stats?.Intensity ?? 0;
+                        var total = stats?.Total ?? 0;
+                        <div class="heatmap-cell intensity-@intensity" 
+                             title="@GetDayName(d) - @h:00: @AppState.CurrencySymbol @total.ToString("N2")"></div>
+                    }
+                }
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-3 text-muted small">
+                <span>Bajo</span>
+                <div class="heatmap-legend-bar"></div>
+                <span>Alto</span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public DateTime StartDate { get; set; }
+    [Parameter] public DateTime EndDate { get; set; }
+
+    private DashboardStatsDTO? stats;
+    private List<TrendPointDTO>? trends;
+    private List<TopProductoDTO> topProductos = new();
+    private List<HourlySalesDTO>? hourlySales;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        StateHasChanged();
+        
+        stats = await ReportService.GetDashboardStatsAsync(StartDate, EndDate);
+        trends = await ReportService.GetSalesTrendsAsync(StartDate, EndDate);
+        topProductos = await ReportService.GetTopProductosAsync(StartDate, EndDate);
+        hourlySales = await ReportService.GetHourlySalesAsync(StartDate, EndDate);
+        
+        loading = false;
+        StateHasChanged();
+    }
+
+    private string GetDayName(int day) => day switch
+    {
+        0 => "Dom", 1 => "Lun", 2 => "Mar", 3 => "Mié",
+        4 => "Jue", 5 => "Vie", 6 => "Sáb", _ => ""
+    };
+
+    private string GetRangeLabel()
+    {
+        if (StartDate.Date == DateTime.Today && EndDate.Date == DateTime.Today)
+            return "Hoy";
+        if (StartDate.Date == DateTime.Today.AddDays(-7))
+            return "Últimos 7 Días";
+        if (StartDate.Day == 1 && StartDate.Month == DateTime.Today.Month)
+            return "Mes Actual";
+        return $"{StartDate:dd/MM} - {EndDate:dd/MM}";
+    }
+}
+

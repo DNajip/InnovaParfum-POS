@@ -1,0 +1,222 @@
+@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.DTOs
+@using System.ComponentModel.DataAnnotations
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">
+                        @(Model.IdUsuario.HasValue ? "Editar Usuario" : "Nuevo Usuario")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@Model" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="row g-3">
+                            <h6 class="text-primary mt-3 border-bottom pb-2">Datos Personales</h6>
+                            <div class="col-md-6">
+                                <label class="form-label small">Primer Nombre *</label>
+                                <InputText @bind-Value="Model.PrimerNombre" class="form-control" placeholder="Ej. Juan" />
+                                <ValidationMessage For="@(() => Model.PrimerNombre)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Segundo Nombre</label>
+                                <InputText @bind-Value="Model.SegundoNombre" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Primer Apellido *</label>
+                                <InputText @bind-Value="Model.PrimerApellido" class="form-control" placeholder="Ej. Pérez" />
+                                <ValidationMessage For="@(() => Model.PrimerApellido)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Segundo Apellido</label>
+                                <InputText @bind-Value="Model.SegundoApellido" class="form-control" />
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label small">Tipo de Identificación *</label>
+                                <InputSelect @bind-Value="Model.IdTipoId" class="form-select">
+                                    <option value="0">Seleccione un tipo...</option>
+                                    @foreach (var t in TiposIdentificacion)
+                                    {
+                                        <option value="@t.IdTipo">@t.DescTipo</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => Model.IdTipoId)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Número Identificación *</label>
+                                <InputText Value="@Model.NumIdentificacion" 
+                                           ValueChanged="(string v) => OnIdentificacionChanged(v)" 
+                                           ValueExpression="() => Model.NumIdentificacion"
+                                           class="form-control" placeholder="Ej. 001-010101-1001A" />
+                                <ValidationMessage For="@(() => Model.NumIdentificacion)" />
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label small">Género</label>
+                                <InputSelect @bind-Value="Model.IdGenero" class="form-select">
+                                    <option value="">Seleccione...</option>
+                                    @foreach (var g in Generos)
+                                    {
+                                        <option value="@g.IdGenero">@g.DescGenero</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Teléfono</label>
+                                <InputText @bind-Value="Model.Telefono" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Correo Electrónico</label>
+                                <InputText @bind-Value="Model.Email" type="email" class="form-control" />
+                                <ValidationMessage For="@(() => Model.Email)" />
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label small">Dirección</label>
+                                <InputText @bind-Value="Model.Direccion" class="form-control" />
+                            </div>
+
+                            <h6 class="text-primary mt-4 border-bottom pb-2">Datos de Usuario y Acceso</h6>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label small">Nombre de Usuario (Username) *</label>
+                                <InputText Value="@Model.Username" 
+                                           ValueChanged="(string v) => OnUsernameChanged(v)"
+                                           ValueExpression="() => Model.Username"
+                                           class="form-control" autocomplete="off" />
+                                <ValidationMessage For="@(() => Model.Username)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Rol del Sistema *</label>
+                                <InputSelect @bind-Value="Model.IdRol" class="form-select">
+                                    <option value="0">Seleccione un rol...</option>
+                                    @foreach (var r in Roles)
+                                    {
+                                        <option value="@r.IdRol">@r.Nombre</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => Model.IdRol)" />
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label small">Contraseña @(Model.IdUsuario.HasValue ? "(Opcional - solo para cambiarla)" : "*")</label>
+                                <InputText @bind-Value="Model.Password" type="password" class="form-control" autocomplete="new-password" />
+                                @if(!Model.IdUsuario.HasValue && string.IsNullOrWhiteSpace(Model.Password))
+                                {
+                                    <span class="text-danger small">La contraseña es requerida para nuevos usuarios.</span>
+                                }
+                            </div>
+                            
+                            <h6 class="text-primary mt-4 border-bottom pb-2">Permisos de Módulos</h6>
+                            @foreach (var mod in Modulos)
+                            {
+                                <div class="col-md-4 mt-2">
+                                    <div class="form-check form-switch p-2 bg-light rounded-3 border h-100 d-flex align-items-center">
+                                        <input class="form-check-input ms-0 me-2 mt-0" type="checkbox" id="mod_@mod.IdModulo"
+                                               checked="@Model.SelectedModuloIds.Contains(mod.IdModulo)"
+                                               @onchange="@(e => ToggleModulo(mod.IdModulo, e.Value))" />
+                                        <label class="form-check-label fw-bold mb-0" for="mod_@mod.IdModulo">
+                                            <i class="@mod.Icono text-primary me-1"></i> @mod.Nombre
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="modal-footer border-0 mt-4">
+                            <button type="button" class="btn btn-light" @onclick="CloseModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary px-4" disabled="@IsSaving">
+                                @if (IsSaving)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span> Guardando...</span>
+                                }
+                                else
+                                {
+                                    <span>Guardar Usuario</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    
+    [Parameter] public UserDto Model { get; set; } = new();
+    [Parameter] public EventCallback<UserDto> OnSave { get; set; }
+    
+    [Parameter] public List<Role> Roles { get; set; } = new();
+    [Parameter] public List<TipoIdentificacion> TiposIdentificacion { get; set; } = new();
+    [Parameter] public List<Genero> Generos { get; set; } = new();
+    [Parameter] public List<Modulo> Modulos { get; set; } = new();
+    
+    [Parameter] public bool IsSaving { get; set; }
+
+    private void ToggleModulo(int idModulo, object? checkedValue)
+    {
+        if (checkedValue is bool isChecked)
+        {
+            if (isChecked && !Model.SelectedModuloIds.Contains(idModulo))
+            {
+                Model.SelectedModuloIds.Add(idModulo);
+            }
+            else if (!isChecked && Model.SelectedModuloIds.Contains(idModulo))
+            {
+                Model.SelectedModuloIds.Remove(idModulo);
+            }
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+
+    private void OnIdentificacionChanged(string value)
+    {
+        // Limpiar el valor (quitar guiones y espacios)
+        var cleanValue = value?.Replace("-", "").Replace(" ", "").ToUpper() ?? "";
+        Model.NumIdentificacion = cleanValue;
+        
+        // Si es un nuevo usuario o el username es igual a la identificación, mantenerlos sincronizados
+        if (!Model.IdUsuario.HasValue || string.IsNullOrEmpty(Model.Username) || Model.Username == cleanValue)
+        {
+            Model.Username = cleanValue;
+        }
+    }
+
+    private void OnUsernameChanged(string value)
+    {
+        Model.Username = value?.Replace("-", "").Replace(" ", "").ToUpper() ?? "";
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Validaciones manuales
+        if (!Model.IdUsuario.HasValue && string.IsNullOrWhiteSpace(Model.Password))
+        {
+            return; // Bloquea si es nuevo y no tiene password
+        }
+        if (Model.IdTipoId <= 0 || Model.IdRol <= 0)
+        {
+            return; // Comboboxes vacíos
+        }
+
+        await OnSave.InvokeAsync(Model);
+    }
+}
+

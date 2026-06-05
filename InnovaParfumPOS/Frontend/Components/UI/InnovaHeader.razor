@@ -1,0 +1,70 @@
+@inject InnovaParfumPOS.Backend.Services.UserSession UserSession
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject NavigationManager Navigation
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+
+<header class="pos-header">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-4">
+                <div class="brand-container d-flex align-items-center gap-2">
+                    <img src="@AppState.BusinessLogo" alt="@AppState.BusinessName" class="brand-logo" />
+                    <span class="brand-name">@AppState.BusinessName</span>
+                </div>
+                
+                <div class="user-active-header border-start ps-4 d-none d-md-block">
+                    <div class="status-label">Usuario activo</div>
+                    <div class="fw-bold text-primary">
+                        <i class="fas fa-user-circle me-1"></i>
+                        @UserSession.NombreCompleto
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-4">
+                <div class="time-block d-none d-md-block text-end">
+                    <div class="status-label">Fecha y hora</div>
+                    <div class="fw-semibold text-dark">
+                        <i class="far fa-calendar me-1"></i>
+                        <span id="digital-clock">Cargando...</span>
+                    </div>
+                </div>
+
+                <div class="logout-block border-start ps-4">
+                    <button class="btn btn-outline-danger rounded-pill border-0 px-3 d-flex align-items-center gap-2" @onclick="HandleLogout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="fw-bold d-none d-lg-inline">Salir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("startClock");
+        }
+    }
+
+    private void HandleLogout()
+    {
+        UserSession.Clear();
+        Navigation.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}
+

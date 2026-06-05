@@ -1,0 +1,58 @@
+@inject NavigationManager Navigation
+@using InnovaParfumPOS.Backend.Services
+@implements IDisposable
+@inject UserSession Session
+
+<nav class="sidebar-tabs">
+    @if (Session.HasModuleAccess("Ventas") || Session.HasModuleAccess("Caja"))
+    {
+        <a href="/ventas" class="tab-vertical @(IsActive("/ventas") ? "active" : "")">TRANSACCIÓN</a>
+    }
+
+    @if (Session.HasModuleAccess("Etiquetas"))
+    {
+        <a href="/etiquetas" class="tab-vertical @(IsActive("/etiquetas") ? "active" : "")">ETIQUETAS</a>
+    }
+    
+    @if (Session.HasModuleAccess("Reportes"))
+    {
+        <a href="/reportes" class="tab-vertical @(IsActive("/reportes") ? "active" : "")">REPORTE</a>
+    }
+    
+    @if (Session.HasModuleAccess("Configuracion"))
+    {
+        <a href="/configuracion" class="tab-vertical @(IsActive("/configuracion") ? "active" : "")">CONFIGURACIÓN</a>
+    }
+</nav>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Session.OnChange += StateHasChanged;
+        Navigation.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        Session.OnChange -= StateHasChanged;
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+
+    private bool IsActive(string href)
+    {
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        
+        // Limpiar parámetros de consulta o fragmentos para la comparación
+        int queryIndex = relativePath.IndexOfAny(new[] { '?', '#' });
+        if (queryIndex >= 0) relativePath = relativePath.Substring(0, queryIndex);
+
+        if (href == "/ventas") return relativePath == "ventas" || string.IsNullOrEmpty(relativePath);
+        return $"/{relativePath}" == href;
+    }
+}
+

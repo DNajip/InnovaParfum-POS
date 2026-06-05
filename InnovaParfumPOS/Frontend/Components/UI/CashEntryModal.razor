@@ -1,0 +1,100 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IShiftService ShiftService
+@inject ToastService ToastService
+@inject UserSession UserSession
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); z-index: 2100;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon kpi-blue" style="width: 48px; height: 48px; background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold m-0">Ingresar Cambio</h4>
+                        <p class="text-muted small m-0">Inyección de efectivo para sencillo.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Moneda</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn @(selectedMonedaId == 1 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 1">Córdobas (@AppState.CurrencySymbol)</button>
+                        <button class="btn @(selectedMonedaId == 2 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 2">Dólares ($)</button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Monto a Ingresar</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text border-0 bg-light">@(selectedMonedaId == 1 ? "@AppState.CurrencySymbol" : "$")</span>
+                        <input type="number" class="form-control border-0 bg-light fw-bold" @bind="monto" @bind:event="oninput" min="0.01" step="0.01" placeholder="0.00" style="border-radius: 0 12px 12px 0;" />
+                    </div>
+                </div>
+
+                <div class="mb-0">
+                    <label class="form-label small fw-bold text-muted">Concepto / Referencia</label>
+                    <input type="text" class="form-control border-0 bg-light" @bind="concepto" placeholder="Ej: Cambio para el día, Refuerzo de caja..." style="border-radius: 12px;" />
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" @onclick="OnClose">Cancelar</button>
+                <button type="button" class="btn btn-primary rounded-pill px-5 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm" 
+                        disabled="@(isProcessing || monto <= 0 || string.IsNullOrWhiteSpace(concepto))" @onclick="HandleSave">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    else
+                    {
+                        <i class="fas fa-save"></i>
+                    }
+                    REGISTRAR INGRESO
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSuccess { get; set; }
+
+    private int selectedMonedaId = 1;
+    private decimal monto;
+    private string concepto = "Ingreso de sencillo";
+    private bool isProcessing = false;
+
+    private async Task HandleSave()
+    {
+        if (isProcessing || UserSession.ActiveShift == null) return;
+
+        try 
+        {
+            isProcessing = true;
+            await ShiftService.AddCashEntryAsync(UserSession.ActiveShift.IdTurno, UserSession.UserId ?? 0, selectedMonedaId, monto, concepto);
+            ToastService.ShowSuccess("Ingreso de efectivo registrado correctamente.");
+            await OnSuccess.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al registrar ingreso: " + ex.Message);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+}
+

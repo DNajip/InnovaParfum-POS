@@ -1,0 +1,276 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IShiftService ShiftService
+@inject ToastService ToastService
+@inject UserSession UserSession
+@inject IJSRuntime JSRuntime
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); z-index: 2000;">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-2xl" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon kpi-blue" style="width: 48px; height: 48px;">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold m-0">Apertura de Caja</h4>
+                        <p class="text-muted small m-0">Ingrese el fondo inicial detallando el conteo de billetes y monedas.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                @if (isLoading)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando denominaciones...</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        <!-- Cordobas Column -->
+                        <div class="col-md-6 border-end">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="badge bg-success-subtle text-success p-2 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <h5 class="fw-bold m-0 text-success">Córdobas (@AppState.CurrencySymbol)</h5>
+                            </div>
+                            
+                            <div class="denominations-list pe-2" style="max-height: 400px; overflow-y: auto;">
+                                @foreach (var item in nioDenominations)
+                                {
+                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded hover-bg-light">
+                                        <div class="d-flex align-items-center gap-2" style="flex: 1;">
+                                            <div class="icon-circle @(item.Denominacion.Tipo == "BILL" ? "bg-primary-subtle text-primary" : "bg-warning-subtle text-warning")" 
+                                                 style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                                <i class="@(item.Denominacion.Tipo == "BILL" ? "fas fa-money-bill" : "fas fa-coins")"></i>
+                                            </div>
+                                            <span class="fw-semibold">@item.Denominacion.Valor.ToString("N0")</span>
+                                            <span class="text-muted small">@item.Denominacion.Tipo</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" style="width: 180px;">
+                                            <input type="number" class="form-control form-control-sm text-center fw-bold" 
+                                                   min="0" @bind="item.Quantity" @bind:event="oninput" @onkeyup="UpdateTotals" 
+                                                   onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"
+                                                   style="border-radius: 8px; flex: 1;" />
+                                            <div class="text-end small fw-bold" style="min-width: 90px;">
+                                                @AppState.CurrencySymbol @item.Subtotal.ToString("N0")
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mt-4 p-3 bg-success-subtle rounded-3 text-success">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold">TOTAL APERTURA @AppState.CurrencySymbol:</span>
+                                    <span class="h4 fw-bold m-0">@AppState.CurrencySymbol @totalNio.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dollars Column -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="badge bg-primary-subtle text-primary p-2 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <h5 class="fw-bold m-0 text-primary">Dólares (USD)</h5>
+                            </div>
+
+                            <div class="denominations-list pe-2" style="max-height: 400px; overflow-y: auto;">
+                                @foreach (var item in usdDenominations)
+                                {
+                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded hover-bg-light">
+                                        <div class="d-flex align-items-center gap-2" style="flex: 1;">
+                                            <div class="icon-circle @(item.Denominacion.Tipo == "BILL" ? "bg-primary-subtle text-primary" : "bg-warning-subtle text-warning")" 
+                                                 style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                                <i class="@(item.Denominacion.Tipo == "BILL" ? "fas fa-money-bill" : "fas fa-coins")"></i>
+                                            </div>
+                                            <span class="fw-semibold">@item.Denominacion.Valor.ToString("N0")</span>
+                                            <span class="text-muted small">@item.Denominacion.Tipo</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" style="width: 180px;">
+                                            <input type="number" class="form-control form-control-sm text-center fw-bold" 
+                                                   min="0" @bind="item.Quantity" @bind:event="oninput" @onkeyup="UpdateTotals"
+                                                   onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"
+                                                   style="border-radius: 8px; flex: 1;" />
+                                            <div class="text-end small fw-bold" style="min-width: 90px;">
+                                                $ @item.Subtotal.ToString("N2")
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mt-4 p-3 bg-primary-subtle rounded-3 text-primary">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold">TOTAL APERTURA $:</span>
+                                    <span class="h4 fw-bold m-0">$ @totalUsd.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" @onclick="OnClose">Cancelar</button>
+                <button type="button" class="btn btn-primary rounded-pill px-5 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm" 
+                        disabled="@(isProcessing || isLoading || (totalNio == 0 && totalUsd == 0))" @onclick="ConfirmOpen">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    else
+                    {
+                        <i class="fas fa-check-circle"></i>
+                    }
+                    APERTURAR CAJA
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-bg-light:hover {
+        background-color: #f8f9fa;
+    }
+    .shadow-2xl {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .bg-success-subtle { background-color: #d1e7dd; }
+    .bg-primary-subtle { background-color: #cfe2ff; }
+    .bg-warning-subtle { background-color: #fff3cd; }
+    .text-success { color: #198754 !important; }
+    .text-primary { color: #0d6efd !important; }
+    .text-warning { color: #ffc107 !important; }
+    
+    /* Remove arrows from number input */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Turno> OnSuccess { get; set; }
+
+    private List<DenominationItem> nioDenominations = new();
+    private List<DenominationItem> usdDenominations = new();
+    private decimal totalNio = 0;
+    private decimal totalUsd = 0;
+    private bool isLoading = true;
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            var denoms = await ShiftService.GetDenominationsAsync();
+            nioDenominations = denoms.Where(d => d.IdMonedaNavigation?.Codigo == "NIO" || d.IdMoneda == 1)
+                                     .OrderByDescending(d => d.Valor)
+                                     .Select(d => new DenominationItem { Denominacion = d })
+                                     .ToList();
+                                     
+            usdDenominations = denoms.Where(d => d.IdMonedaNavigation?.Codigo == "USD" || d.IdMoneda == 2)
+                                     .OrderByDescending(d => d.Valor)
+                                     .Select(d => new DenominationItem { Denominacion = d })
+                                     .ToList();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al cargar denominaciones: " + ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try { await JSRuntime.InvokeVoidAsync("qzOpenDrawer", (string?)null); } catch { }
+        }
+    }
+
+    private void UpdateTotals()
+    {
+        totalNio = nioDenominations.Sum(i => i.Subtotal);
+        totalUsd = usdDenominations.Sum(i => i.Subtotal);
+        StateHasChanged();
+    }
+
+    private async Task ConfirmOpen()
+    {
+        if (isProcessing) return;
+        if (!UserSession.UserId.HasValue) 
+        {
+            ToastService.ShowError("Error: Sesión no válida.");
+            return;
+        }
+
+        try 
+        {
+            isProcessing = true;
+            
+            var counts = new List<ConteoDenominacione>();
+            
+            // Collect non-zero counts
+            foreach(var item in nioDenominations.Where(d => d.Quantity > 0))
+            {
+                counts.Add(new ConteoDenominacione {
+                    IdDenominacion = item.Denominacion.IdDenominacion,
+                    Cantidad = item.Quantity,
+                    TipoConteo = "APERTURA"
+                });
+            }
+            
+            foreach(var item in usdDenominations.Where(d => d.Quantity > 0))
+            {
+                counts.Add(new ConteoDenominacione {
+                    IdDenominacion = item.Denominacion.IdDenominacion,
+                    Cantidad = item.Quantity,
+                    TipoConteo = "APERTURA"
+                });
+            }
+
+            var turno = await ShiftService.OpenShiftAsync(UserSession.UserId.Value, totalNio, totalUsd, counts);
+            ToastService.ShowSuccess("¡Caja abierta con éxito! Buena venta.");
+            await OnSuccess.InvokeAsync(turno);
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException?.Message ?? ex.Message;
+            ToastService.ShowError("Error al abrir caja: " + msg);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    public class DenominationItem
+    {
+        public Denominacione Denominacion { get; set; } = null!;
+        public int Quantity { get; set; }
+        public decimal Subtotal => Denominacion.Valor * Quantity;
+    }
+}
+

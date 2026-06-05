@@ -1,0 +1,84 @@
+@using InnovaParfumPOS.Frontend.Services
+@implements IDisposable
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+
+<div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 11000">
+    <div id="liveToast" class="toast hide toast-premium border-0 overflow-hidden shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 350px;">
+        <div class="toast-header border-0 bg-transparent pt-3 px-3 align-items-center">
+             <div class="kpi-icon @(_typeClass)" style="width: 42px; height: 42px; font-size: 1.1rem; margin-right: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0;">
+                <i class="@(_iconClass)"></i>
+            </div>
+            <div class="me-auto">
+                <strong class="fw-bold d-block @(_textClass)" style="font-size: 1.05rem; letter-spacing: -0.2px; line-height: 1.2;">@_title</strong>
+                <small class="text-muted fw-medium" style="font-size: 0.7rem; opacity: 0.8;">Recién ahora</small>
+            </div>
+            <button type="button" class="btn-close shadow-none ms-2" data-bs-dismiss="toast" aria-label="Close" style="font-size: 0.75rem; opacity: 0.5;"></button>
+        </div>
+        <div class="toast-body p-3 pt-2 fw-medium" style="color: #4a4a4a; font-size: 0.95rem; line-height: 1.4;">
+            @_message
+        </div>
+        <div class="progress" style="height: 5px; border-radius: 0; background: rgba(0,0,0,0.03);">
+            <div class="progress-bar @(_progressClass)" role="progressbar" style="width: 0%; transition: width 4s linear;" id="toastProgressBar"></div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _message = "";
+    private string _title = "";
+    private string _typeClass = "";
+    private string _iconClass = "";
+    private string _progressClass = "";
+    private string _textClass = "";
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnShow += ShowToast;
+    }
+
+    private void ShowToast(string message, string title, string type)
+    {
+        _message = message;
+        _title = title;
+        
+        switch (type)
+        {
+            case "success":
+                _typeClass = "kpi-green";
+                _textClass = "text-toast-success";
+                _iconClass = "fas fa-check-circle";
+                _progressClass = "toast-progress-success";
+                break;
+            case "danger":
+                _typeClass = "kpi-red";
+                _textClass = "text-toast-danger";
+                _iconClass = "fas fa-times-circle";
+                _progressClass = "toast-progress-danger";
+                break;
+            case "warning":
+                _typeClass = "kpi-yellow";
+                _textClass = "text-toast-warning";
+                _iconClass = "fas fa-exclamation-triangle";
+                _progressClass = "toast-progress-warning";
+                break;
+            default:
+                _typeClass = "kpi-cyan";
+                _textClass = "text-toast-info";
+                _iconClass = "fas fa-info-circle";
+                _progressClass = "toast-progress-info";
+                break;
+        }
+
+        InvokeAsync(async () => {
+            StateHasChanged();
+            await JSRuntime.InvokeVoidAsync("showBootstrapToast", "liveToast");
+        });
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnShow -= ShowToast;
+    }
+}
+

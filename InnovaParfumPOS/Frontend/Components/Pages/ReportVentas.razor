@@ -1,0 +1,161 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IReportService ReportService
+
+@if (resumen == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Analizando transacciones financieras...</p>
+    </div>
+}
+else
+{
+    <div class="kpi-grid">
+        <InnovaKpiCard Title="Ventas Totales" Value="resumen?.Sum(r => r.VentasBrutas) ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-hand-holding-usd" IconBg="#e0f2fe" IconColor="#0284c7" Loading="loading" />
+        <InnovaKpiCard Title="Total Facturas" Value="resumen?.Sum(r => r.Facturas) ?? 0" Format="N0" IconClass="fas fa-file-invoice" IconBg="#ffedd5" IconColor="#ea580c" Loading="loading" />
+    </div>
+
+    <div class="report-card mb-4">
+        <div class="report-card-title">Resumen de Ventas por Día</div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th class="text-end">Ventas del Día</th>
+                        <th class="text-center">Facturas</th>
+                        <th class="text-end">Ticket Promedio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (resumen != null)
+                    {
+                        @foreach (var r in resumen)
+                        {
+                            <tr>
+                                <td>@r.Fecha.ToString("dd-MM-yyyy (ddd)")</td>
+                                <td class="text-end fw-bold">@AppState.CurrencySymbol @r.VentasBrutas.ToString("N2")</td>
+                                <td class="text-center">@r.Facturas</td>
+                                <td class="text-end">@AppState.CurrencySymbol @r.TicketPromedio.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot class="table-group-divider fw-bold">
+                    <tr>
+                        <td>TOTAL</td>
+                        <td class="text-end">@AppState.CurrencySymbol @(resumen?.Sum(r => r.VentasBrutas).ToString("N2") ?? "0.00")</td>
+                        <td class="text-center">@(resumen?.Sum(r => r.Facturas) ?? 0)</td>
+                        <td class="text-end">@AppState.CurrencySymbol @(resumen != null && resumen.Any() ? resumen.Average(r => r.TicketPromedio).ToString("N2") : "0.00")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="report-row">
+        <!-- Métodos de Pago -->
+        <div class="report-card">
+            <div class="report-card-title">Ventas por Método de Pago</div>
+            <div class="d-flex align-items-center justify-content-around py-4">
+                <div class="donut-container" style="position: relative; width: 150px; height: 150px;">
+                    @{
+                        var topMethod = paymentStats.OrderByDescending(x => x.Total).FirstOrDefault();
+                        var pct = topMethod?.Porcentaje ?? 0;
+                        var dashArray = $"{pct} 100";
+                    }
+                    <svg viewBox="0 0 36 36" class="circular-chart" style="transform: rotate(-90deg);">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3" />
+                        <path class="circle" stroke-dasharray="@dashArray" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" stroke-width="3" />
+                    </svg>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                        <div class="fw-bold fs-4">@pct.ToString("N0")%</div>
+                        <div class="text-muted" style="font-size: 10px;">@(topMethod?.Metodo ?? "Sin datos")</div>
+                    </div>
+                </div>
+                <div class="payment-legend">
+                    @foreach (var (m, index) in paymentStats.Select((v, i) => (v, i)))
+                    {
+                        var colors = new[] { "#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6" };
+                        var color = colors[index % colors.Length];
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div style="width: 12px; height: 12px; border-radius: 3px; background: @color;"></div>
+                            <span class="small">@m.Metodo: <strong>@m.Porcentaje.ToString("N1")%</strong></span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="report-card">
+            <div class="report-card-title">Insights de Ventas</div>
+            <div class="d-flex flex-column gap-3 mt-2">
+                @if (stats != null)
+                {
+                    <div class="p-3 rounded-4 bg-light">
+                        <div class="text-primary small fw-bold mb-1"><i class="fas fa-lightbulb me-2"></i>RECOMENDACIÓN</div>
+                        @if (stats.PorcentajeVentas >= 0)
+                        {
+                            <p class="m-0 small">Las ventas netas aumentaron un <strong>@stats.PorcentajeVentas.ToString("N1")%</strong> comparado con el periodo anterior. El ticket promedio es de <strong>@AppState.CurrencySymbol @stats.TicketPromedio.ToString("N2")</strong>.</p>
+                        }
+                        else
+                        {
+                            <p class="m-0 small">Las ventas han disminuido un <strong>@Math.Abs(stats.PorcentajeVentas).ToString("N1")%</strong>. Se recomienda revisar estrategias de promoción para el ticket promedio actual.</p>
+                        }
+                    </div>
+
+                    @if (stats.Anulaciones > 0)
+                    {
+                        <div class="p-3 rounded-4" style="background: #fff7ed;">
+                            <div class="text-warning small fw-bold mb-1"><i class="fas fa-exclamation-triangle me-2"></i>ALERTA</div>
+                            <p class="m-0 small">Se detectaron <strong>@stats.Anulaciones</strong> anulaciones en este periodo. Se recomienda revisar el historial de auditoría para asegurar la integridad.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-3 rounded-4" style="background: #f0fdf4;">
+                            <div class="text-success small fw-bold mb-1"><i class="fas fa-check-circle me-2"></i>OPERACIÓN LIMPIA</div>
+                            <p class="m-0 small">No se han detectado anulaciones en el periodo seleccionado. La integridad transaccional es excelente.</p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-3 text-muted small">Generando insights...</div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public DateTime StartDate { get; set; }
+    [Parameter] public DateTime EndDate { get; set; }
+
+    private List<ResumenDiarioDTO>? resumen;
+    private List<PaymentMethodStatDTO> paymentStats = new();
+    private DashboardStatsDTO? stats;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        StateHasChanged();
+        
+        resumen = await ReportService.GetResumenDiarioAsync(StartDate, EndDate);
+        paymentStats = await ReportService.GetPaymentMethodStatsAsync(StartDate, EndDate);
+        stats = await ReportService.GetDashboardStatsAsync(StartDate, EndDate);
+        
+        loading = false;
+        StateHasChanged();
+    }
+}
+

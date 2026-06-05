@@ -1,0 +1,184 @@
+@using InnovaParfumPOS.Backend.Services
+@inject ConfiguracionService ConfigService
+@inject IWebHostEnvironment Env
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="login-redesign.css" />
+    <ImportMap />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@0.460.0"></script>
+    
+    @{
+        var logoSetting = "default_favicon.png";
+        try
+        {
+            var logoFromDb = Task.Run(async () => await ConfigService.GetSettingAsync("Empresa_Logo")).GetAwaiter().GetResult();
+            if (!string.IsNullOrEmpty(logoFromDb))
+            {
+                logoSetting = logoFromDb;
+            }
+        }
+        catch (Exception)
+        {
+            // Console error aquí
+        }
+
+        string normalizedFavicon = "";
+        try
+        {
+            var path = logoSetting.TrimStart('/');
+            var physicalPath = System.IO.Path.Combine(Env.WebRootPath, path);
+            if (System.IO.File.Exists(physicalPath))
+            {
+                var bytes = System.IO.File.ReadAllBytes(physicalPath);
+                normalizedFavicon = $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+            }
+            else
+            {
+                normalizedFavicon = "/" + path + "?v=" + DateTime.Now.Ticks;
+            }
+        }
+        catch 
+        {
+            normalizedFavicon = "/default_favicon.png?v=" + DateTime.Now.Ticks;
+        }
+        
+    }
+    <link rel="icon" type="image/png" href="@normalizedFavicon" id="dynamic-favicon" />
+    <link rel="shortcut icon" type="image/png" href="@normalizedFavicon" id="dynamic-favicon-shortcut" />
+    <HeadOutlet @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+</head>
+
+<body>
+    <Routes @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+    <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.startClock = () => {
+            const el = document.getElementById('digital-clock');
+            if (!el) return;
+            const update = () => {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                
+                let hours = now.getHours();
+                const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+                hours = hours % 12;
+                hours = hours ? hours : 12; 
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                
+                el.innerText = `${day}-${month}-${year} | ${hours}:${minutes} ${ampm}`;
+            };
+            update();
+            setInterval(update, 1000);
+        };
+
+        window.showBootstrapToast = (toastId) => {
+            const toastEl = document.getElementById(toastId);
+            if (toastEl) {
+                const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+                
+                // Progress bar animation logic
+                const progressBar = document.getElementById('toastProgressBar');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                    progressBar.style.transition = 'none';
+                    setTimeout(() => {
+                        progressBar.style.transition = 'width 4s linear';
+                        progressBar.style.width = '100%';
+                    }, 50);
+                }
+                
+                toast.show();
+            }
+        };
+
+        window.updateFavicon = (url) => {
+            let normalizedUrl = url || 'favicon.png';
+            if (normalizedUrl && !normalizedUrl.startsWith('data:') && !normalizedUrl.startsWith('http:') && !normalizedUrl.startsWith('https:') && !normalizedUrl.startsWith('/')) {
+                normalizedUrl = '/' + normalizedUrl;
+            }
+            if (normalizedUrl && !normalizedUrl.startsWith('data:')) {
+                normalizedUrl = normalizedUrl + '?v=' + new Date().getTime(); // Anti-cache para archivos tradicionales
+            }
+
+            // Remove existing icons
+            const oldIcons = document.querySelectorAll("link[rel~='icon']");
+            oldIcons.forEach(icon => icon.remove());
+
+            // Create new standard icon
+            let link = document.createElement('link');
+            link.id = 'dynamic-favicon';
+            link.rel = 'icon';
+            link.type = 'image/png';
+            link.href = normalizedUrl;
+            document.head.appendChild(link);
+
+            // Create new shortcut icon
+            let shortcutLink = document.createElement('link');
+            shortcutLink.id = 'dynamic-favicon-shortcut';
+            shortcutLink.rel = 'shortcut icon';
+            shortcutLink.type = 'image/png';
+            shortcutLink.href = normalizedUrl;
+            document.head.appendChild(shortcutLink);
+        };
+
+        window.downloadFileFromStream = async (fileName, contentStreamReference) => {
+            const arrayBuffer = await contentStreamReference.arrayBuffer();
+            const blob = new Blob([arrayBuffer]);
+            const url = URL.createObjectURL(blob);
+            const anchorElement = document.createElement('a');
+            anchorElement.href = url;
+            anchorElement.download = fileName ?? '';
+            anchorElement.click();
+            anchorElement.remove();
+            URL.revokeObjectURL(url);
+        };
+        window.downloadFile = (fileName, contentType, content) => {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const anchorElement = document.createElement('a');
+            anchorElement.href = url;
+            anchorElement.download = fileName ?? '';
+            anchorElement.click();
+            anchorElement.remove();
+            URL.revokeObjectURL(url);
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.9.0/jsrsasign-all-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script>
+        window.generateBarcode = (elementId, value) => {
+            try {
+                JsBarcode(`#${elementId}`, value, {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 3,
+                    height: 120,
+                    displayValue: false,
+                    margin: 0
+                });
+            } catch (e) {
+                console.error("Error generating barcode:", e);
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.6/qz-tray.js"></script>
+    <script src="js/qz-print.js"></script>
+    <script src="js/barcode-scanner.js"></script>
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>
+

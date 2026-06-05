@@ -1,0 +1,390 @@
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IShiftService ShiftService
+@inject ToastService ToastService
+@inject UserSession UserSession
+@inject ConfiguracionService ConfigService
+@inject IJSRuntime JSRuntime
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); z-index: 2000;">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-2xl" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon kpi-red" style="width: 48px; height: 48px;">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold m-0">Cierre de Caja</h4>
+                        <p class="text-muted small m-0">Realice el recuento final de efectivo para cerrar el turno.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Resumen de Apertura -->
+                <div class="alert alert-info border-0 shadow-sm mb-4 d-flex justify-content-between align-items-center" style="border-radius: 12px;">
+                    <div>
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span class="fw-bold">Caja abierta con:</span>
+                    </div>
+                    <div class="d-flex gap-4">
+                        <span class="badge bg-white text-info px-3 py-2" style="font-size: 0.9rem;">
+                            Córdobas: <strong class="ms-1">@AppState.CurrencySymbol @UserSession.ActiveShift?.MontoInicialNio.ToString("N2")</strong>
+                        </span>
+                        <span class="badge bg-white text-info px-3 py-2" style="font-size: 0.9rem;">
+                            Dólares: <strong class="ms-1">$ @UserSession.ActiveShift?.MontoInicialUsd.ToString("N2")</strong>
+                        </span>
+                    </div>
+                </div>
+
+                @if (isLoading)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        <!-- Cordobas Column -->
+                        <div class="col-md-6 border-end">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="badge bg-success-subtle text-success p-2 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <h5 class="fw-bold m-0 text-success">Recuento Córdobas</h5>
+                            </div>
+
+                            <div class="denominations-list pe-2" style="max-height: 350px; overflow-y: auto;">
+                                @foreach (var item in nioDenominations)
+                                {
+                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded hover-bg-light">
+                                        <div class="d-flex align-items-center gap-2" style="flex: 1;">
+                                            <div class="icon-circle @(item.Denominacion.Tipo == "BILL" ? "bg-primary-subtle text-primary" : "bg-warning-subtle text-warning")" 
+                                                 style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                                <i class="@(item.Denominacion.Tipo == "BILL" ? "fas fa-money-bill" : "fas fa-coins")"></i>
+                                            </div>
+                                            <span class="fw-semibold">@item.Denominacion.Valor.ToString("N0")</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" style="width: 180px;">
+                                            <input type="number" class="form-control form-control-sm text-center fw-bold" 
+                                                   min="0" @bind="item.Quantity" @bind:event="oninput" @onkeyup="UpdateTotals" 
+                                                   onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"
+                                                   style="border-radius: 8px; flex: 1;" />
+                                            <div class="text-end small fw-bold" style="min-width: 90px;">@AppState.CurrencySymbol @item.Subtotal.ToString("N0")</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Dollars Column -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="badge bg-primary-subtle text-primary p-2 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <h5 class="fw-bold m-0 text-primary">Recuento Dólares</h5>
+                            </div>
+
+                            <div class="denominations-list pe-2" style="max-height: 350px; overflow-y: auto;">
+                                @foreach (var item in usdDenominations)
+                                {
+                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded hover-bg-light">
+                                        <div class="d-flex align-items-center gap-2" style="flex: 1;">
+                                            <div class="icon-circle @(item.Denominacion.Tipo == "BILL" ? "bg-primary-subtle text-primary" : "bg-warning-subtle text-warning")" 
+                                                 style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                                <i class="@(item.Denominacion.Tipo == "BILL" ? "fas fa-money-bill" : "fas fa-coins")"></i>
+                                            </div>
+                                            <span class="fw-semibold">@item.Denominacion.Valor.ToString("N0")</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" style="width: 180px;">
+                                            <input type="number" class="form-control form-control-sm text-center fw-bold" 
+                                                   min="0" @bind="item.Quantity" @bind:event="oninput" @onkeyup="UpdateTotals"
+                                                   onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"
+                                                   style="border-radius: 8px; flex: 1;" />
+                                            <div class="text-end small fw-bold" style="min-width: 90px;">$ @item.Subtotal.ToString("N2")</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indicadores Visuales de Diferencia -->
+                    <div class="row g-3 mt-1">
+                        <div class="col-6">
+                            <div class="p-3 rounded-4 shadow-sm @(diffNio == 0 ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : diffNio > 0 ? "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" : "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25")">
+                                <div class="small fw-bold opacity-75">Diferencia @AppState.CurrencySymbol</div>
+                                <div class="h4 m-0 fw-bold">@AppState.CurrencySymbol @diffNio.ToString("N2")</div>
+                                <div class="x-small mt-1">@(diffNio == 0 ? "Caja Cuadrada" : diffNio > 0 ? "Sobrante" : "Faltante")</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-4 shadow-sm @(diffUsd == 0 ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : diffUsd > 0 ? "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" : "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25")">
+                                <div class="small fw-bold opacity-75">Diferencia $</div>
+                                <div class="h4 m-0 fw-bold">$ @diffUsd.ToString("N2")</div>
+                                <div class="x-small mt-1">@(diffUsd == 0 ? "Caja Cuadrada" : diffUsd > 0 ? "Sobrante" : "Faltante")</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded-3">
+                        <label class="form-label small fw-bold text-muted">Observaciones del Cierre</label>
+                        <textarea class="form-control border-0 shadow-sm" rows="2" @bind="observations" 
+                                  placeholder="Escriba aquí cualquier novedad o justificación de diferencias..."
+                                  style="border-radius: 12px; resize: none;"></textarea>
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer border-0 p-4 pt-0 position-relative">
+                @if (showConfirmation)
+                {
+                    <div class="confirmation-overlay p-4 animate__animated animate__fadeInUp" 
+                         style="position: absolute; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; border-radius: 0 0 24px 24px; z-index: 10;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-warning h3 mb-0"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div>
+                                    <div class="fw-bold">FALTANTE DETECTADO</div>
+                                    <div class="small text-muted">
+                                        @(diffNio < 0 ? $"@AppState.CurrencySymbol {Math.Abs(diffNio):N2} " : "")
+                                        @(diffUsd < 0 ? $"$ {Math.Abs(diffUsd):N2}" : "")
+                                        <br/>¿Deseas cerrar la caja con este faltante?
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light rounded-pill px-4" @onclick="() => showConfirmation = false">NO, RECONTAR</button>
+                                <button class="btn btn-danger rounded-pill px-4 shadow-sm" @onclick="FinalizeClose">SÍ, CERRAR</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <button type="button" class="btn btn-light rounded-pill px-4" @onclick="OnClose">Cancelar</button>
+                <button type="button" class="btn btn-danger rounded-pill px-5 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm" 
+                        disabled="@(isProcessing || isLoading || showConfirmation)" @onclick="HandleInitialClick">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    else
+                    {
+                        <i class="fas fa-lock"></i>
+                    }
+                    CERRAR CAJA DEFINITIVAMENTE
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .kpi-red { background: linear-gradient(135deg, #ff4b2b 0%, #ff416c 100%); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .hover-bg-light:hover { background-color: #f8f9fa; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+    .bg-success-subtle { background-color: #d1e7dd; }
+    .bg-primary-subtle { background-color: #cfe2ff; }
+    .bg-warning-subtle { background-color: #fff3cd; }
+    .bg-danger-subtle { background-color: #f8d7da; }
+    .text-success { color: #198754 !important; }
+    .text-primary { color: #0d6efd !important; }
+    .text-warning { color: #ffc107 !important; }
+    
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    .confirmation-overlay {
+        box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSuccess { get; set; }
+
+    private List<DenominationItem> nioDenominations = new();
+    private List<DenominationItem> usdDenominations = new();
+    private decimal totalNio = 0;
+    private decimal totalUsd = 0;
+    private decimal expectedNio = 0;
+    private decimal expectedUsd = 0;
+    private decimal diffNio = 0;
+    private decimal diffUsd = 0;
+    private string observations = "";
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    private bool showConfirmation = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            isLoading = true;
+            if (UserSession.UserId == null) { await OnClose.InvokeAsync(); return; }
+
+            // Refrescar el turno desde la base de datos para tener los totales reales post-venta
+            var freshShift = await ShiftService.GetActiveShiftAsync(UserSession.UserId.Value);
+            if (freshShift != null)
+            {
+                UserSession.ActiveShift = freshShift;
+            }
+
+            if (UserSession.ActiveShift == null) { await OnClose.InvokeAsync(); return; }
+
+            var shift = UserSession.ActiveShift;
+            var extraNio = await ShiftService.GetTotalCashEntriesAsync(shift.IdTurno, 1);
+            var extraUsd = await ShiftService.GetTotalCashEntriesAsync(shift.IdTurno, 2);
+
+            expectedNio = shift.MontoInicialNio + shift.TotalEfectivoNio + extraNio;
+            expectedUsd = shift.MontoInicialUsd + shift.TotalEfectivoUsd + extraUsd;
+
+            var denoms = await ShiftService.GetDenominationsAsync();
+            nioDenominations = denoms.Where(d => d.IdMonedaNavigation?.Codigo == "NIO" || d.IdMoneda == 1)
+                                     .OrderByDescending(d => d.Valor)
+                                     .Select(d => new DenominationItem { Denominacion = d })
+                                     .ToList();
+                                     
+            usdDenominations = denoms.Where(d => d.IdMonedaNavigation?.Codigo == "USD" || d.IdMoneda == 2)
+                                     .OrderByDescending(d => d.Valor)
+                                     .Select(d => new DenominationItem { Denominacion = d })
+                                     .ToList();
+            
+            UpdateTotals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al iniciar cierre: " + ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try { await JSRuntime.InvokeVoidAsync("qzOpenDrawer", (string?)null); } catch { }
+        }
+    }
+
+    private void UpdateTotals()
+    {
+        totalNio = nioDenominations.Sum(i => i.Subtotal);
+        totalUsd = usdDenominations.Sum(i => i.Subtotal);
+        diffNio = totalNio - expectedNio;
+        diffUsd = totalUsd - expectedUsd;
+        
+        // If they change numbers, hide confirmation to re-trigger later
+        showConfirmation = false;
+        
+        StateHasChanged();
+    }
+
+    private async Task HandleInitialClick()
+    {
+        if (diffNio < 0 || diffUsd < 0)
+        {
+            // Show the "Toads" of confirmation
+            showConfirmation = true;
+            
+            var msg = "Se ha detectado un faltante: ";
+            if (diffNio < 0) msg += $"@AppState.CurrencySymbol {Math.Abs(diffNio):N2} ";
+            if (diffUsd < 0) msg += $"$ {Math.Abs(diffUsd):N2}";
+            ToastService.ShowWarning(msg);
+        }
+        else
+        {
+            await FinalizeClose();
+        }
+    }
+
+    private async Task FinalizeClose()
+    {
+        if (isProcessing || UserSession.ActiveShift == null) return;
+
+        try 
+        {
+            isProcessing = true;
+            showConfirmation = false;
+            
+            var counts = new List<ConteoDenominacione>();
+            foreach(var item in nioDenominations.Where(d => d.Quantity > 0))
+            {
+                counts.Add(new ConteoDenominacione { IdDenominacion = item.Denominacion.IdDenominacion, Cantidad = item.Quantity });
+            }
+            foreach(var item in usdDenominations.Where(d => d.Quantity > 0))
+            {
+                counts.Add(new ConteoDenominacione { IdDenominacion = item.Denominacion.IdDenominacion, Cantidad = item.Quantity });
+            }
+
+            var closedShift = await ShiftService.CloseShiftAsync(UserSession.ActiveShift.IdTurno, totalNio, totalUsd, counts, observations);
+            
+            // Imprimir Reporte Z
+            try 
+            {
+                var settings = await ConfigService.GetAllSettingsAsync();
+                var configPrint = new {
+                    nombreNegocio = settings.GetValueOrDefault("Empresa_Nombre", "INNOVATEC POS"),
+                    printerName = settings.GetValueOrDefault("Hardware_Impresora_Nombre", "")
+                };
+                
+                var printData = new {
+                    idTurno = closedShift.IdTurno,
+                    cajero = UserSession.Username,
+                    fechaApertura = closedShift.FechaApertura,
+                    fechaCierre = DateTime.Now,
+                    totalVentasNio = closedShift.TotalVentasNio,
+                    totalEfectivoNio = closedShift.TotalEfectivoNio,
+                    totalEfectivoUsd = closedShift.TotalEfectivoUsd,
+                    totalTarjeta = closedShift.TotalTarjeta,
+                    totalTransferencia = closedShift.TotalTransferencia,
+                    montoInicialNio = closedShift.MontoInicialNio,
+                    montoInicialUsd = closedShift.MontoInicialUsd,
+                    montoContadoNio = closedShift.MontoContadoNio,
+                    montoContadoUsd = closedShift.MontoContadoUsd,
+                    montoManualNio = await ShiftService.GetTotalCashEntriesAsync(closedShift.IdTurno, 1),
+                    montoManualUsd = await ShiftService.GetTotalCashEntriesAsync(closedShift.IdTurno, 2),
+                    diferenciaNio = closedShift.DiferenciaNio,
+                    diferenciaUsd = closedShift.DiferenciaUsd,
+                    observaciones = closedShift.Observaciones
+                };
+
+                await JSRuntime.InvokeVoidAsync("qzPrintShiftClosing", printData, configPrint);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al imprimir arqueo: " + ex.Message);
+            }
+
+            ToastService.ShowSuccess("Caja cerrada correctamente");
+            UserSession.ActiveShift = null; 
+            await OnSuccess.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al cerrar caja: " + (ex.InnerException?.Message ?? ex.Message));
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    public class DenominationItem
+    {
+        public Denominacione Denominacion { get; set; } = null!;
+        public int Quantity { get; set; }
+        public decimal Subtotal => Denominacion.Valor * Quantity;
+    }
+}
+

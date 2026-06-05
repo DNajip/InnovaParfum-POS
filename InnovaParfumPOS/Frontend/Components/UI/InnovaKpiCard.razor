@@ -1,0 +1,42 @@
+@if (Loading)
+{
+    <div class="innova-kpi-card">
+        <div class="kpi-card-header">
+            <div class="skeleton" style="width: 80px; height: 16px;"></div>
+            <div class="skeleton" style="width: 40px; height: 40px; border-radius: 12px;"></div>
+        </div>
+        <div class="skeleton mt-2" style="width: 120px; height: 32px;"></div>
+        <div class="skeleton mt-2" style="width: 100px; height: 16px;"></div>
+    </div>
+}
+else
+{
+    <div class="innova-kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-title">@Title</span>
+            <div class="kpi-card-icon" style="background: @IconBg; color: @IconColor;">
+                <i class="@IconClass"></i>
+            </div>
+        </div>
+        <div class="kpi-card-value">@Prefix @Value.ToString(Format)</div>
+        <div class="kpi-card-footer">
+            <span class="@(Trend >= 0 ? "trend-up" : "trend-down")">
+                <i class="fas @(Trend >= 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                @Math.Abs(Trend).ToString("N1")%
+            </span>
+            <span class="text-muted">vs anterior</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public decimal Value { get; set; }
+    [Parameter] public string Prefix { get; set; } = "";
+    [Parameter] public string Format { get; set; } = "N2";
+    [Parameter] public string IconClass { get; set; } = "";
+    [Parameter] public string IconBg { get; set; } = "#eff6ff";
+    [Parameter] public string IconColor { get; set; } = "#3b82f6";
+    [Parameter] public decimal Trend { get; set; }
+    [Parameter] public bool Loading { get; set; }
+}

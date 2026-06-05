@@ -1,0 +1,717 @@
+@page "/configuracion"
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.DTOs
+@using InnovaParfumPOS.Frontend.Components.UI
+@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
+@inject ConfiguracionService ConfiguracionService
+@inject AppState AppState
+@inject UserService UserService
+@inject IWebHostEnvironment Environment
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+@inject UserSession UserSession
+@inject NavigationManager Navigation
+@inject DailyReportPdfService DailyReportPdfService
+@inject EmailService EmailService
+
+<div class="configuracion-container">
+    <div class="config-header d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 p-4 bg-white rounded-4 shadow-sm border border-light">
+        <div class="mb-3 mb-md-0">
+            <h2 class="fw-bold mb-1" style="color: #0f172a;"><i class="bi bi-gear-fill text-primary me-2"></i>Configuración del Sistema</h2>
+            <p class="text-muted mb-0 fs-6">Ajusta los parámetros generales, ventas, dispositivos y seguridad de InnovaParfumPOS.</p>
+        </div>
+        <div class="config-actions">
+            <button class="btn btn-primary btn-lg px-4 shadow-sm fw-semibold rounded-pill d-flex align-items-center gap-2" @onclick="GuardarConfiguracion" disabled="@isSaving" style="transition: all 0.3s ease;">
+                @if (isSaving)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Guardando...</span>
+                }
+                else
+                {
+                    <i class="bi bi-save fs-5"></i>
+                    <span>Guardar Cambios</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Cargando configuraciones...</p>
+        </div>
+    }
+    else
+    {
+        <div class="accordion-wrapper mt-4">
+            <!-- 1. Empresa -->
+            <div class="accordion-item @(activeSection == "empresa" ? "active" : "")">
+                <div class="accordion-header" @onclick="@(() => ToggleSection("empresa"))">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box"><i class="bi bi-building"></i></div>
+                        <h5>Información de la Empresa</h5>
+                    </div>
+                    <i class="bi @(activeSection == "empresa" ? "bi-chevron-up" : "bi-chevron-down") chevron-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="content-inner">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre del Negocio</label>
+                                <input type="text" class="form-control" @bind='settings["Empresa_Nombre"]' placeholder="Ej. Mi Tienda S.A." />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">RUC / Identificación Fiscal</label>
+                                <input type="text" class="form-control" @bind='settings["Empresa_RUC"]' placeholder="Ej. J0000000000000" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" @bind='settings["Empresa_Telefono"]' placeholder="Ej. +505 8888 8888" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" class="form-control" @bind='settings["Empresa_Direccion"]' placeholder="Ej. Del parque 1c al sur..." />
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Logo del Negocio (Imagen o URL)</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="logo-preview-box border rounded p-1" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
+                                        <img src="@(string.IsNullOrEmpty(settings["Empresa_Logo"]) ? "images/logo.png" : settings["Empresa_Logo"])" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex gap-2 mb-2">
+                                            <label class="btn btn-outline-primary btn-sm rounded-pill px-3 mb-0 cursor-pointer">
+                                                <i class="bi bi-upload me-1"></i> Seleccionar Imagen
+                                                <InputFile OnChange="OnInputFileChange" class="d-none" accept="image/*" />
+                                            </label>
+                                            @if (!string.IsNullOrEmpty(settings["Empresa_Logo"]) && settings["Empresa_Logo"] != "images/logo.png")
+                                            {
+                                                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" @onclick="ResetLogo">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Restaurar
+                                                </button>
+                                            }
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm" @bind='settings["Empresa_Logo"]' placeholder="Ruta de la imagen (ej: images/logo.png)" />
+                                        <small class="text-muted">Se recomienda una imagen cuadrada de al menos 200x200px.</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notificaciones y Reportes -->
+                            <div class="col-md-12 mt-4 pt-3 border-top">
+                                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-envelope-at-fill me-2"></i>Notificaciones y Reporte Diario (Automático a las 7:00 PM)</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Enviar Reporte Diario De (Remitente)</label>
+                                        <input type="email" class="form-control" @bind='settings["Correo_Remitente"]' placeholder="ejemplo@gmail.com" />
+                                        <small class="text-muted">Correo Gmail que enviará el reporte.</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Contraseña de Aplicación de Gmail</label>
+                                        <input type="password" class="form-control" @bind='settings["Correo_Password"]' placeholder="•••• •••• •••• ••••" />
+                                        <small class="text-muted">No es tu contraseña normal de Gmail.</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Enviar Reporte A (Jefe)</label>
+                                        <input type="email" class="form-control" @bind='settings["Correo_Destinatario"]' placeholder="correo-jefe@gmail.com" />
+                                        <small class="text-muted">Destinatario del reporte consolidado.</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
+                                    <div style="max-width: 180px;">
+                                        <input type="date" class="form-control form-control-sm rounded-pill px-3" @bind="fechaPrueba" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" @onclick="EnviarReportePrueba" disabled="@isSendingTestReport">
+                                        @if (isSendingTestReport)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            <span>Enviando Reporte...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-send-fill me-1"></i>
+                                            <span>Enviar Reporte de Fecha Seleccionada</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.5. Personalización -->
+            <div class="accordion-item @(activeSection == "personalizacion" ? "active" : "")">
+                <div class="accordion-header" @onclick="@(() => ToggleSection("personalizacion"))">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box"><i class="bi bi-palette-fill"></i></div>
+                        <h5>Personalización Visual</h5>
+                    </div>
+                    <i class="bi @(activeSection == "personalizacion" ? "bi-chevron-up" : "bi-chevron-down") chevron-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="content-inner">
+                        <div class="row g-4">
+                            <div class="col-md-4 col-sm-6">
+                                <label class="form-label">Color Primario</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" class="form-control form-control-color" @bind='settings["Color_Primario"]' title="Elegir color primario" />
+                                    <small class="text-muted">Botones principales</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6">
+                                <label class="form-label">Color Secundario</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" class="form-control form-control-color" @bind='settings["Color_Secundario"]' title="Elegir color secundario" />
+                                    <small class="text-muted">Botones inactivos</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6">
+                                <label class="form-label">Módulo Activo</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" class="form-control form-control-color" @bind='settings["Color_ModuloActivo"]' title="Elegir color para módulo activo" />
+                                    <small class="text-muted">Resalte de selección</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6">
+                                <label class="form-label">Fondo Login</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" class="form-control form-control-color" @bind='settings["Color_FondoLogin"]' title="Elegir color base del login" />
+                                    <small class="text-muted">Animación de olas</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6">
+                                <label class="form-label">Barra Vertical</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" class="form-control form-control-color" @bind='settings["Color_BarraVertical"]' title="Elegir color de barra lateral" />
+                                    <small class="text-muted">Fondo del menú</small>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
+                                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                                    <small>Nota: Al Guardar Cambios, actualice la página (F5) para aplicar completamente los nuevos estilos a todos los módulos.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Ventas y Facturación -->
+            <div class="accordion-item @(activeSection == "ventas" ? "active" : "")">
+                <div class="accordion-header" @onclick="@(() => ToggleSection("ventas"))">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box"><i class="bi bi-receipt"></i></div>
+                        <h5>Ventas y Facturación</h5>
+                    </div>
+                    <i class="bi @(activeSection == "ventas" ? "bi-chevron-up" : "bi-chevron-down") chevron-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="content-inner">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Prefijo de Factura/Ticket</label>
+                                <input type="text" class="form-control" @bind='settings["Ventas_PrefijoTicket"]' placeholder="Ej. FAC-" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mensaje Agradecimiento (Pie de Ticket)</label>
+                                <input type="text" class="form-control" @bind='settings["Ventas_MensajeTicket"]' placeholder="¡Gracias por su compra!" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Monedas -->
+            <div class="accordion-item @(activeSection == "monedas" ? "active" : "")">
+                <div class="accordion-header" @onclick="@(() => ToggleSection("monedas"))">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box"><i class="bi bi-cash-coin"></i></div>
+                        <h5>Monedas y Tasas de Cambio</h5>
+                    </div>
+                    <i class="bi @(activeSection == "monedas" ? "bi-chevron-up" : "bi-chevron-down") chevron-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="content-inner">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Moneda Principal</label>
+                                <select class="form-select" @bind='settings["Moneda_Principal"]'>
+                                    <option value="NIO">Córdobas (NIO)</option>
+                                    <option value="USD">Dólares (USD)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tasa de Cambio (Oficial / Del Día)</label>
+                                <input type="number" step="0.01" class="form-control" @bind='settings["Moneda_TasaCambio"]' placeholder="Ej. 36.62" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Dispositivos -->
+            <div class="accordion-item @(activeSection == "dispositivos" ? "active" : "")">
+                <div class="accordion-header" @onclick="@(() => ToggleSection("dispositivos"))">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box"><i class="bi bi-printer"></i></div>
+                        <h5>Dispositivos y Hardware</h5>
+                    </div>
+                    <i class="bi @(activeSection == "dispositivos" ? "bi-chevron-up" : "bi-chevron-down") chevron-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="content-inner">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label d-flex justify-content-between">
+                                    Nombre Impresora Predeterminada (QZ Tray)
+                                    <button class="btn btn-link btn-sm p-0 text-decoration-none" @onclick="BuscarImpresoras" disabled="@isSearchingPrinters">
+                                        @if (isSearchingPrinters)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-search me-1"></i>
+                                        }
+                                        Buscar
+                                    </button>
+                                </label>
+                                <div class="input-group">
+                                    @if (availablePrinters != null && availablePrinters.Any())
+                                    {
+                                        <select class="form-select" @bind='settings["Hardware_Impresora"]'>
+                                            <option value="">-- Seleccionar Impresora --</option>
+                                            @foreach (var p in availablePrinters)
+                                            {
+                                                <option value="@p">@p</option>
+                                            }
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind='settings["Hardware_Impresora"]' placeholder="Ej. POS-58" />
+                                    }
+                                    <button class="btn btn-outline-secondary" type="button" @onclick="ProbarImpresion" disabled="@(string.IsNullOrEmpty(settings["Hardware_Impresora"]))">
+                                        <i class="bi bi-printer"></i> Probar
+                                    </button>
+                                </div>
+                                <small class="text-muted">Asegúrese de que QZ Tray esté iniciado y conectado.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Apertura Automática de Cajón</label>
+                                <select class="form-select" @bind='settings["Hardware_AbrirCajon"]'>
+                                    <option value="SI">Sí, al cobrar</option>
+                                    <option value="NO">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <!-- 6. Usuarios y Permisos -->
+            <div class="accordion-item @(activeSection == "usuarios" ? "active" : "")">
+                <div class="accordion-header" @onclick="@(() => ToggleSection("usuarios"))">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box"><i class="bi bi-people-fill"></i></div>
+                        <h5>Gestión de Usuarios y Accesos</h5>
+                    </div>
+                    <i class="bi @(activeSection == "usuarios" ? "bi-chevron-up" : "bi-chevron-down") chevron-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="content-inner">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 text-muted">Control de acceso al sistema POS</h6>
+                            <button class="btn btn-sm btn-primary" @onclick="OpenAddUserModal">
+                                <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle pos-table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in userList)
+                                    {
+                                        <tr>
+                                            <td><span class="fw-bold">@user.Username</span></td>
+                                            <td>@user.NombreCompleto</td>
+                                            <td><span class="badge bg-secondary">@user.NombreRol</span></td>
+                                            <td>
+                                                @if (user.IdEstado == 1)
+                                                {
+                                                    <span class="badge bg-success">Activo</span>
+                                                }
+                                                else if (user.IdEstado == 3)
+                                                {
+                                                    <span class="badge bg-warning text-dark">Bloqueado</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-action" title="Editar" @onclick="() => OpenEditUserModal(user)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-action @(user.IdEstado == 3 ? "text-warning" : (user.IdEstado == 1 ? "text-danger" : "text-success"))" 
+                                                        title="@(user.IdEstado == 3 ? "Desbloquear" : (user.IdEstado == 1 ? "Suspender" : "Habilitar"))" 
+                                                        @onclick="() => ToggleUserStatus(user)">
+                                                    <i class="bi @(user.IdEstado == 3 ? "bi-unlock-fill" : (user.IdEstado == 1 ? "bi-person-x-fill" : "bi-person-check-fill"))"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="row g-3 mt-3 pt-3 border-top">
+                            <div class="col-md-6">
+                                <label class="form-label">Tiempo Cierre de Sesión por Inactividad (Minutos)</label>
+                                <input type="number" class="form-control" @bind='settings["Seguridad_TimeoutMinutos"]' placeholder="Ej. 15" />
+                                <small class="text-muted">Deje en 0 para no cerrar sesión automáticamente.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+</div>
+
+<UserModal @bind-IsVisible="isUserModalVisible" 
+           Model="currentUserDto" 
+           Roles="rolesList" 
+           TiposIdentificacion="tiposIdList" 
+           Generos="generosList" 
+           Modulos="modulosList"
+           IsSaving="isSavingUser" 
+           OnSave="SaveUser" />
+
+@code {
+    private string activeSection = "empresa";
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isSearchingPrinters = false;
+    private List<string>? availablePrinters;
+
+    private Dictionary<string, string> settings = new();
+
+    private string[] defaultKeys = {
+        "Empresa_Nombre", "Empresa_RUC", "Empresa_Telefono", "Empresa_Direccion", "Empresa_Logo",
+        "Ventas_PrefijoTicket", "Ventas_MensajeTicket", 
+        "Moneda_Principal", "Moneda_TasaCambio",
+        "Hardware_Impresora", "Hardware_AbrirCajon",
+        "Inventario_VentaSinStock",
+        "Seguridad_TimeoutMinutos",
+        "Correo_Remitente", "Correo_Password", "Correo_Destinatario",
+        "Color_Primario", "Color_Secundario", "Color_ModuloActivo", "Color_FondoLogin", "Color_BarraVertical"
+    };
+
+    // User Management variables
+    private List<UserDto> userList = new();
+    private List<Role> rolesList = new();
+    private List<TipoIdentificacion> tiposIdList = new();
+    private List<Genero> generosList = new();
+    private List<Modulo> modulosList = new();
+    private bool isUserModalVisible = false;
+    private bool isSavingUser = false;
+    private UserDto currentUserDto = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserSession.IsAuthenticated || !UserSession.HasModuleAccess("Configuracion"))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            var dbSettings = await ConfiguracionService.GetAllSettingsAsync();
+            foreach (var key in defaultKeys)
+            {
+                if (dbSettings.TryGetValue(key, out var val)) settings[key] = val;
+                else settings[key] = ""; 
+            }
+
+            // Defaults for new color keys if empty
+            if (string.IsNullOrEmpty(settings["Color_Primario"])) settings["Color_Primario"] = "#0077b6";
+            if (string.IsNullOrEmpty(settings["Color_Secundario"])) settings["Color_Secundario"] = "#6c757d";
+            if (string.IsNullOrEmpty(settings["Color_ModuloActivo"])) settings["Color_ModuloActivo"] = "#0077b6";
+            if (string.IsNullOrEmpty(settings["Color_FondoLogin"])) settings["Color_FondoLogin"] = "#003566";
+            if (string.IsNullOrEmpty(settings["Color_BarraVertical"])) settings["Color_BarraVertical"] = "#0b192c";
+
+            if (string.IsNullOrEmpty(settings["Moneda_Principal"])) settings["Moneda_Principal"] = "NIO";
+            if (string.IsNullOrEmpty(settings["Hardware_AbrirCajon"])) settings["Hardware_AbrirCajon"] = "SI";
+            if (string.IsNullOrEmpty(settings["Inventario_VentaSinStock"])) settings["Inventario_VentaSinStock"] = "NO";
+
+            // Load user data
+            userList = await UserService.GetUsersAsync();
+            rolesList = await UserService.GetRolesAsync();
+            tiposIdList = await UserService.GetTiposIdentificacionAsync();
+            generosList = await UserService.GetGenerosAsync();
+            modulosList = await UserService.GetModulosAsync();
+
+            // Sync with AppState
+            AppState.UpdateFromDictionary(settings);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ToggleSection(string section)
+    {
+        if (activeSection == section) activeSection = ""; 
+        else activeSection = section; 
+    }
+
+    private async Task GuardarConfiguracion()
+    {
+        isSaving = true;
+        try
+        {
+            await ConfiguracionService.UpdateSettingsBatchAsync(settings, modificadoPor: 1); 
+            AppState.UpdateFromDictionary(settings);
+            ToastService.ShowSuccess("Configuraciones guardadas exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al guardar: " + ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task BuscarImpresoras()
+    {
+        isSearchingPrinters = true;
+        try
+        {
+            availablePrinters = await JSRuntime.InvokeAsync<List<string>>("qzListPrinters");
+            if (availablePrinters == null || !availablePrinters.Any())
+            {
+                ToastService.ShowWarning("No se encontraron impresoras. Verifique que QZ Tray esté abierto.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al conectar con QZ Tray: " + ex.Message);
+        }
+        finally
+        {
+            isSearchingPrinters = false;
+        }
+    }
+
+    private async Task ProbarImpresion()
+    {
+        try
+        {
+            var printer = settings["Hardware_Impresora"];
+            var business = settings["Empresa_Nombre"];
+            await JSRuntime.InvokeAsync<bool>("qzTestPrint", printer, business);
+            ToastService.ShowSuccess("Prueba enviada a la impresora.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error en la prueba: " + ex.Message);
+        }
+    }
+
+
+    // User Management Methods
+    private void OpenAddUserModal()
+    {
+        currentUserDto = new UserDto();
+        isUserModalVisible = true;
+    }
+
+    private void OpenEditUserModal(UserDto user)
+    {
+        // Copy to avoid modifying the list directly before saving
+        currentUserDto = new UserDto
+        {
+            IdUsuario = user.IdUsuario,
+            IdEmpleado = user.IdEmpleado,
+            IdPersona = user.IdPersona,
+            Username = user.Username,
+            IdRol = user.IdRol,
+            IdEstado = user.IdEstado,
+            PrimerNombre = user.PrimerNombre,
+            SegundoNombre = user.SegundoNombre,
+            PrimerApellido = user.PrimerApellido,
+            SegundoApellido = user.SegundoApellido,
+            IdTipoId = user.IdTipoId,
+            NumIdentificacion = user.NumIdentificacion,
+            IdGenero = user.IdGenero,
+            Telefono = user.Telefono,
+            Email = user.Email,
+            Direccion = user.Direccion,
+            SelectedModuloIds = new List<int>(user.SelectedModuloIds)
+        };
+        isUserModalVisible = true;
+    }
+
+    private async Task SaveUser(UserDto dto)
+    {
+        isSavingUser = true;
+        try
+        {
+            if (dto.IdUsuario.HasValue)
+            {
+                await UserService.UpdateUserAsync(dto);
+                ToastService.ShowSuccess("Usuario actualizado exitosamente.");
+            }
+            else
+            {
+                await UserService.CreateUserAsync(dto);
+                ToastService.ShowSuccess("Usuario creado exitosamente.");
+            }
+            
+            isUserModalVisible = false;
+            userList = await UserService.GetUsersAsync(); // Reload grid
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error: " + ex.Message);
+        }
+        finally
+        {
+            isSavingUser = false;
+        }
+    }
+
+    private async Task ToggleUserStatus(UserDto user)
+    {
+        try
+        {
+            if (user.IdUsuario.HasValue)
+            {
+                int oldEstado = user.IdEstado;
+                await UserService.ToggleUserStatusAsync(user.IdUsuario.Value);
+                
+                if (oldEstado == 3) user.IdEstado = 1;
+                else user.IdEstado = user.IdEstado == 1 ? 2 : 1;
+                
+                string accion = oldEstado == 3 ? "desbloqueado" : (user.IdEstado == 1 ? "habilitado" : "suspendido");
+                ToastService.ShowInfo($"El usuario ha sido {accion}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al cambiar estado: " + ex.Message);
+        }
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            try
+            {
+                // Limitar tamaño a 2MB para el procesamiento inicial
+                if (file.Size > 2 * 1024 * 1024)
+                {
+                    ToastService.ShowWarning("La imagen es muy pesada. Se intentará comprimir.");
+                }
+
+                var format = file.ContentType;
+                if (format != "image/png" && format != "image/jpeg" && format != "image/webp")
+                {
+                    format = "image/png"; // Default to png if unusual
+                }
+                
+                // Redimensionar para optimizar espacio (Max 500x500)
+                var resizedFile = await file.RequestImageFileAsync(format, 500, 500);
+                
+                using var ms = new MemoryStream();
+                using var stream = resizedFile.OpenReadStream(1024 * 1024 * 5); // Buffer hasta 5MB
+                await stream.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+                
+                settings["Empresa_Logo"] = $"data:{format};base64,{Convert.ToBase64String(bytes)}";
+                StateHasChanged();
+                ToastService.ShowInfo("Imagen cargada correctamente. No olvide Guardar Cambios.");
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError("Error al procesar la imagen: " + ex.Message);
+            }
+        }
+    }
+
+    private void ResetLogo()
+    {
+        settings["Empresa_Logo"] = "images/logo.png";
+        StateHasChanged();
+    }
+
+    private DateTime fechaPrueba = DateTime.Today;
+    private bool isSendingTestReport = false;
+
+    private async Task EnviarReportePrueba()
+    {
+        if (isSendingTestReport) return;
+        isSendingTestReport = true;
+        StateHasChanged();
+        try
+        {
+            // Primero, guardar cambios en base de datos para usar las credenciales que estén en pantalla
+            await GuardarConfiguracion();
+
+            var date = fechaPrueba;
+            byte[] pdfBytes = await DailyReportPdfService.GenerateDailyReportPdfAsync(date);
+            bool sent = await EmailService.SendDailyReportEmailAsync(pdfBytes, date);
+
+            if (sent)
+            {
+                ToastService.ShowSuccess("Reporte de prueba enviado exitosamente por correo.");
+            }
+            else
+            {
+                ToastService.ShowError("No se pudo enviar el reporte. Verifique que las credenciales del remitente y destinatario estén configuradas.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error al enviar reporte de prueba: " + ex.Message);
+        }
+        finally
+        {
+            isSendingTestReport = false;
+            StateHasChanged();
+        }
+    }
+}
+

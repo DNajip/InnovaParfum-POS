@@ -1,0 +1,90 @@
+@page "/reportes"
+@using InnovaParfumPOS.Backend.Services
+@using InnovaParfumPOS.Backend.Models
+@inject IReportService ReportService
+@inject AppState AppState
+@inject UserSession Session
+@inject UserSession Session
+<div class="report-main-container">
+    <InnovaReportSidebar ActiveSection="@activeSection" OnSectionChanged="HandleSectionChange" />
+    
+    <div class="report-content">
+        <!-- Header con Filtro de Fechas Compartido -->
+        <div class="report-header-toolbar">
+            <div class="report-title">
+                <h1 style="font-size: 1.4rem; margin-bottom: 0;">Reportes</h1>
+                <p style="font-size: 0.85rem; margin-bottom: 0;">Centro de inteligencia de tu negocio</p>
+            </div>
+            
+            <div class="report-date-selector">
+                <div class="custom-range d-flex align-items-center gap-2">
+                    <span class="fw-bold text-muted small">Desde</span>
+                    <input type="date" class="form-control form-control-sm" @bind="startDate" />
+                    <span class="fw-bold text-muted small">a</span>
+                    <input type="date" class="form-control form-control-sm" @bind="endDate" />
+                    <button class="btn btn-primary btn-sm rounded-pill ms-1" @onclick="RefreshData">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Renderizado de la Sección Activa -->
+        <div class="report-view-area">
+            @if (activeSection == "dashboard")
+            {
+                <ReportDashboard StartDate="startDate" EndDate="endDate" />
+            }
+            else if (activeSection == "ventas")
+            {
+                <ReportVentas StartDate="startDate" EndDate="endDate" />
+            }
+            else if (activeSection == "inventario")
+            {
+                <ReportInventario StartDate="startDate" EndDate="endDate" />
+            }
+            else if (activeSection == "clientes")
+            {
+                <ReportClientes StartDate="startDate" EndDate="endDate" />
+            }
+            else if (activeSection == "cajeros")
+            {
+                <ReportCajeros StartDate="startDate" EndDate="endDate" />
+            }
+            else if (activeSection == "arqueos")
+            {
+                <ReportCaja StartDate="startDate" EndDate="endDate" />
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string activeSection = "dashboard";
+    private DateTime startDate { get => AppState.ReportStartDate; set => AppState.ReportStartDate = value; }
+    private DateTime endDate { get => AppState.ReportEndDate; set => AppState.ReportEndDate = value; }
+
+    protected override void OnInitialized()
+    {
+        if (!Session.IsAuthenticated) return;
+        
+        // Inicializar si es la primera vez que se entra en la sesión
+        if (AppState.ReportStartDate == DateTime.MinValue)
+        {
+            AppState.ReportStartDate = DateTime.Today;
+            AppState.ReportEndDate = DateTime.Today;
+        }
+    }
+
+    private void HandleSectionChange(string section)
+    {
+        activeSection = section;
+        StateHasChanged();
+    }
+
+    private async Task RefreshData()
+    {
+        StateHasChanged();
+    }
+}
+

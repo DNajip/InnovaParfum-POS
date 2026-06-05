@@ -1,0 +1,94 @@
+@inherits LayoutComponentBase
+@using InnovaParfumPOS.Backend.Services
+@inject InnovaParfumPOS.Backend.Services.UserSession UserSession
+@inject InnovaParfumPOS.Backend.Services.ConfiguracionService ConfiguracionService
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IJSRuntime JS
+@implements IDisposable
+
+
+<div class="d-flex flex-column vh-100 overflow-hidden">
+    <style>
+        :root {
+            --primary-color: @AppState.ColorPrimario;
+            --secondary-color: @AppState.ColorSecundario;
+            --color-modulo-activo: @AppState.ColorModuloActivo;
+            --color-barra-vertical: @AppState.ColorBarraVertical;
+        }
+    </style>
+    <InnovaHeader />
+
+    <div class="main-container flex-grow-1 overflow-hidden">
+        <InnovaSidebar />
+        
+        <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+            <section class="content-area flex-grow-1 overflow-auto shadow-inset">
+                @Body
+            </section>
+
+            @if (ShouldShowSummary())
+            {
+                <SummaryBar />
+            }
+
+            <ControlHub />
+        </div>
+    </div>
+    <ToastContainer />
+</div>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserSession.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        var settings = await ConfiguracionService.GetAllSettingsAsync();
+        AppState.UpdateFromDictionary(settings);
+        AppState.OnChange += StateHasChanged;
+        AppState.OnChange += UpdateFavicon;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateFaviconAsync();
+        }
+    }
+
+    private void UpdateFavicon()
+    {
+        _ = UpdateFaviconAsync();
+    }
+
+    private async Task UpdateFaviconAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(AppState.BusinessLogo))
+            {
+                await JS.InvokeVoidAsync("updateFavicon", AppState.BusinessLogo);
+            }
+        }
+        catch { /* Ignorar errores de JS interop en prerender */ }
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+        AppState.OnChange -= UpdateFavicon;
+    }
+
+    private bool ShouldShowSummary()
+    {
+        var path = Navigation.ToBaseRelativePath(Navigation.Uri);
+        return string.IsNullOrEmpty(path) || path.StartsWith("ventas");
+    }
+}
+
