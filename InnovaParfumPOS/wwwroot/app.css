@@ -1392,11 +1392,5 @@ html, body {
     color: var(--color-texto-marca, #0077b6) !important;
 }
 
-/* Aplicar color a los iconos, pero respetar los que están dentro de botones o elementos activos/coloreados */
-i.fas, i.far, i.fal, i.fab, i.bi, .bi {
-    color: var(--color-iconos, #0077b6);
-}
-.btn i, .active i, .text-white i, .text-danger i, .text-success i, .text-warning i, .text-muted i, .text-info i {
-    color: inherit !important;
-}
+
 

@@ -200,13 +200,7 @@
                                     <small class="text-muted">Branding y Nombres</small>
                                 </div>
                             </div>
-                            <div class="col-md-4 col-sm-6">
-                                <label class="form-label">Color de Iconos</label>
-                                <div class="d-flex align-items-center gap-2">
-                                    <input type="color" class="form-control form-control-color" @bind='settings["Color_Iconos"]' title="Elegir color de iconos" />
-                                    <small class="text-muted">Iconos globales</small>
-                                </div>
-                            </div>
+                            
                             <div class="col-12 mt-2">
                                 <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
                                     <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -439,7 +433,7 @@
         "Inventario_VentaSinStock",
         "Seguridad_TimeoutMinutos",
         "Correo_Remitente", "Correo_Password", "Correo_Destinatario",
-        "Color_Primario", "Color_Secundario", "Color_ModuloActivo", "Color_FondoLogin", "Color_BarraVertical", "Color_TextoMarca", "Color_Iconos"
+        "Color_Primario", "Color_Secundario", "Color_ModuloActivo", "Color_FondoLogin", "Color_BarraVertical", "Color_TextoMarca"
     };
 
     // User Management variables
@@ -481,8 +475,6 @@
             if (string.IsNullOrEmpty(settings["Color_FondoLogin"])) settings["Color_FondoLogin"] = "#003566";
             if (string.IsNullOrEmpty(settings["Color_BarraVertical"])) settings["Color_BarraVertical"] = "#0b192c";
             if (string.IsNullOrEmpty(settings["Color_TextoMarca"])) settings["Color_TextoMarca"] = "#0077b6";
-            if (string.IsNullOrEmpty(settings["Color_Iconos"])) settings["Color_Iconos"] = "#0077b6";
-
             if (string.IsNullOrEmpty(settings["Moneda_Principal"])) settings["Moneda_Principal"] = "NIO";
             if (string.IsNullOrEmpty(settings["Hardware_AbrirCajon"])) settings["Hardware_AbrirCajon"] = "SI";
             if (string.IsNullOrEmpty(settings["Inventario_VentaSinStock"])) settings["Inventario_VentaSinStock"] = "NO";

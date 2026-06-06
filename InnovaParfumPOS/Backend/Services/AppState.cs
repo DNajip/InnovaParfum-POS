@@ -194,49 +194,54 @@ public class AppState
     public string ColorPrimario
     {
         get => _colorPrimario;
-        set { if (_colorPrimario != value) { _colorPrimario = value; NotifyStateChanged(); } }
+        set { if (_colorPrimario != value) { _colorPrimario = value; NotifyStateChanged();
+            }
+        }
     }
 
     private string _colorSecundario = "#6c757d";
     public string ColorSecundario
     {
         get => _colorSecundario;
-        set { if (_colorSecundario != value) { _colorSecundario = value; NotifyStateChanged(); } }
+        set { if (_colorSecundario != value) { _colorSecundario = value; NotifyStateChanged();
+            }
+        }
     }
 
     private string _colorModuloActivo = "#0077b6";
     public string ColorModuloActivo
     {
         get => _colorModuloActivo;
-        set { if (_colorModuloActivo != value) { _colorModuloActivo = value; NotifyStateChanged(); } }
+        set { if (_colorModuloActivo != value) { _colorModuloActivo = value; NotifyStateChanged();
+            }
+        }
     }
 
     private string _colorTextoMarca = "#0077b6";
     public string ColorTextoMarca
     {
         get => _colorTextoMarca;
-        set { if (_colorTextoMarca != value) { _colorTextoMarca = value; NotifyStateChanged(); } }
-    }
-
-    private string _colorIconos = "#0077b6";
-    public string ColorIconos
-    {
-        get => _colorIconos;
-        set { if (_colorIconos != value) { _colorIconos = value; NotifyStateChanged(); } }
+        set { if (_colorTextoMarca != value) { _colorTextoMarca = value; NotifyStateChanged();
+            }
+        }
     }
 
     private string _colorFondoLogin = "#003566";
     public string ColorFondoLogin
     {
         get => _colorFondoLogin;
-        set { if (_colorFondoLogin != value) { _colorFondoLogin = value; NotifyStateChanged(); } }
+        set { if (_colorFondoLogin != value) { _colorFondoLogin = value; NotifyStateChanged();
+            }
+        }
     }
 
     private string _colorBarraVertical = "#0b192c";
     public string ColorBarraVertical
     {
         get => _colorBarraVertical;
-        set { if (_colorBarraVertical != value) { _colorBarraVertical = value; NotifyStateChanged(); } }
+        set { if (_colorBarraVertical != value) { _colorBarraVertical = value; NotifyStateChanged();
+            }
+        }
     }
 
     public void UpdateFromDictionary(Dictionary<string, string> settings)
@@ -266,7 +271,6 @@ public class AppState
         if (settings.TryGetValue("Color_FondoLogin", out var colLog)) ColorFondoLogin = colLog;
         if (settings.TryGetValue("Color_BarraVertical", out var colBar)) ColorBarraVertical = colBar;
         if (settings.TryGetValue("Color_TextoMarca", out var colTex)) ColorTextoMarca = colTex;
-        if (settings.TryGetValue("Color_Iconos", out var colIco)) ColorIconos = colIco;
     }
 
     private void NotifyStateChanged() => OnChange?.Invoke();
