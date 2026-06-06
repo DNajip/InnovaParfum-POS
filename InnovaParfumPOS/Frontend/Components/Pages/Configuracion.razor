@@ -622,6 +622,9 @@
             tiposIdList = await UserService.GetTiposIdentificacionAsync();
             generosList = await UserService.GetGenerosAsync();
             modulosList = await UserService.GetModulosAsync();
+            
+            // Load category data
+            categoriasList = await ProductService.GetCategoriasAsync();
 
             // Sync with AppState
             AppState.UpdateFromDictionary(settings);
