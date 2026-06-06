@@ -119,7 +119,7 @@
         debounceTimer.Elapsed += async (s, e) => await OnSearchTimerElapsed();
         
         SaleService.PropertyChanged += OnServicePropertyChanged;
-        SaleService.OnCheckoutRequested += HandleCheckoutRequest;
+        SaleService.OnCheckoutRequested += OnCheckoutRequestedHandler;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -140,7 +140,9 @@
         StateHasChanged();
     }
 
-    private async void HandleCheckoutRequest()
+    private void OnCheckoutRequestedHandler() => _ = InvokeAsync(HandleCheckoutRequest);
+
+    private async Task HandleCheckoutRequest()
     {
         if (!UserSession.UserId.HasValue) return;
 
@@ -313,7 +315,7 @@
     public void Dispose()
     {
         SaleService.PropertyChanged -= OnServicePropertyChanged;
-        SaleService.OnCheckoutRequested -= HandleCheckoutRequest;
+        SaleService.OnCheckoutRequested -= OnCheckoutRequestedHandler;
         debounceTimer?.Stop();
         debounceTimer?.Dispose();
         
