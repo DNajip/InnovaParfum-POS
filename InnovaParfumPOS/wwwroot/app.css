@@ -299,7 +299,7 @@ html, body {
 }
 
 .btn-checkout {
-    background-color: var(--primary-color);
+    background-color: var(--color-boton-primario, #0077b6);
     color: white;
     border: none;
     padding: 10px 30px;
@@ -316,9 +316,9 @@ html, body {
 }
 
 .btn-checkout:hover {
-    background-color: #005f8d;
+    background-color: color-mix(in srgb, var(--color-boton-primario, #0077b6) 80%, black);
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 119, 182, 0.3);
+    box-shadow: 0 6px 15px color-mix(in srgb, var(--color-boton-primario, #0077b6) 30%, transparent);
     color: white;
 }
 
@@ -1335,3 +1335,54 @@ html, body {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* --- Overrides para Botones Personalizados --- */
+.btn-primary, .btn-primary:not(:disabled):not(.disabled):active {
+    background-color: var(--color-boton-primario, #0077b6) !important;
+    border-color: var(--color-boton-primario, #0077b6) !important;
+    color: white !important;
+}
+.btn-primary:hover {
+    background-color: color-mix(in srgb, var(--color-boton-primario, #0077b6) 85%, black) !important;
+    border-color: color-mix(in srgb, var(--color-boton-primario, #0077b6) 85%, black) !important;
+    color: white !important;
+}
+.btn-outline-primary {
+    color: var(--color-boton-primario, #0077b6) !important;
+    border-color: var(--color-boton-primario, #0077b6) !important;
+}
+.btn-outline-primary:hover {
+    background-color: var(--color-boton-primario, #0077b6) !important;
+    color: white !important;
+}
+
+.btn-secondary, .btn-light, .btn-outline-secondary {
+    background-color: var(--color-boton-secundario, #6c757d) !important;
+    border-color: var(--color-boton-secundario, #6c757d) !important;
+
+.btn-secondary, .btn-light {
+    background-color: var(--color-boton-secundario, #6c757d) !important;
+    border-color: var(--color-boton-secundario, #6c757d) !important;
+    color: white !important;
+}
+.btn-secondary:hover, .btn-light:hover {
+    background-color: color-mix(in srgb, var(--color-boton-secundario, #6c757d) 85%, black) !important;
+    border-color: color-mix(in srgb, var(--color-boton-secundario, #6c757d) 85%, black) !important;
+    color: white !important;
+}
+.btn-outline-secondary {
+    background-color: transparent !important;
+    border-color: var(--color-boton-secundario, #6c757d) !important;
+    color: var(--color-boton-secundario, #6c757d) !important;
+}
+.btn-outline-secondary:hover {
+    background-color: var(--color-boton-secundario, #6c757d) !important;
+    color: white !important;
+}
+.btn-link.text-muted {
+    color: var(--color-boton-secundario, #6c757d) !important;
+}
+.btn-link.text-muted:hover {
+    color: color-mix(in srgb, var(--color-boton-secundario, #6c757d) 70%, black) !important;
+}
+

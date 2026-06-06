@@ -121,8 +121,8 @@
 
 .login-field-wrapper:focus-within {
     background: rgba(255,255,255,0.12);
-    border-color: var(--primary-color, #00b4d8);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color, #00b4d8) 25%, transparent);
+    border-color: var(--color-boton-primario, #00b4d8);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-boton-primario, #00b4d8) 25%, transparent);
     transform: translateY(-2px);
 }
 
@@ -135,7 +135,7 @@
 }
 
 .login-field-wrapper:focus-within i.field-icon {
-    color: var(--primary-color, #00b4d8);
+    color: var(--color-boton-primario, #00b4d8);
 }
 
 .login-control-premium {
@@ -172,7 +172,7 @@
 .btn-login-premium {
     width: 100%;
     padding: 18px;
-    background: var(--primary-color, #00b4d8);
+    background: var(--color-boton-primario, #00b4d8);
     color: white;
     border: none;
     border-radius: 16px;
@@ -182,14 +182,14 @@
     letter-spacing: 1.5px;
     margin-top: 1rem;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 25px color-mix(in srgb, var(--primary-color, #00b4d8) 30%, transparent);
+    box-shadow: 0 10px 25px color-mix(in srgb, var(--color-boton-primario, #00b4d8) 30%, transparent);
     cursor: pointer;
 }
 
 .btn-login-premium:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--primary-color, #00b4d8) 85%, white);
+    background: color-mix(in srgb, var(--color-boton-primario, #00b4d8) 85%, white);
     transform: translateY(-3px);
-    box-shadow: 0 15px 30px color-mix(in srgb, var(--primary-color, #00b4d8) 45%, transparent);
+    box-shadow: 0 15px 30px color-mix(in srgb, var(--color-boton-primario, #00b4d8) 45%, transparent);
 }
 
 .btn-login-premium:active {
