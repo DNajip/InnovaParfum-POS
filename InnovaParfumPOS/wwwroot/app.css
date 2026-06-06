@@ -1388,7 +1388,7 @@ html, body {
 
 
 /* --- Personalización de Marca e Iconos --- */
-.user-active-header .fw-bold {
+.username-text {
     color: var(--color-texto-marca, #0077b6) !important;
 }
 
