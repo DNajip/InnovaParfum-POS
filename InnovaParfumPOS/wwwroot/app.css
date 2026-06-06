@@ -1131,7 +1131,7 @@ html, body {
 .intensity-6 { background: #2563eb; }
 .intensity-7 { background: #1d4ed8; }
 .intensity-8 { background: #1e40af; }
-.intensity-9 { background: #1e3a8a; }
+.intensity-9 { background: color-mix(in srgb, var(--color-boton-primario, #0077b6) 80%, black); }
 .intensity-10 { background: #172554; }
 
 .heatmap-legend-bar {
@@ -1313,7 +1313,7 @@ html, body {
 }
 
 .btn-print-submit {
-    background: linear-gradient(135deg, #1a2a6c, #1e3a8a);
+    background: var(--color-boton-primario, #0077b6);
     color: white;
     border: none;
     padding: 1rem;
@@ -1328,7 +1328,7 @@ html, body {
 .btn-print-submit:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(26, 42, 108, 0.4);
-    background: #1e3a8a;
+    background: color-mix(in srgb, var(--color-boton-primario, #0077b6) 80%, black);
 }
 
 .btn-print-submit:disabled {
@@ -1394,3 +1394,8 @@ html, body {
 
 
 
+
+/* Override text-primary */
+.text-primary {
+    color: var(--color-boton-primario, #0077b6) !important;
+}
