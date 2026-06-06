@@ -13,6 +13,12 @@ public partial class Categoria
 
     public int IdEstado { get; set; }
 
+    public bool PedirMarca { get; set; } = true;
+    public bool PedirGenero { get; set; } = true;
+    public bool PedirVencimiento { get; set; } = true;
+    public bool PedirConcentracion { get; set; } = true;
+    public bool PedirOrigen { get; set; } = true;
+
     public virtual Estado IdEstadoNavigation { get; set; } = null!;
 
     public virtual ICollection<Producto> Productos { get; set; } = new List<Producto>();

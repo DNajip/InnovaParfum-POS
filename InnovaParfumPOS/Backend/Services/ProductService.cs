@@ -19,6 +19,8 @@ public interface IProductService
     Task CreateProductAsync(Producto producto);
     Task UpdateProductAsync(Producto producto);
     Task<List<Categoria>> GetCategoriasAsync();
+    Task<Categoria> AddCategoriaAsync(Categoria categoria);
+    Task UpdateCategoriaAsync(Categoria categoria);
     Task AdjustStockAsync(int idProducto, int nuevaCantidad, string observacion);
     Task<List<VStockCritico>> GetStockCriticoAsync();
     Task<InventoryStatsDto> GetInventoryStatsAsync(string? search = null, int? idCategoria = null);
@@ -192,6 +194,21 @@ public class ProductService : IProductService
     {
         using var context = await _factory.CreateDbContextAsync();
         return await context.VStockCriticos.ToListAsync();
+    }
+
+        public async Task<Categoria> AddCategoriaAsync(Categoria categoria)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        context.Categorias.Add(categoria);
+        await context.SaveChangesAsync();
+        return categoria;
+    }
+
+    public async Task UpdateCategoriaAsync(Categoria categoria)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        context.Categorias.Update(categoria);
+        await context.SaveChangesAsync();
     }
 
     public async Task<InventoryStatsDto> GetInventoryStatsAsync(string? search = null, int? idCategoria = null)
