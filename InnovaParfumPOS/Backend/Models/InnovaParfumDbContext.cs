@@ -125,6 +125,12 @@ public partial class InnovaParfumDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("NOMBRE");
 
+            entity.Property(e => e.PedirMarca).HasColumnName("PEDIR_MARCA");
+            entity.Property(e => e.PedirGenero).HasColumnName("PEDIR_GENERO");
+            entity.Property(e => e.PedirVencimiento).HasColumnName("PEDIR_VENCIMIENTO");
+            entity.Property(e => e.PedirConcentracion).HasColumnName("PEDIR_CONCENTRACION");
+            entity.Property(e => e.PedirOrigen).HasColumnName("PEDIR_ORIGEN");
+
             entity.HasOne(d => d.IdEstadoNavigation).WithMany(p => p.Categoria)
                 .HasForeignKey(d => d.IdEstado)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -338,7 +344,7 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasColumnName("AFECTA_CAJA");
             entity.Property(e => e.IdMoneda).HasColumnName("ID_MONEDA");
             entity.Property(e => e.Nombre)
-                .HasMaxLength(40)
+                .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("NOMBRE");
 
@@ -368,7 +374,7 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasDefaultValue(1)
                 .HasColumnName("ID_ESTADO");
             entity.Property(e => e.Nombre)
-                .HasMaxLength(100)
+                .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("NOMBRE");
             entity.Property(e => e.Orden).HasColumnName("ORDEN");
@@ -394,7 +400,7 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasColumnName("CODIGO");
             entity.Property(e => e.EsBase).HasColumnName("ES_BASE");
             entity.Property(e => e.Nombre)
-                .HasMaxLength(50)
+                .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("NOMBRE");
             entity.Property(e => e.Simbolo)
@@ -637,7 +643,8 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("GENERO");
             entity.Property(e => e.Nombre)
-                .HasMaxLength(150)
+                .HasMaxLength(80)
+                .IsUnicode(false)
                 .HasColumnName("NOMBRE");
             entity.Property(e => e.PrecioCompra)
                 .HasColumnType("decimal(12, 2)")
@@ -723,7 +730,7 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasDefaultValue(1)
                 .HasColumnName("ID_ESTADO");
             entity.Property(e => e.Nombre)
-                .HasMaxLength(50)
+                .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("NOMBRE");
 
@@ -764,7 +771,7 @@ public partial class InnovaParfumDbContext : DbContext
 
             entity.Property(e => e.IdTipo).HasColumnName("ID_TIPO");
             entity.Property(e => e.Nombre)
-                .HasMaxLength(40)
+                .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("NOMBRE");
             entity.Property(e => e.Signo)
@@ -1047,7 +1054,8 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("CONCENTRACION");
             entity.Property(e => e.Nombre)
-                .HasMaxLength(150)
+                .HasMaxLength(80)
+                .IsUnicode(false)
                 .HasColumnName("NOMBRE");
             entity.Property(e => e.StockActual).HasColumnName("STOCK_ACTUAL");
             entity.Property(e => e.StockMinimo).HasColumnName("STOCK_MINIMO");
@@ -1218,6 +1226,8 @@ public partial class InnovaParfumDbContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+
+
 
 
 
