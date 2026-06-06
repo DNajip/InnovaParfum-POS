@@ -121,7 +121,7 @@ html, body {
 .tab-vertical:hover {
     opacity: 1;
     color: white;
-    background: var(--color-boton-primario, #0077b6);
+    background: var(--color-modulo-activo, var(--color-boton-primario, #0077b6));
 }
 
 .tab-vertical.active {
@@ -349,7 +349,7 @@ html, body {
 }
 
 .action-btn:hover {
-    background: var(--color-boton-primario, #0077b6);
+    background: var(--color-modulo-activo, var(--color-boton-primario, #0077b6));
     color: white;
 }
 
