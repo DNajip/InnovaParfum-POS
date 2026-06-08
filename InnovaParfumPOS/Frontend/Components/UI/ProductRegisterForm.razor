@@ -1,4 +1,4 @@
-@using InnovaParfumPOS.Backend.Models
+﻿@using InnovaParfumPOS.Backend.Models
 @using InnovaParfumPOS.Backend.Services
 @inject IProductService ProductService
 @inject ToastService Toast
@@ -40,7 +40,7 @@
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Categoría</label>
                             <select class="form-select bg-light border-0 py-1 rounded-3 shadow-none" @bind="newProduct.IdCategoria" style="height: 38px;">
-                                <option value="">Seleccione...</option>
+                                <option value="" disabled hidden>Seleccione...</option>
                                 @foreach (var cat in Categorias)
                                 {
                                     <option value="@cat.IdCategoria">@cat.Nombre</option>
@@ -53,18 +53,12 @@
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Marca</label>
                             <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Marca" @bind="newProduct.Marca">
                         </div> }
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Género</label>
-                            <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Género" @bind="newProduct.Genero">
-                        </div>
+                        @if(SelectedCategory?.PedirGenero == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Género</label><input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Género" @bind="newProduct.Genero"></div> }
                         @if(SelectedCategory?.PedirOrigen == true) { <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Origen/Tipo</label>
                             <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Diseñador, Árabe..." @bind="newProduct.OrigenTipo">
                         </div> }
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Concentración</label>
-                            <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="EDP, EDT..." @bind="newProduct.Concentracion">
-                        </div>
+                        @if(SelectedCategory?.PedirConcentracion == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Concentración</label><input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="EDP, EDT..." @bind="newProduct.Concentracion"></div> }
                         @if(SelectedCategory?.PedirVencimiento == true) { <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Vencimiento</label>
                             <input type="date" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.FechaVencimiento">
@@ -212,5 +206,7 @@
         }
     }
 }
+
+
 
 
