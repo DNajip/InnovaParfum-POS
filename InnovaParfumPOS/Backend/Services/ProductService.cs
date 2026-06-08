@@ -1,4 +1,4 @@
-using InnovaParfumPOS.Backend.Models;
+﻿using InnovaParfumPOS.Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using InnovaParfumPOS.Backend.Services;
 using InnovaParfumPOS.Backend.DTOs;
@@ -11,6 +11,10 @@ namespace InnovaParfumPOS.Backend.Services;
 public interface IProductService
 {
     Task<List<Producto>> GetAllProductsAsync(string? search = null, int? idCategoria = null, bool includeInactive = false, bool onlyInStock = false);
+    Task<List<Producto>> GetFilteredProductsAsync(ProductFilterDto filter);
+    Task<List<string>> GetDistinctMarcasAsync();
+    Task<List<string>> GetDistinctGenerosAsync();
+    Task<List<string>> GetDistinctOrigenesAsync();
     Task<Producto?> GetProductByIdAsync(int id);
     Task<Producto?> GetProductByCodeAsync(string code);
     Task<Producto?> GetProductByBarcodeAsync(string barcode);
@@ -59,6 +63,103 @@ public class ProductService : IProductService
         if (!string.IsNullOrWhiteSpace(search))
         {
             var s = search.ToLower();
+            query = query.Where(p => p.Nombre.ToLower().Contains(s) || (p.CodigoBarras != null && p.CodigoBarras.ToLower().Contains(s)));
+        }
+
+        return await query
+            .OrderByDescending(p => p.IdProducto)
+            .ToListAsync();
+    }
+
+        public async Task<List<string>> GetDistinctMarcasAsync()
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Productos
+            .Where(p => p.Marca != null && p.Marca != "")
+            .Select(p => p.Marca.ToLower().Trim())
+            .Distinct()
+            .ToListAsync();
+    }
+
+    public async Task<List<string>> GetDistinctGenerosAsync()
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Productos
+            .Where(p => p.Genero != null && p.Genero != "")
+            .Select(p => p.Genero.ToLower().Trim())
+            .Distinct()
+            .ToListAsync();
+    }
+
+    public async Task<List<string>> GetDistinctOrigenesAsync()
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Productos
+            .Where(p => p.OrigenTipo != null && p.OrigenTipo != "")
+            .Select(p => p.OrigenTipo.ToLower().Trim())
+            .Distinct()
+            .ToListAsync();
+    }
+
+    public async Task<List<Producto>> GetFilteredProductsAsync(ProductFilterDto filter)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        
+        var query = context.Productos
+            .FromSqlRaw("SELECT * FROM INV.V_PRODUCTOS_DETALLE")
+            .Include(p => p.IdCategoriaNavigation)
+            .AsNoTracking();
+
+        // 1. Estado de Actividad
+        if (filter.ActivityStatus == "activos") query = query.Where(p => p.Activo == true);
+        else if (filter.ActivityStatus == "inactivos") query = query.Where(p => p.Activo == false);
+        // "todos" no filtra por Activo
+
+        // 2. Categoria
+        if (filter.IdCategoria.HasValue && filter.IdCategoria > 0)
+            query = query.Where(p => p.IdCategoria == filter.IdCategoria);
+
+        // 3. Estado de Stock
+        if (filter.StockStatus == "con_stock") query = query.Where(p => p.StockActual > 0);
+        else if (filter.StockStatus == "stock_bajo") query = query.Where(p => p.StockActual <= p.StockMinimo && p.StockActual > 0);
+        else if (filter.StockStatus == "sin_stock") query = query.Where(p => p.StockActual == 0);
+
+        // 4. Vencimiento
+        if (filter.ShowExpiredOnly)
+        {
+            var today = DateTime.Today;
+            query = query.Where(p => p.FechaVencimiento.HasValue && p.FechaVencimiento.Value < today);
+        }
+        else if (filter.ExpireInMonths.HasValue && filter.ExpireInMonths.Value > 0)
+        {
+            var today = DateTime.Today;
+            var maxDate = today.AddMonths(filter.ExpireInMonths.Value);
+            query = query.Where(p => p.FechaVencimiento.HasValue && p.FechaVencimiento.Value >= today && p.FechaVencimiento.Value <= maxDate);
+        }
+
+        // 5. Atributos dinámicos (Insensibles a mayúsculas/minúsculas)
+        if (!string.IsNullOrWhiteSpace(filter.Marca))
+        {
+            var marca = filter.Marca.ToLower().Trim();
+            query = query.Where(p => p.Marca != null && p.Marca.ToLower().Contains(marca));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Genero))
+        {
+            var genero = filter.Genero.ToLower().Trim();
+            query = query.Where(p => p.Genero != null && p.Genero.ToLower().Contains(genero));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.OrigenTipo))
+        {
+            var origen = filter.OrigenTipo.ToLower().Trim();
+            query = query.Where(p => p.OrigenTipo != null && p.OrigenTipo.ToLower().Contains(origen));
+        }
+
+        // 6. Búsqueda por texto (Nombre o Código)
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        {
+            var s = filter.SearchTerm.ToLower().Trim();
             query = query.Where(p => p.Nombre.ToLower().Contains(s) || (p.CodigoBarras != null && p.CodigoBarras.ToLower().Contains(s)));
         }
 
@@ -249,4 +350,5 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 }
+
 
