@@ -210,7 +210,7 @@
                     </div>
 
                     <!-- Preview Area -->
-                    <div class="label-template-container mb-3">
+                    <div class="label-template-container mb-2">
                         @if (printSelectedProduct != null)
                         {
                             <div class="label-preview-box label-preview-@selectedTemplate" id="label-preview-render">
@@ -264,7 +264,7 @@
                         <input type="number" class="form-control form-control-sm text-center fw-bold" @bind="printQuantity" min="1" max="100" />
                     </div>
 
-                    <button class="btn-print-submit w-100 mt-3" disabled="@(printSelectedProduct == null || string.IsNullOrEmpty(AppState.PrinterName))" @onclick="ExecutePrint">
+                    <button class="btn-print-submit w-100 mt-2" disabled="@(printSelectedProduct == null || string.IsNullOrEmpty(AppState.PrinterName))" @onclick="ExecutePrint">
                         @if (isPrinting)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -286,7 +286,7 @@
 
 <style>
     .etiquetas-premium-container {
-        padding: 1.5rem;
+        padding: 0.5rem 1.5rem;
         background: #f8f9fa;
         min-height: 90vh;
     }
@@ -294,12 +294,12 @@
     .etiquetas-header-glass {
         background: white;
         border-radius: 16px;
-        padding: 1rem 1.5rem;
+        padding: 0.75rem 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
         box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
         border: 1px solid rgba(0,0,0,0.05);
     }
 
@@ -323,7 +323,7 @@
     }
 
     .header-titles h1 {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 800;
         color: #1a2a6c;
         margin-bottom: 0;
@@ -374,7 +374,7 @@
     }
 
     .panel-header {
-        padding: 1rem 1.25rem;
+        padding: 0.75rem 1.25rem;
         border-bottom: 1px solid #eee;
     }
 
@@ -386,7 +386,7 @@
     }
 
     .panel-body {
-        padding: 1rem 1.25rem;
+        padding: 0.75rem 1.25rem;
         flex-grow: 1;
         overflow: hidden;
         display: flex;
@@ -563,7 +563,7 @@
     /* Print Panel Specific Styles */
     .print-search-dropdown {
         background: white;
-        max-height: 150px;
+        max-height: 120px;
         overflow-y: auto;
         z-index: 100;
     }
@@ -594,7 +594,7 @@
     private int pageSize = 5;
 
     // Estados de Impresión
-    private string selectedTemplate = "mediana";
+    private string selectedTemplate = "mini";
     private int printQuantity = 1;
     private string printSearchTerm = "";
     private List<Producto> printSearchResults = new();
