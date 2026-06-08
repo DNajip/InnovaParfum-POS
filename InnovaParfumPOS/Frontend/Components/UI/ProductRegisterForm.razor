@@ -148,9 +148,20 @@
 
     protected override void OnParametersSet()
     {
-        if (IsVisible && !string.IsNullOrEmpty(InitialBarcode))
+        if (IsVisible)
         {
-            newProduct.CodigoBarras = InitialBarcode;
+            if (!string.IsNullOrEmpty(InitialBarcode))
+            {
+                newProduct.CodigoBarras = InitialBarcode;
+            }
+            if ((newProduct.IdCategoria == null || newProduct.IdCategoria == 0) && Categorias != null && Categorias.Any())
+            {
+                var defaultCategory = Categorias.FirstOrDefault(c => c.Nombre != null && c.Nombre.Equals("PERFUMES", StringComparison.OrdinalIgnoreCase));
+                if (defaultCategory != null)
+                {
+                    newProduct.IdCategoria = defaultCategory.IdCategoria;
+                }
+            }
         }
     }
 
@@ -201,4 +212,5 @@
         }
     }
 }
+
 
