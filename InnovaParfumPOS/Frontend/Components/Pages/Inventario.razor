@@ -1,4 +1,4 @@
-﻿@page "/inventario"
+@page "/inventario"
 @using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.DTOs
 @using InnovaParfumPOS.Backend.Models
@@ -72,18 +72,117 @@
         </div>
     </div>
 
-    <!-- Barra de Filtros -->
-    <div class="p-3 bg-white border rounded shadow-sm d-flex gap-3 align-items-center">
+    <!-- Barra de Búsqueda y Filtros -->
+    <div class="p-3 bg-white border rounded shadow-sm d-flex gap-3 align-items-center position-relative">
         <div class="position-relative flex-grow-1">
             <i class="fas fa-search position-absolute top-50 translate-middle-y text-muted ms-3"></i>
             <input type="text" class="form-control ps-5" placeholder="Buscar por nombre o código... (Presione Enter)" 
-                   @bind="SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+                   @bind="_filter.SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
         </div>
         
-        <div class="btn-group category-filters">
-            <button type="button" class="btn @(selectedFilterType == null ? "btn-primary" : "btn-outline-secondary")" @onclick="() => SetFiltroTipo(null)">Todos</button>
-            <button type="button" class="btn @(selectedFilterType == "PERFUME" ? "btn-primary" : "btn-outline-secondary")" @onclick="@(() => SetFiltroTipo("PERFUME"))">Perfumes</button>
-            <button type="button" class="btn @(selectedFilterType == "ARTICULO_VARIO" ? "btn-primary" : "btn-outline-secondary")" @onclick="@(() => SetFiltroTipo("ARTICULO_VARIO"))">Artículos Varios</button>
+        <div class="dropdown">
+            <button class="btn @(ActiveFilterCount > 0 ? "btn-primary" : "btn-outline-secondary") d-inline-flex align-items-center gap-2" type="button" @onclick="ToggleFilterMenu">
+                <i class="fas fa-filter"></i> Filtros
+                @if (ActiveFilterCount > 0)
+                {
+                    <span class="badge bg-white text-primary rounded-pill ms-1">@ActiveFilterCount</span>
+                }
+            </button>
+
+            @if (showFilterMenu)
+            {
+                <div class="filter-dropdown-menu shadow-lg border rounded-3 p-3 position-absolute end-0 mt-2 bg-white z-3" style="width: 380px; top: 100%;">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <h6 class="fw-bold mb-0 text-primary"><i class="fas fa-sliders-h me-2"></i>Filtros Avanzados</h6>
+                        <button class="btn-close text-muted" @onclick="() => showFilterMenu = false"></button>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted mb-1">Estado</label>
+                            <select class="form-select form-select-sm" @bind="_filter.ActivityStatus">
+                                <option value="activos">Solo Activos</option>
+                                <option value="inactivos">Solo Inactivos</option>
+                                <option value="todos">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted mb-1">Stock</label>
+                            <select class="form-select form-select-sm" @bind="_filter.StockStatus">
+                                <option value="todos">Todos</option>
+                                <option value="con_stock">Con Stock (>0)</option>
+                                <option value="stock_bajo">Stock Bajo/Crítico</option>
+                                <option value="sin_stock">Agotados (=0)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted mb-1">Categoría</label>
+                            <select class="form-select form-select-sm" @bind="_filter.IdCategoria">
+                                <option value="">Todas</option>
+                                @foreach(var cat in categorias)
+                                {
+                                    <option value="@cat.IdCategoria">@cat.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted mb-1">Vencimiento</label>
+                            <div class="input-group input-group-sm mb-1">
+                                <span class="input-group-text bg-light border-end-0">Vence en</span>
+                                <input type="number" class="form-control border-start-0" @bind="_filter.ExpireInMonths" placeholder="N" min="1" max="120" disabled="@_filter.ShowExpiredOnly">
+                                <span class="input-group-text bg-light">meses</span>
+                            </div>
+                            <div class="form-check form-check-sm">
+                                <input class="form-check-input" type="checkbox" id="chkExpired" @bind="_filter.ShowExpiredOnly">
+                                <label class="form-check-label text-danger small fw-bold" for="chkExpired">Mostrar solo ya vencidos</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted mb-1">Marca</label>
+                            <select class="form-select form-select-sm" @bind="_filter.Marca">
+                                <option value="">Todas</option>
+                                @foreach(var m in filterMarcas)
+                                {
+                                    <option value="@m">@(char.ToUpper(m[0]) + m.Substring(1))</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted mb-1">Género</label>
+                            <select class="form-select form-select-sm" @bind="_filter.Genero">
+                                <option value="">Todos</option>
+                                @foreach(var g in filterGeneros)
+                                {
+                                    <option value="@g">@(char.ToUpper(g[0]) + g.Substring(1))</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted mb-1">Origen / Tipo</label>
+                            <select class="form-select form-select-sm" @bind="_filter.OrigenTipo">
+                                <option value="">Todos</option>
+                                @foreach(var o in filterOrigenes)
+                                {
+                                    <option value="@o">@(char.ToUpper(o[0]) + o.Substring(1))</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button class="btn btn-sm btn-link text-muted text-decoration-none px-0" @onclick="ClearFilters">Limpiar Todo</button>
+                        <button class="btn btn-sm btn-primary rounded-pill px-4 fw-bold shadow-sm" @onclick="ApplyFilters">
+                            <i class="fas fa-check me-2"></i>Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+            }
+            
+            <!-- Overlay para cerrar el menú haciendo clic afuera -->
+            @if(showFilterMenu)
+            {
+                <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2;" @onclick="() => showFilterMenu = false"></div>
+            }
         </div>
     </div>
 
@@ -535,7 +634,7 @@
                                             <tbody>
                                                 @{
                                                     var pagedMovements = productMovements
-                                                        .Where(m => string.IsNullOrEmpty(selectedFilterType) || m.IdTipoMovNavigation?.Nombre == selectedFilterType)
+                                                        .Where(m => string.IsNullOrEmpty(selectedHistoryFilterType) || m.IdTipoMovNavigation?.Nombre == selectedHistoryFilterType)
                                                         .Skip((historyCurrentPage - 1) * historyPageSize)
                                                         .Take(historyPageSize)
                                                         .ToList();
@@ -620,14 +719,38 @@
 
 @code {
     private List<Producto>? productos;
-    private List<Producto>? filteredProductos;
+    private List<Producto>? filteredProductos; // Ahora será igual a productos (filtrado en BD)
     private List<Categoria> categorias = new();
     private InventoryStatsDto stats = new();
-    private string SearchTerm = "";
-    private string? selectedFilterType = null;
+    
+    // Filtros
+    private ProductFilterDto _filter = new();
+    private bool showFilterMenu = false;
+    private List<string> filterMarcas = new();
+    private List<string> filterGeneros = new();
+    private List<string> filterOrigenes = new();
+    
+    private string? selectedHistoryFilterType = null;
+
     private int currentPage = 1;
     private int pageSize = 10;
     private System.Timers.Timer? debounceTimer;
+
+    private int ActiveFilterCount 
+    {
+        get 
+        {
+            int count = 0;
+            if (_filter.ActivityStatus != "activos") count++;
+            if (_filter.StockStatus != "todos") count++;
+            if (_filter.IdCategoria.HasValue && _filter.IdCategoria > 0) count++;
+            if (_filter.ExpireInMonths.HasValue || _filter.ShowExpiredOnly) count++;
+            if (!string.IsNullOrEmpty(_filter.Marca)) count++;
+            if (!string.IsNullOrEmpty(_filter.Genero)) count++;
+            if (!string.IsNullOrEmpty(_filter.OrigenTipo)) count++;
+            return count;
+        }
+    }
 
     // Modal state
     private bool showRegisterModal = false;
@@ -662,6 +785,10 @@
         debounceTimer.Elapsed += async (s, e) => await InvokeAsync(async () => await HandleSearch());
         
         categorias = await ProductService.GetCategoriasAsync();
+        filterMarcas = await ProductService.GetDistinctMarcasAsync();
+        filterGeneros = await ProductService.GetDistinctGenerosAsync();
+        filterOrigenes = await ProductService.GetDistinctOrigenesAsync();
+
         await LoadData();
 
         // Alerta proactiva de productos agotados
@@ -835,26 +962,27 @@
 
     private async Task LoadData()
     {
-        Console.WriteLine("Inventory: Starting LoadData...");
         currentPage = 1;
-        stats = await ProductService.GetInventoryStatsAsync(SearchTerm, null);
-        productos = await ProductService.GetAllProductsAsync(SearchTerm, null, includeInactive: true);
-        ApplyLocalFilter();
-        Console.WriteLine($"Inventory: Loaded {productos.Count} products.");
+        // Stats could be adapted to filter later if needed.
+        stats = await ProductService.GetInventoryStatsAsync(_filter.SearchTerm, _filter.IdCategoria);
+        productos = await ProductService.GetFilteredProductsAsync(_filter);
+        filteredProductos = productos;
         await InvokeAsync(StateHasChanged);
     }
 
-    private void ApplyLocalFilter()
+    private void ToggleFilterMenu() => showFilterMenu = !showFilterMenu;
+
+    private async Task ApplyFilters()
     {
-        if (productos == null) 
-        {
-            filteredProductos = null;
-            return;
-        }
-        
-        filteredProductos = string.IsNullOrEmpty(selectedFilterType) 
-            ? productos 
-            : productos.Where(p => p.TipoProducto == selectedFilterType).ToList();
+        showFilterMenu = false;
+        await LoadData();
+    }
+
+    private async Task ClearFilters()
+    {
+        _filter = new ProductFilterDto();
+        showFilterMenu = false;
+        await LoadData();
     }
 
     private void HandleKeyUp(KeyboardEventArgs e)
@@ -873,25 +1001,13 @@
 
     private async Task HandleSearch()
     {
-        currentPage = 1;
-        stats = await ProductService.GetInventoryStatsAsync(SearchTerm, null);
-        productos = await ProductService.GetAllProductsAsync(SearchTerm, null, includeInactive: true);
-        ApplyLocalFilter();
-        await InvokeAsync(StateHasChanged);
+        await LoadData();
     }
 
     private void SetPage(int page)
     {
         currentPage = page;
         StateHasChanged();
-    }
-
-    private async Task SetFiltroTipo(string? tipo)
-    {
-        selectedFilterType = tipo;
-        ApplyLocalFilter();
-        currentPage = 1;
-        await InvokeAsync(StateHasChanged);
     }
 
     private string GetEstadoClass(Producto p) => p.EstadoStock switch {
@@ -931,6 +1047,7 @@
         margin-bottom: 0px;
     }
 </style>
+
 
 
 
