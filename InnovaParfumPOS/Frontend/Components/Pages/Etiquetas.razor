@@ -163,13 +163,18 @@
                     <div class="print-panel-controls mb-3">
                         <div class="print-control-group">
                             <label><i class="fas fa-print me-1"></i> Impresora</label>
-                            <select class="form-select form-select-sm rounded-3" @bind="selectedPrinter">
-                                <option value="pdf">Descargar como PDF</option>
-                                @foreach (var printer in availablePrinters)
-                                {
-                                    <option value="@printer">@printer</option>
-                                }
-                            </select>
+                            @if (string.IsNullOrEmpty(AppState.PrinterName))
+                            {
+                                <div class="form-control form-control-sm bg-light text-danger fw-bold rounded-3 d-flex align-items-center">
+                                    <i class="fas fa-exclamation-circle me-2"></i> Sin impresora
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="form-control form-control-sm bg-light text-primary fw-bold rounded-3 d-flex align-items-center">
+                                    <i class="fas fa-print me-2"></i> @AppState.PrinterName
+                                </div>
+                            }
                         </div>
 
                         <div class="print-control-group mt-2">
@@ -259,7 +264,7 @@
                         <input type="number" class="form-control form-control-sm text-center fw-bold" @bind="printQuantity" min="1" max="100" />
                     </div>
 
-                    <button class="btn-print-submit w-100 mt-3" disabled="@(printSelectedProduct == null)" @onclick="ExecutePrint">
+                    <button class="btn-print-submit w-100 mt-3" disabled="@(printSelectedProduct == null || string.IsNullOrEmpty(AppState.PrinterName))" @onclick="ExecutePrint">
                         @if (isPrinting)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -268,7 +273,7 @@
                         else
                         {
                             <i class="fas fa-print me-2"></i>
-                            <span>@(selectedPrinter == "pdf" ? "GENERAR PDF" : "IMPRIMIR")</span>
+                            <span>IMPRIMIR</span>
                         }
                     </button>
                 </div>
@@ -589,8 +594,6 @@
     private int pageSize = 5;
 
     // Estados de Impresión
-    private List<string> availablePrinters = new();
-    private string selectedPrinter = "pdf";
     private string selectedTemplate = "mediana";
     private int printQuantity = 1;
     private string printSearchTerm = "";
@@ -619,16 +622,6 @@
         // Cargar productos iniciales sin código de barras para facilitar el uso
         var allProds = await ProductService.SearchProductsAsync("");
         searchResults = allProds.Where(p => string.IsNullOrEmpty(p.CodigoBarras)).ToList();
-
-        // Cargar impresoras
-        try 
-        {
-            availablePrinters = await JS.InvokeAsync<List<string>>("qzListPrinters");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("QZ Tray no detectado: " + ex.Message);
-        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -775,21 +768,11 @@
 
         try 
         {
-            if (selectedPrinter == "pdf")
-            {
-                // Descargar PDF con todas las etiquetas en un solo archivo
-                byte[] pdfBytes = LabelService.GenerateLabelPdf(printSelectedProduct, selectedTemplate, printQuantity);
-                await JS.InvokeVoidAsync("downloadFile", $"Etiquetas_{printSelectedProduct.Nombre.Replace(" ", "_")}.pdf", "application/pdf", pdfBytes);
-                Toast.ShowSuccess("Descarga Iniciada", "El PDF con las etiquetas se ha generado correctamente.");
-            }
-            else
-            {
-                // Imprimir vía QZ: generar 1 sola etiqueta y enviarla N veces como trabajos separados para que corte entre cada una
-                byte[] pdfBytes = LabelService.GenerateLabelPdf(printSelectedProduct, selectedTemplate, 1);
-                string base64Pdf = Convert.ToBase64String(pdfBytes);
-                await JS.InvokeVoidAsync("qzPrintLabelPdf", base64Pdf, selectedPrinter, selectedTemplate, printQuantity);
-                Toast.ShowSuccess("Impresión Enviada", $"Se han enviado {printQuantity} etiquetas a la impresora {selectedPrinter}.");
-            }
+            // Imprimir vía QZ: generar 1 sola etiqueta y enviarla N veces como trabajos separados para que corte entre cada una
+            byte[] pdfBytes = LabelService.GenerateLabelPdf(printSelectedProduct, selectedTemplate, 1);
+            string base64Pdf = Convert.ToBase64String(pdfBytes);
+            await JS.InvokeVoidAsync("qzPrintLabelPdf", base64Pdf, AppState.PrinterName, selectedTemplate, printQuantity);
+            Toast.ShowSuccess("Impresión Enviada", $"Se han enviado {printQuantity} etiquetas a la impresora.");
         }
         catch (Exception ex)
         {
