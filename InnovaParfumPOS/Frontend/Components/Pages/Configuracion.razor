@@ -388,9 +388,13 @@
                                     <option value="USD">Dólares (USD)</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Tasa de Cambio (Oficial / Del Día)</label>
-                                <input type="number" step="0.01" class="form-control" @bind='settings["Moneda_TasaCambio"]' placeholder="Ej. 36.62" />
+                            <div class="col-md-3">
+                                <label class="form-label">Tasa de Compra</label>
+                                <input type="number" step="0.01" class="form-control" @bind='settings["Moneda_TasaCompra"]' placeholder="Ej. 36.50" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Tasa de Venta</label>
+                                <input type="number" step="0.01" class="form-control" @bind='settings["Moneda_TasaVenta"]' placeholder="Ej. 37.00" />
                             </div>
                         </div>
                     </div>
@@ -560,7 +564,7 @@
     private string[] defaultKeys = {
         "Empresa_Nombre", "Empresa_RUC", "Empresa_Telefono", "Empresa_Direccion", "Empresa_Logo",
         "Ventas_PrefijoTicket", "Ventas_MensajeTicket", 
-        "Moneda_Principal", "Moneda_TasaCambio",
+        "Moneda_Principal", "Moneda_TasaCompra", "Moneda_TasaVenta",
         "Hardware_Impresora", "Hardware_AbrirCajon",
         "Inventario_VentaSinStock",
         "Seguridad_TimeoutMinutos",

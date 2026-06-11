@@ -176,15 +176,29 @@ public class AppState
         }
     }
 
-    private decimal _exchangeRate = 36.62m;
-    public decimal ExchangeRate
+    private decimal _exchangeRateBuy = 36.50m;
+    public decimal ExchangeRateBuy
     {
-        get => _exchangeRate;
+        get => _exchangeRateBuy;
         set
         {
-            if (_exchangeRate != value)
+            if (_exchangeRateBuy != value)
             {
-                _exchangeRate = value;
+                _exchangeRateBuy = value;
+                NotifyStateChanged();
+            }
+        }
+    }
+
+    private decimal _exchangeRateSell = 37.00m;
+    public decimal ExchangeRateSell
+    {
+        get => _exchangeRateSell;
+        set
+        {
+            if (_exchangeRateSell != value)
+            {
+                _exchangeRateSell = value;
                 NotifyStateChanged();
             }
         }
@@ -260,9 +274,13 @@ public class AppState
             CurrencyCode = moneda;
             CurrencySymbol = moneda == "USD" ? "$" : "C$";
         }
-        if (settings.TryGetValue("Moneda_TasaCambio", out var tasa) && decimal.TryParse(tasa, out var parsedTasa))
+        if (settings.TryGetValue("Moneda_TasaCompra", out var tasaC) && decimal.TryParse(tasaC, out var parsedTasaC))
         {
-            ExchangeRate = parsedTasa;
+            ExchangeRateBuy = parsedTasaC;
+        }
+        if (settings.TryGetValue("Moneda_TasaVenta", out var tasaV) && decimal.TryParse(tasaV, out var parsedTasaV))
+        {
+            ExchangeRateSell = parsedTasaV;
         }
 
         if (settings.TryGetValue("Color_Primario", out var colPri)) ColorPrimario = colPri;

@@ -156,7 +156,7 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-7">
                                     <label class="small text-muted mb-1">Método de Pago</label>
-                                    <select class="form-select bg-light border-0" @bind="currentPayment.IdMetodoPago">
+                                    <select class="form-select bg-light border-0" @bind="currentPayment.IdMetodoPago" @bind:after="UpdateSuggestedAmount">
                                         @foreach (var m in metodosPago)
                                         {
                                             <option value="@m.IdMetodo">@m.Nombre (@m.IdMonedaNavigation?.Simbolo)</option>
@@ -166,7 +166,7 @@
                                 <div class="col-5">
                                     <label class="small text-muted mb-1">Monto a Pagar</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light border-0 fw-bold">@(metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago)?.IdMonedaNavigation?.Simbolo ?? "@AppState.CurrencySymbol")</span>
+                                        <span class="input-group-text bg-light border-0 fw-bold">@(metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago)?.IdMonedaNavigation?.Simbolo ?? AppState.CurrencySymbol)</span>
                                         <input type="number" step="0.01" class="form-control bg-light border-0 fw-bold" @bind="currentPayment.Monto" />
                                     </div>
                                 </div>
@@ -189,7 +189,7 @@
                                             @if(!string.IsNullOrEmpty(p.Referencia)){ <div class="x-small text-muted">Ref: @p.Referencia</div> }
                                         </div>
                                         <div class="d-flex align-items-center gap-3">
-                                            <span class="fw-bold text-dark">@AppState.CurrencySymbol @p.MontoEnNio.ToString("N2")</span>
+                                            <span class="fw-bold text-dark">@AppState.CurrencySymbol @p.MontoEnMonedaBase.ToString("N2")</span>
                                             <button class="btn btn-sm text-danger p-0 m-0" @onclick="() => RemovePayment(p)"><i class="fas fa-trash-alt"></i></button>
                                         </div>
                                     </div>
@@ -264,7 +264,7 @@
     private string clientSearchTerm = "";
     private bool isProcessing = false;
 
-    private decimal TotalPagado => selectedPayments.Sum(p => p.MontoEnNio);
+    private decimal TotalPagado => selectedPayments.Sum(p => p.MontoEnMonedaBase);
     private decimal SaldoRestante => Total - TotalPagado;
 
     protected override async Task OnInitializedAsync()
@@ -274,10 +274,33 @@
         
         if (metodosPago.Any())
         {
-            currentPayment.IdMetodoPago = metodosPago.First().IdMetodo;
+            var defaultMethod = metodosPago.FirstOrDefault(m => m.IdMonedaNavigation?.Codigo == AppState.CurrencyCode);
+            currentPayment.IdMetodoPago = defaultMethod != null ? defaultMethod.IdMetodo : metodosPago.First().IdMetodo;
         }
         
-        currentPayment.Monto = SaldoRestante > 0 ? SaldoRestante : Total;
+        UpdateSuggestedAmount();
+    }
+
+    private void UpdateSuggestedAmount()
+    {
+        if (SaldoRestante <= 0) 
+        {
+            currentPayment.Monto = 0;
+            return;
+        }
+
+        var metodo = metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago);
+        if (metodo == null) return;
+
+        string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? "NIO";
+        string baseCurrency = AppState.CurrencyCode;
+
+        if (baseCurrency == "NIO" && paymentCurrency == "USD")
+            currentPayment.Monto = Math.Round(SaldoRestante / AppState.ExchangeRateBuy, 2);
+        else if (baseCurrency == "USD" && paymentCurrency == "NIO")
+            currentPayment.Monto = Math.Round(SaldoRestante * AppState.ExchangeRateSell, 2);
+        else
+            currentPayment.Monto = Math.Round(SaldoRestante, 2);
     }
 
     private void AddPayment()
@@ -287,23 +310,51 @@
         var metodo = metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago);
         if (metodo == null) return;
 
+        string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? "NIO";
+        string baseCurrency = AppState.CurrencyCode;
+        
+        decimal tasaCambio = 1m;
+        decimal montoEnMonedaBase = currentPayment.Monto;
+        decimal montoEnNio = currentPayment.Monto;
+
+        if (baseCurrency == "NIO" && paymentCurrency == "USD")
+        {
+            tasaCambio = AppState.ExchangeRateBuy;
+            montoEnMonedaBase = Math.Round(currentPayment.Monto * tasaCambio, 2);
+            montoEnNio = montoEnMonedaBase;
+        }
+        else if (baseCurrency == "USD" && paymentCurrency == "NIO")
+        {
+            tasaCambio = AppState.ExchangeRateSell;
+            montoEnMonedaBase = Math.Round(currentPayment.Monto / tasaCambio, 2);
+            montoEnNio = currentPayment.Monto;
+        }
+        else if (baseCurrency == "USD" && paymentCurrency == "USD")
+        {
+            tasaCambio = AppState.ExchangeRateBuy;
+            montoEnMonedaBase = currentPayment.Monto;
+            montoEnNio = Math.Round(currentPayment.Monto * tasaCambio, 2);
+        }
+
         selectedPayments.Add(new PaymentInput
         {
             IdMetodoPago = currentPayment.IdMetodoPago,
             MetodoNombre = metodo.Nombre,
             Monto = currentPayment.Monto,
-            TasaCambio = metodo.IdMonedaNavigation?.Codigo == "USD" ? 36.60m : 1m, // Logic for exchange rate
+            TasaCambio = tasaCambio,
+            MontoEnMonedaBase = montoEnMonedaBase,
+            MontoEnNio = montoEnNio,
             Referencia = currentPayment.Referencia
         });
 
-        currentPayment.Referencia = ""; // Reset ref
-        currentPayment.Monto = SaldoRestante > 0 ? SaldoRestante : 0; // Reset for next payment
+        currentPayment.Referencia = "";
+        UpdateSuggestedAmount();
     }
     
     private void RemovePayment(PaymentInput p)
     {
         selectedPayments.Remove(p);
-        currentPayment.Monto = SaldoRestante > 0 ? SaldoRestante : 0;
+        UpdateSuggestedAmount();
     }
 
     private async Task SearchClients()
