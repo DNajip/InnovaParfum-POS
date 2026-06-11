@@ -1,4 +1,4 @@
-﻿@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.Models
 @using InnovaParfumPOS.Backend.Services
 @inject IProductService ProductService
 @inject ToastService Toast
@@ -183,6 +183,15 @@
         {
             Toast.ShowWarning("Debe seleccionar una categoría.");
             return;
+        }
+
+        var selectedCat = Categorias.FirstOrDefault(c => c.IdCategoria == newProduct.IdCategoria);
+        if (selectedCat != null)
+        {
+            if (selectedCat.Nombre != null && selectedCat.Nombre.Contains("PERFUME", StringComparison.OrdinalIgnoreCase))
+                newProduct.TipoProducto = "PERFUME";
+            else
+                newProduct.TipoProducto = "ARTICULO_VARIO";
         }
 
         try

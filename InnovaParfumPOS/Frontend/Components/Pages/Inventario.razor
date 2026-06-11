@@ -854,6 +854,15 @@
             ToastService.ShowWarning("El precio de venta debe ser mayor a 0.");
             return;
         }
+
+        var selectedCat = categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria);
+        if (selectedCat != null)
+        {
+            if (selectedCat.Nombre != null && selectedCat.Nombre.Contains("PERFUME", StringComparison.OrdinalIgnoreCase))
+                editingProduct.TipoProducto = "PERFUME";
+            else
+                editingProduct.TipoProducto = "ARTICULO_VARIO";
+        }
         
         try 
         {
