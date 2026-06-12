@@ -130,6 +130,7 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.PedirVencimiento).HasColumnName("PEDIR_VENCIMIENTO");
             entity.Property(e => e.PedirConcentracion).HasColumnName("PEDIR_CONCENTRACION");
             entity.Property(e => e.PedirOrigen).HasColumnName("PEDIR_ORIGEN");
+            entity.Property(e => e.PedirMl).HasColumnName("PEDIR_ML");
 
             entity.HasOne(d => d.IdEstadoNavigation).WithMany(p => p.Categoria)
                 .HasForeignKey(d => d.IdEstado)

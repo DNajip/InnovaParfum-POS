@@ -19,6 +19,8 @@ public partial class Producto
 
     public string? Concentracion { get; set; }
 
+    public decimal? Ml { get; set; }
+
     public DateTime? FechaVencimiento { get; set; }
 
     public int? IdCategoria { get; set; }

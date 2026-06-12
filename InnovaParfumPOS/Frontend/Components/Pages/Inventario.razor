@@ -424,6 +424,13 @@
                                   <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="EDP, EDT..." @bind="editingProduct.Concentracion">
                               </div>
                           }
+                        @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirMl == true)
+                          {
+                              <div class="col-lg-3">
+                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">ML (Mililitros)</label>
+                                  <input type="number" step="any" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Ej. 100" @bind="editingProduct.Ml">
+                              </div>
+                          }
 
                         <!-- Fila 3 -->
                         <div class="col-lg-3">
@@ -1056,6 +1063,7 @@
         margin-bottom: 0px;
     }
 </style>
+
 
 
 

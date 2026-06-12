@@ -1,4 +1,4 @@
-ï»¿using InnovaParfumPOS.Backend.Models;
+using InnovaParfumPOS.Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using InnovaParfumPOS.Backend.Services;
 using InnovaParfumPOS.Backend.DTOs;
@@ -137,7 +137,7 @@ public class ProductService : IProductService
             query = query.Where(p => p.FechaVencimiento.HasValue && p.FechaVencimiento.Value >= today && p.FechaVencimiento.Value <= maxDate);
         }
 
-        // 5. Atributos dinÃ¡micos (Insensibles a mayÃºsculas/minÃºsculas)
+        // 5. Atributos dinámicos (Insensibles a mayúsculas/minúsculas)
         if (!string.IsNullOrWhiteSpace(filter.Marca))
         {
             var marca = filter.Marca.ToLower().Trim();
@@ -156,7 +156,7 @@ public class ProductService : IProductService
             query = query.Where(p => p.OrigenTipo != null && p.OrigenTipo.ToLower().Contains(origen));
         }
 
-        // 6. BÃºsqueda por texto (Nombre o CÃ³digo)
+        // 6. Búsqueda por texto (Nombre o Código)
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var s = filter.SearchTerm.ToLower().Trim();
@@ -213,6 +213,7 @@ public class ProductService : IProductService
         AddParam(command, "@Genero", (object?)producto.Genero ?? DBNull.Value);
         AddParam(command, "@OrigenTipo", (object?)producto.OrigenTipo ?? DBNull.Value);
         AddParam(command, "@Concentracion", (object?)producto.Concentracion ?? DBNull.Value);
+        AddParam(command, "@Ml", (object?)producto.Ml ?? DBNull.Value);
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
         AddParam(command, "@TipoProducto", producto.TipoProducto);
@@ -248,6 +249,7 @@ public class ProductService : IProductService
         AddParam(command, "@Genero", (object?)producto.Genero ?? DBNull.Value);
         AddParam(command, "@OrigenTipo", (object?)producto.OrigenTipo ?? DBNull.Value);
         AddParam(command, "@Concentracion", (object?)producto.Concentracion ?? DBNull.Value);
+        AddParam(command, "@Ml", (object?)producto.Ml ?? DBNull.Value);
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
         AddParam(command, "@TipoProducto", producto.TipoProducto);

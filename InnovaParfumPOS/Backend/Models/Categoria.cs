@@ -18,6 +18,7 @@ public partial class Categoria
     public bool PedirVencimiento { get; set; } = true;
     public bool PedirConcentracion { get; set; } = true;
     public bool PedirOrigen { get; set; } = true;
+    public bool PedirMl { get; set; } = true;
 
     public virtual Estado IdEstadoNavigation { get; set; } = null!;
 
