@@ -21,4 +21,5 @@ public class ProductFilterDto
     public string? Marca { get; set; }
     public string? Genero { get; set; }
     public string? OrigenTipo { get; set; }
+    public decimal? Ml { get; set; }
 }

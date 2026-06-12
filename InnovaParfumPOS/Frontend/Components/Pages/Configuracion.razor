@@ -240,6 +240,7 @@
                                         <th class="text-center" title="Pedir Origen/Tipo">Orig.</th>
                                         <th class="text-center" title="Pedir Concentración">Conc.</th>
                                         <th class="text-center" title="Pedir Vencimiento">Venc.</th>
+                                        <th class="text-center" title="Pedir ML">ML</th>
                                         <th class="text-end">Acciones</th>
                                     </tr>
                                 </thead>
@@ -262,6 +263,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <i class="bi @(cat.PedirVencimiento ? "bi-check-circle-fill text-success" : "bi-dash-circle text-muted")"></i>
+                                            </td>
+                                            <td class="text-center">
+                                                <i class="bi @(cat.PedirMl ? "bi-check-circle-fill text-success" : "bi-dash-circle text-muted")"></i>
                                             </td>
                                             <td class="text-end">
                                                 <button class="btn btn-outline-primary btn-sm rounded-circle shadow-sm" @onclick="() => AbrirModalCategoria(cat)" title="Editar">
@@ -328,6 +332,12 @@
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="chkVenc" @bind="categoriaEditando.PedirVencimiento">
                                             <label class="form-check-label" for="chkVenc">Pedir Vencimiento</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="chkMl" @bind="categoriaEditando.PedirMl">
+                                            <label class="form-check-label" for="chkMl">Pedir ML</label>
                                         </div>
                                     </div>
                                 </div>
@@ -575,7 +585,7 @@
         private List<Categoria> categoriasList = new();
     private bool showCategoriaModal = false;
     private bool isSavingCategoria = false;
-    private Categoria categoriaEditando = new() { PedirMarca = true, PedirGenero = true, PedirVencimiento = true, PedirConcentracion = true, PedirOrigen = true, IdEstado = 1 };
+    private Categoria categoriaEditando = new() { PedirMarca = true, PedirGenero = true, PedirVencimiento = true, PedirConcentracion = true, PedirOrigen = true, PedirMl = true, IdEstado = 1 };
 
     // User Management variables
     private List<UserDto> userList = new();
@@ -706,7 +716,7 @@
     {
         if (cat == null)
         {
-            categoriaEditando = new Categoria { PedirMarca = true, PedirGenero = true, PedirVencimiento = true, PedirConcentracion = true, PedirOrigen = true, IdEstado = 1 };
+            categoriaEditando = new Categoria { PedirMarca = true, PedirGenero = true, PedirVencimiento = true, PedirConcentracion = true, PedirOrigen = true, PedirMl = true, IdEstado = 1 };
         }
         else
         {
@@ -719,6 +729,7 @@
                 PedirVencimiento = cat.PedirVencimiento,
                 PedirConcentracion = cat.PedirConcentracion,
                 PedirOrigen = cat.PedirOrigen,
+                PedirMl = cat.PedirMl,
                 IdEstado = cat.IdEstado
             };
         }
