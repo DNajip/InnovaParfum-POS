@@ -72,13 +72,17 @@
                 <div class="row g-4">
                     <!-- Left Column: Line Items & Details -->
                     <div class="col-lg-7">
-                        <div class="card border-0 bg-white shadow-sm h-100" style="border-radius: 16px;">
-                            <div class="p-0" style="max-height: 540px; overflow-y: auto;">
+                        <div class="card border-0 bg-white shadow-sm h-100" style="border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important; overflow: hidden;">
+                            <div class="bg-light px-4 py-3 border-bottom d-flex align-items-center">
+                                <h6 class="fw-bold mb-0 text-secondary text-uppercase" style="letter-spacing: 0.5px;"><i class="fas fa-box-open me-2 text-primary"></i> Productos a Facturar</h6>
+                                <span class="badge bg-primary rounded-pill ms-auto">@Items.Sum(i => i.Quantity) items</span>
+                            </div>
+                            <div class="p-0" style="max-height: 480px; overflow-y: auto;">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light sticky-top">
+                                    <thead class="bg-white sticky-top shadow-sm" style="z-index: 10;">
                                         <tr>
-                                            <th class="ps-3 border-0">Producto</th>
-                                            <th class="text-end pe-4 border-0" style="width: 130px;">Total</th>
+                                            <th class="ps-4 py-3 border-0 text-muted small fw-bold text-uppercase">Detalle</th>
+                                            <th class="text-end pe-4 py-3 border-0 text-muted small fw-bold text-uppercase" style="width: 140px;">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -150,47 +154,57 @@
                     <!-- Right Column: Payment & Summary -->
                     <div class="col-lg-5 d-flex flex-column gap-3">
                         <!-- MULTI-PAYMENT SECTION -->
-                        <div class="card border-0 shadow-sm p-3 bg-white flex-grow-1" style="border-radius: 16px;">
-                            <h6 class="fw-bold mb-3 text-secondary"><i class="fas fa-wallet me-2"></i>1. Pagos</h6>
+                        <div class="card border-0 shadow-sm p-4 bg-white flex-grow-1" style="border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;">
+                            <h6 class="fw-bold mb-4 text-secondary text-uppercase" style="letter-spacing: 0.5px;"><i class="fas fa-wallet me-2 text-primary"></i> 1. Añadir Pagos</h6>
                             
-                            <div class="row g-2 mb-3">
+                            <div class="row g-3 mb-4">
                                 <div class="col-7">
-                                    <label class="small text-muted mb-1">Método de Pago</label>
-                                    <select class="form-select bg-light border-0" @bind="currentPayment.IdMetodoPago" @bind:after="UpdateSuggestedAmount">
+                                    <label class="small text-muted mb-2 fw-semibold">Método de Pago</label>
+                                    <select class="form-select bg-light border-0 shadow-none p-2" style="border-radius: 10px;" @bind="currentPayment.IdMetodoPago" @bind:after="UpdateSuggestedAmount">
                                         @foreach (var m in metodosPago)
                                         {
-                                            <option value="@m.IdMetodo">@m.Nombre (@m.IdMonedaNavigation?.Simbolo)</option>
+                                            <option value="@m.IdMetodo">@m.Nombre</option>
                                         }
                                     </select>
                                 </div>
                                 <div class="col-5">
-                                    <label class="small text-muted mb-1">Monto a Pagar</label>
+                                    <label class="small text-muted mb-2 fw-semibold">Monto a Pagar</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light border-0 fw-bold">@(metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago)?.IdMonedaNavigation?.Simbolo ?? AppState.CurrencySymbol)</span>
-                                        <input type="number" step="0.01" class="form-control bg-light border-0 fw-bold" @bind="currentPayment.Monto" />
+                                        <span class="input-group-text bg-light border-0 fw-bold text-primary" style="border-top-left-radius: 10px; border-bottom-left-radius: 10px;">
+                                            @(metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago)?.IdMonedaNavigation?.Simbolo ?? AppState.CurrencySymbol)
+                                        </span>
+                                        <input type="number" step="0.01" class="form-control bg-light border-0 fw-bold text-dark fs-6" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px;" @bind="currentPayment.Monto" />
                                     </div>
                                 </div>
                                 <div class="col-12">
-                                    <input type="text" class="form-control bg-light border-0 form-control-sm" @bind="currentPayment.Referencia" placeholder="Referencia / Autorización (Opcional)" />
+                                    <input type="text" class="form-control bg-light border-0 form-control-sm p-2" style="border-radius: 10px;" @bind="currentPayment.Referencia" placeholder="Referencia / Autorización (Opcional)" />
                                 </div>
-                                <div class="col-12 mt-2">
-                                    <button class="btn btn-outline-primary w-100 rounded-3 border-dashed" style="border-style: dashed;" @onclick="AddPayment" disabled="@(SaldoRestante <= 0 && currentPayment.Monto > 0)">
-                                        <i class="fas fa-plus me-1"></i> Agregar Pago
+                                <div class="col-12 mt-3">
+                                    <button class="btn btn-outline-primary w-100 fw-bold" style="border-radius: 12px; border-width: 2px; border-style: dashed;" @onclick="AddPayment" disabled="@(SaldoRestante <= 0 && currentPayment.Monto > 0)">
+                                        <i class="fas fa-plus me-2"></i> Agregar Pago
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="payment-list d-flex flex-column gap-2" style="max-height: 140px; overflow-y: auto;">
+                            <div class="payment-list d-flex flex-column gap-3" style="max-height: 180px; overflow-y: auto;">
                                 @foreach (var p in selectedPayments)
                                 {
-                                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded-3 border-start border-primary border-4 shadow-sm">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light border-start border-primary shadow-sm" style="border-radius: 12px; border-width: 4px !important;">
                                         <div>
                                             <div class="small fw-bold text-dark">@p.MetodoNombre</div>
-                                            @if(!string.IsNullOrEmpty(p.Referencia)){ <div class="x-small text-muted">Ref: @p.Referencia</div> }
+                                            @if(!string.IsNullOrEmpty(p.Referencia)){ <div class="x-small text-muted mt-1"><i class="fas fa-receipt me-1"></i>Ref: @p.Referencia</div> }
                                         </div>
                                         <div class="d-flex align-items-center gap-3">
-                                            <span class="fw-bold text-dark">@AppState.CurrencySymbol @p.MontoEnMonedaBase.ToString("N2")</span>
-                                            <button class="btn btn-sm text-danger p-0 m-0" @onclick="() => RemovePayment(p)"><i class="fas fa-trash-alt"></i></button>
+                                            <div class="text-end">
+                                                <span class="d-block fw-bold text-dark fs-6">@AppState.CurrencySymbol @p.MontoEnMonedaBase.ToString("N2")</span>
+                                                @if(p.Monto != p.MontoEnMonedaBase)
+                                                {
+                                                    <span class="d-block x-small text-muted">(@p.Monto.ToString("N2") pago orig.)</span>
+                                                }
+                                            </div>
+                                            <button class="btn btn-sm btn-light text-danger rounded-circle p-2 shadow-sm" @onclick="() => RemovePayment(p)" title="Eliminar Pago">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 }
@@ -198,35 +212,35 @@
                         </div>
 
                         <!-- TOTAL SUMMARY & BALANCE -->
-                        <div class="card border-0 p-3 shadow-sm mt-auto" style="border-radius: 16px; background: white; border-top: 4px solid #0ea5e9 !important;">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-secondary fw-bold">Total Venta</span>
+                        <div class="card border-0 p-4 mt-auto" style="border-radius: 20px; background: linear-gradient(145deg, #ffffff, #f8fafc); box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
+                            <div class="d-flex justify-content-between mb-3 align-items-center">
+                                <span class="text-muted fw-semibold">Total Venta</span>
                                 <span class="fw-bold fs-5 text-dark">@AppState.CurrencySymbol @Total.ToString("N2")</span>
                             </div>
-                            <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                                <span class="text-secondary">Total Pagado</span>
-                                <span class="fw-bold text-success">@AppState.CurrencySymbol @TotalPagado.ToString("N2")</span>
+                            <div class="d-flex justify-content-between mb-4 border-bottom pb-3 align-items-center">
+                                <span class="text-muted fw-semibold">Pagado</span>
+                                <span class="fw-bold fs-5 text-success">@AppState.CurrencySymbol @TotalPagado.ToString("N2")</span>
                             </div>
 
                             @if (SaldoRestante > 0)
                             {
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="text-danger fw-bold small">PENDIENTE</span>
+                                <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded-3" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+                                    <span class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-2"></i>PENDIENTE</span>
                                     <span class="h3 fw-bold mb-0 text-danger">@AppState.CurrencySymbol @SaldoRestante.ToString("N2")</span>
                                 </div>
                             }
                             else
                             {
-                                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-success bg-opacity-10 rounded-3">
-                                    <span class="text-success fw-bold small"><i class="fas fa-check-circle me-1"></i> CUBIERTO - VUELTO</span>
-                                    <span class="h4 fw-bold mb-0 text-success">@AppState.CurrencySymbol @Math.Abs(SaldoRestante).ToString("N2")</span>
+                                <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                    <span class="text-success fw-bold"><i class="fas fa-check-circle me-2"></i>VUELTO / CAMBIO</span>
+                                    <span class="h3 fw-bold mb-0 text-success">@AppState.CurrencySymbol @Math.Abs(SaldoRestante).ToString("N2")</span>
                                 </div>
                             }
 
-                            <div class="d-flex gap-2 mt-1">
-                                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-muted border-0" style="background: #f1f5f9;" @onclick="OnClose">Cancelar</button>
-                                <button type="button" class="btn btn-primary flex-grow-1 d-inline-flex justify-content-center align-items-center gap-2 rounded-pill px-4 py-2 fw-bold shadow-sm" 
-                                        disabled="@(isProcessing || SaldoRestante > 0)" @onclick="ProcessSale" style="font-size: 1.1rem;">
+                            <div class="d-flex gap-3 mt-2">
+                                <button type="button" class="btn btn-light fw-bold text-muted border-0 shadow-sm" style="border-radius: 14px; padding: 12px 24px; background: #e2e8f0;" @onclick="OnClose">Cancelar</button>
+                                <button type="button" class="btn btn-primary flex-grow-1 d-inline-flex justify-content-center align-items-center gap-2 fw-bold shadow-sm" 
+                                        disabled="@(isProcessing || SaldoRestante > 0)" @onclick="ProcessSale" style="border-radius: 14px; padding: 12px; font-size: 1.15rem; background: linear-gradient(135deg, #0ea5e9, #0284c7); border: none;">
                                     @if (isProcessing)
                                     {
                                         <span class="spinner-border spinner-border-sm"></span>
@@ -234,7 +248,7 @@
                                     }
                                     else
                                     {
-                                        <i class="fas fa-check-circle"></i>
+                                        <i class="fas fa-check-circle fs-5"></i>
                                         <span>FINALIZAR VENTA</span>
                                     }
                                 </button>
@@ -274,7 +288,8 @@
         
         if (metodosPago.Any())
         {
-            var defaultMethod = metodosPago.FirstOrDefault(m => m.IdMonedaNavigation?.Codigo == AppState.CurrencyCode);
+            var defaultMethod = metodosPago.FirstOrDefault(m => m.IdMonedaNavigation?.Codigo == AppState.CurrencyCode)
+                                ?? metodosPago.FirstOrDefault(m => m.Nombre.Contains(AppState.CurrencyCode, StringComparison.OrdinalIgnoreCase));
             currentPayment.IdMetodoPago = defaultMethod != null ? defaultMethod.IdMetodo : metodosPago.First().IdMetodo;
         }
         
@@ -292,7 +307,7 @@
         var metodo = metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago);
         if (metodo == null) return;
 
-        string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? "NIO";
+        string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? (metodo.Nombre.Contains("USD") ? "USD" : "NIO");
         string baseCurrency = AppState.CurrencyCode;
 
         if (baseCurrency == "NIO" && paymentCurrency == "USD")
@@ -310,7 +325,7 @@
         var metodo = metodosPago.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago);
         if (metodo == null) return;
 
-        string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? "NIO";
+        string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? (metodo.Nombre.Contains("USD") ? "USD" : "NIO");
         string baseCurrency = AppState.CurrencyCode;
         
         decimal tasaCambio = 1m;
@@ -331,7 +346,7 @@
         }
         else if (baseCurrency == "USD" && paymentCurrency == "USD")
         {
-            tasaCambio = AppState.ExchangeRateBuy;
+            tasaCambio = AppState.ExchangeRateBuy; // Para guardado en BD siempre se necesita en NIO
             montoEnMonedaBase = currentPayment.Monto;
             montoEnNio = Math.Round(currentPayment.Monto * tasaCambio, 2);
         }
