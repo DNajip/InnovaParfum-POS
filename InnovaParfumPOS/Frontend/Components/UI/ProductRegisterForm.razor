@@ -63,6 +63,10 @@
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Vencimiento</label>
                             <input type="date" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.FechaVencimiento">
                         </div> }
+                        @if(SelectedCategory?.PedirMl == true) { <div class="col-lg-3">
+                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">ML</label>
+                            <input type="number" step="any" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="ML" @bind="newProduct.Ml">
+                        </div> }
 
                         <!-- Fila 3 -->
                         <div class="col-lg-3">

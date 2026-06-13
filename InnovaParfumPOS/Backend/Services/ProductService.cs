@@ -1,4 +1,4 @@
-using InnovaParfumPOS.Backend.Models;
+ï»¿using InnovaParfumPOS.Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using InnovaParfumPOS.Backend.Services;
 using InnovaParfumPOS.Backend.DTOs;
@@ -137,7 +137,7 @@ public class ProductService : IProductService
             query = query.Where(p => p.FechaVencimiento.HasValue && p.FechaVencimiento.Value >= today && p.FechaVencimiento.Value <= maxDate);
         }
 
-        // 5. Atributos dinámicos (Insensibles a mayúsculas/minúsculas)
+        // 5. Atributos dinï¿½micos (Insensibles a mayï¿½sculas/minï¿½sculas)
         if (!string.IsNullOrWhiteSpace(filter.Marca))
         {
             var marca = filter.Marca.ToLower().Trim();
@@ -156,7 +156,12 @@ public class ProductService : IProductService
             query = query.Where(p => p.OrigenTipo != null && p.OrigenTipo.ToLower().Contains(origen));
         }
 
-        // 6. Búsqueda por texto (Nombre o Código)
+        if (filter.Ml.HasValue)
+        {
+            query = query.Where(p => p.Ml == filter.Ml.Value);
+        }
+
+        // 6. Bï¿½squeda por texto (Nombre o Cï¿½digo)
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var s = filter.SearchTerm.ToLower().Trim();
