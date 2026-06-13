@@ -1,4 +1,4 @@
-@using InnovaParfumPOS.Backend.Models
+﻿@using InnovaParfumPOS.Backend.Models
 @using InnovaParfumPOS.Backend.Services
 @inject IProductService ProductService
 @inject ToastService Toast
@@ -69,55 +69,175 @@
                             <input type="number" step="any" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="ML" @bind="newProduct.Ml">
                         </div> }
 
-                        <!-- Fila 3 -->
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo (Compra)</label>
-                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
-                                <i class="fas fa-coins text-success me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="_CostoProducto">
-                            </div>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">P. Venta</label>
-                            <div class="input-group-custom bg-primary bg-opacity-10 rounded-3 d-flex align-items-center px-2 py-1">
-                                <span class="text-primary me-1 fw-bold">@SimboloMoneda</span>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none fw-bold text-primary" @bind="_PrecioMinorista">
-                            </div>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Inicial</label>
-                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
-                                <i class="fas fa-boxes text-muted me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" onfocus="this.select()" @bind="newProduct.StockActual">
-                            </div>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Mínimo Alerta</label>
-                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
-                                <i class="fas fa-bell text-warning me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" onfocus="this.select()" @bind="newProduct.StockMinimo">
-                            </div>
-                        </div>
-
-                        <!-- Fila 4 -->
-                        <div class="col-lg-12">
-                            <div class="mt-2 p-2 px-3 bg-light rounded-4 d-flex align-items-center justify-content-between border border-white">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="form-check form-switch p-0 m-0">
-                                        <input class="form-check-input ms-0" type="checkbox" style="width: 2.8rem; height: 1.4rem;" id="flexSwitchCheckChecked" @bind="newProduct.Activo">
+                        <!-- SECCIÓN COSTOS -->
+                        <div class="col-12 mt-4">
+                            <div class="p-3 bg-light rounded-4 border" style="border-color: #e2e8f0 !important;">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-coins text-success"></i>
                                     </div>
                                     <div>
-                                        <label class="form-check-label fw-bold mb-0" for="flexSwitchCheckChecked">Producto Activo en el Sistema</label>
-                                        <p class="text-muted small mb-0">Solo los productos activos pueden ser vendidos en el POS</p>
+                                        <h6 class="mb-0 fw-bold text-success">1. COSTOS</h6>
+                                        <small class="text-muted">Ingrese los costos para calcular los precios de venta</small>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo Perfume</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <i class="fas fa-money-bill-wave text-success me-2"></i>
+                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.CostoProducto" @bind:event="oninput" @bind:after="CalculatePrices">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo Envío</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <i class="fas fa-money-bill-wave text-success me-2"></i>
+                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.CostoEnvio" @bind:event="oninput" @bind:after="CalculatePrices">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo Total (Automático)</label>
+                                        <div class="input-group-custom bg-success bg-opacity-10 rounded-3 d-flex align-items-center px-3 py-2 border border-success border-opacity-25">
+                                            <span class="text-success me-2 fw-bold">@SimboloMoneda</span>
+                                            <input type="text" readonly class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold text-success" value="@CostoTotal.ToString("N2")">
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Cálculo: Costo Perfume + Costo Envío</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- SECCIÓN PRECIO MAYORISTA -->
+                        <div class="col-12 mt-3">
+                            <div class="p-3 bg-white rounded-4 border border-primary border-opacity-25">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-users text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-primary">2. PRECIO MAYORISTA</h6>
+                                        <small class="text-muted">Defina el porcentaje de ganancia y/o el precio para mayoristas</small>
+                                    </div>
+                                </div>
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">% Ganancia Mayorista</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded px-2 py-1 me-2 fw-bold">%</div>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PorcGananciaMayorista" @bind:event="oninput" @bind:after="CalculateMayoristaFromPorc">
+                                            <span class="text-muted ms-2">%</span>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Basado en el costo total</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Mayorista</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <i class="fas fa-money-bill-wave text-primary me-2"></i>
+                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PrecioMayorista" @bind:event="oninput" @bind:after="CalculatePorcFromMayorista">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 border border-primary border-opacity-25 h-100 d-flex align-items-center">
+                                            <i class="fas fa-info-circle text-primary me-3 fs-4"></i>
+                                            <small class="text-primary fw-medium mb-0" style="line-height: 1.2;">Puede ingresar el porcentaje o el precio, el otro se calculará automáticamente.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN PRECIO MINORISTA -->
+                        <div class="col-12 mt-3">
+                            <div class="p-3 bg-white rounded-4 border" style="border-color: #d8b4fe !important;">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background-color: #f3e8ff;">
+                                        <i class="fas fa-user" style="color: #9333ea;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold" style="color: #9333ea;">3. PRECIO MINORISTA</h6>
+                                        <small class="text-muted">Defina el porcentaje de ganancia y/o el precio para minoristas</small>
+                                    </div>
+                                </div>
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">% Ganancia Minorista</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <div class="rounded px-2 py-1 me-2 fw-bold" style="background-color: #f3e8ff; color: #9333ea;">%</div>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PorcGananciaMinorista" @bind:event="oninput" @bind:after="CalculateMinoristaFromPorc">
+                                            <span class="text-muted ms-2">%</span>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Basado en el costo total</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Minorista</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <i class="fas fa-money-bill-wave me-2" style="color: #9333ea;"></i>
+                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PrecioMinorista" @bind:event="oninput" @bind:after="CalculatePorcFromMinorista">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 rounded-3 border h-100 d-flex align-items-center" style="background-color: #faf5ff; border-color: #e9d5ff !important;">
+                                            <i class="fas fa-info-circle me-3 fs-4" style="color: #9333ea;"></i>
+                                            <small class="fw-medium mb-0" style="color: #7e22ce; line-height: 1.2;">Puede ingresar el porcentaje o el precio, el otro se calculará automáticamente.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN STOCK Y ESTADO -->
+                        <div class="col-12 mt-3">
+                            <div class="p-3 bg-white rounded-4 border border-warning border-opacity-25" style="background-color: #fffbeb !important;">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-box-open text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-warning">4. STOCK Y ESTADO</h6>
+                                        <small class="text-muted">Configure el stock inicial, mínimo y el estado del producto</small>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Inicial</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <i class="fas fa-boxes text-warning me-2"></i>
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none" placeholder="0" @bind="newProduct.StockActual" onfocus="this.select()">
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Cantidad inicial en inventario</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Mínimo (Alerta)</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
+                                            <i class="fas fa-bell text-warning me-2"></i>
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none" placeholder="5" @bind="newProduct.StockMinimo" onfocus="this.select()">
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Se genera alerta al llegar a este nivel</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Producto Activo</label>
+                                        <div class="bg-white rounded-3 d-flex align-items-center px-3 py-2 border h-auto" style="height: 40px !important;">
+                                            <div class="form-check form-switch p-0 m-0 d-flex align-items-center w-100">
+                                                <input class="form-check-input ms-0 me-3" type="checkbox" style="width: 2.5rem; height: 1.25rem;" id="chkActivo" @bind="newProduct.Activo">
+                                                <label class="form-check-label fw-bold m-0" for="chkActivo">Sí, activar producto</label>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Solo los productos activos pueden ser vendidos en el POS</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-2">
                     <button class="btn btn-link text-muted text-decoration-none px-4" @onclick="Close">Cancelar</button>
-                    <button class="btn btn-primary rounded-pill px-5 shadow fw-bold py-2" @onclick="HandleCreateProduct" disabled="@isSaving">
+                    <button class="btn btn-dark rounded-pill px-5 shadow fw-bold py-2" @onclick="HandleCreateProduct" disabled="@isSaving">
                         @if (isSaving)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -137,7 +257,7 @@
 @code {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
-        [Parameter] public List<Categoria> Categorias { get; set; } = new();
+    [Parameter] public List<Categoria> Categorias { get; set; } = new();
     [Parameter] public List<Genero> Generos { get; set; } = new();
     [Parameter] public List<Origen> Origenes { get; set; } = new();
     [Parameter] public List<Concentracion> Concentraciones { get; set; } = new();
@@ -148,8 +268,8 @@
     private Categoria? SelectedCategory => Categorias.FirstOrDefault(c => c.IdCategoria == newProduct.IdCategoria);
     private bool isSaving = false;
     private string SimboloMoneda = "C$";
-    private decimal? _PrecioMinorista;
-    private decimal? _CostoProducto;
+
+    private decimal CostoTotal => (newProduct.CostoProducto ?? 0) + (newProduct.CostoEnvio ?? 0);
 
     protected override async Task OnInitializedAsync()
     {
@@ -176,11 +296,47 @@
         }
     }
 
+    private void CalculatePrices()
+    {
+        CalculateMayoristaFromPorc();
+        CalculateMinoristaFromPorc();
+    }
+
+    private void CalculateMayoristaFromPorc()
+    {
+        if (newProduct.PorcGananciaMayorista.HasValue && CostoTotal > 0)
+        {
+            newProduct.PrecioMayorista = Math.Round(CostoTotal + (CostoTotal * (newProduct.PorcGananciaMayorista.Value / 100m)), 2);
+        }
+    }
+
+    private void CalculatePorcFromMayorista()
+    {
+        if (newProduct.PrecioMayorista.HasValue && CostoTotal > 0)
+        {
+            newProduct.PorcGananciaMayorista = Math.Round(((newProduct.PrecioMayorista.Value - CostoTotal) / CostoTotal) * 100m, 2);
+        }
+    }
+
+    private void CalculateMinoristaFromPorc()
+    {
+        if (newProduct.PorcGananciaMinorista.HasValue && CostoTotal > 0)
+        {
+            newProduct.PrecioMinorista = Math.Round(CostoTotal + (CostoTotal * (newProduct.PorcGananciaMinorista.Value / 100m)), 2);
+        }
+    }
+
+    private void CalculatePorcFromMinorista()
+    {
+        if (newProduct.PrecioMinorista.HasValue && CostoTotal > 0)
+        {
+            newProduct.PorcGananciaMinorista = Math.Round(((newProduct.PrecioMinorista.Value - CostoTotal) / CostoTotal) * 100m, 2);
+        }
+    }
+
     private async Task Close()
     {
         newProduct = new Producto { Activo = true, StockActual = 0, StockMinimo = 5 };
-        _PrecioMinorista = null;
-        _CostoProducto = null;
         await IsVisibleChanged.InvokeAsync(false);
     }
 
@@ -192,8 +348,6 @@
             return;
         }
 
-        newProduct.PrecioMinorista = _PrecioMinorista ?? 0;
-        newProduct.CostoProducto = _CostoProducto;
         if ((newProduct.PrecioMinorista ?? 0) <= 0)
         {
             Toast.ShowWarning("Debe ingresar un precio minorista al crear un producto.");
@@ -236,16 +390,3 @@
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
