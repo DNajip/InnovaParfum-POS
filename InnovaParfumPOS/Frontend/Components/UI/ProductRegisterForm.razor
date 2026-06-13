@@ -239,16 +239,13 @@
 
     private decimal CostoTotal => (newProduct.CostoProducto ?? 0) + (newProduct.CostoEnvio ?? 0);
 
-    protected override async Task OnInitializedAsync()
-    {
-        var moneda = await ConfigService.GetSettingAsync("Moneda_Principal");
-        SimboloMoneda = moneda == "USD" ? "$" : "C$";
-    }
-
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (IsVisible)
         {
+            var moneda = await ConfigService.GetSettingAsync("Moneda_Principal");
+            SimboloMoneda = moneda == "USD" ? "$" : "C$";
+
             if (!string.IsNullOrEmpty(InitialBarcode))
             {
                 newProduct.CodigoBarras = InitialBarcode;
