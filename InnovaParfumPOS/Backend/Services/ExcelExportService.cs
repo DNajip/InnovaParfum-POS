@@ -258,8 +258,8 @@ public class ExcelExportService
             ws.Cell(row, 3).Value = item.StockActual;
             ws.Cell(row, 4).Value = item.StockMinimo;
             ws.Cell(row, 5).Value = item.EstadoStock;
-            ws.Cell(row, 6).Value = item.PrecioCompra;
-            ws.Cell(row, 7).Value = item.PrecioVenta;
+            ws.Cell(row, 6).Value = item.CostoProducto;
+            ws.Cell(row, 7).Value = item.PrecioMinorista;
             ws.Cell(row, 8).Value = item.ValorCostoTotal;
             ws.Cell(row, 9).Value = item.ValorVentaTotal;
             row++;
@@ -323,4 +323,5 @@ public class ExcelExportService
         ws.Range(5, 1, 5, 9).Style.Border.BottomBorderColor = XLColor.FromHtml("#0077b6");
     }
 }
+
 

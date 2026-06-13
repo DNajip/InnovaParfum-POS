@@ -202,7 +202,7 @@
                                     <div class="print-search-item p-2 border-bottom @(printSelectedProduct?.IdProducto == prod.IdProducto ? "bg-primary-subtle" : "")" 
                                          @onclick="async () => await SelectPrintProduct(prod)">
                                         <div class="small fw-bold">@prod.Nombre</div>
-                                        <div class="smaller text-muted">@(prod.CodigoBarras ?? "Sin Código") | @AppState.CurrencySymbol @prod.PrecioVenta:N2</div>
+                                        <div class="smaller text-muted">@(prod.CodigoBarras ?? "Sin Código") | @AppState.CurrencySymbol @prod.PrecioMinorista:N2</div>
                                     </div>
                                 }
                             </div>
@@ -227,7 +227,7 @@
                                 {
                                     <div class="label-price-container">
                                         @if (selectedTemplate == "grande") { <span class="label-price-label">Precio:</span> }
-                                        <span class="label-price-value">@AppState.CurrencySymbol @printSelectedProduct.PrecioVenta.ToString("N2")</span>
+                                        <span class="label-price-value">@AppState.CurrencySymbol @printSelectedProduct.(PrecioMinorista ?? 0).ToString("N2")</span>
                                     </div>
                                 }
 
@@ -792,6 +792,8 @@
         Toast.ShowInfo("Inventario Actualizado", "El nuevo producto ya está disponible.");
     }
 }
+
+
 
 
 

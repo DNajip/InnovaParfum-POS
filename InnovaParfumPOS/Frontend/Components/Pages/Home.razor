@@ -37,7 +37,7 @@
                                     <small class="text-muted">Cód: @prod.CodigoBarras | Disp: @prod.StockActual</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="d-block text-primary fw-bold">@AppState.CurrencySymbol @prod.PrecioVenta.ToString("N2")</span>
+                                    <span class="d-block text-primary fw-bold">@AppState.CurrencySymbol @prod.(PrecioMinorista ?? 0).ToString("N2")</span>
                                 </div>
                             </div>
                         </li>
@@ -255,7 +255,7 @@
                 IdProducto = prod.IdProducto,
                 Code = prod.CodigoBarras ?? "",
                 Description = prod.Nombre,
-                UnitPrice = prod.PrecioVenta,
+                UnitPrice = prod.PrecioMinorista ?? 0,
                 Quantity = 1,
                 IdCategoria = prod.IdCategoria,
                 RequiresImei = requiresImei,
@@ -326,4 +326,7 @@
         }
     }
 }
+
+
+
 

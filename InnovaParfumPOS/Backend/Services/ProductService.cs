@@ -221,8 +221,8 @@ public class ProductService : IProductService
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
         AddParam(command, "@TipoProducto", producto.TipoProducto);
-        AddParam(command, "@PrecioCompra", producto.PrecioCompra);
-        AddParam(command, "@PrecioVenta", producto.PrecioVenta);
+        AddParam(command, "@CostoProducto", producto.CostoProducto);
+        AddParam(command, "@PrecioMinorista", producto.PrecioMinorista);
         AddParam(command, "@StockActual", producto.StockActual);
         AddParam(command, "@StockMinimo", producto.StockMinimo);
         AddParam(command, "@Activo", producto.Activo);
@@ -257,8 +257,8 @@ public class ProductService : IProductService
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
         AddParam(command, "@TipoProducto", producto.TipoProducto);
-        AddParam(command, "@PrecioCompra", producto.PrecioCompra);
-        AddParam(command, "@PrecioVenta", producto.PrecioVenta);
+        AddParam(command, "@CostoProducto", producto.CostoProducto);
+        AddParam(command, "@PrecioMinorista", producto.PrecioMinorista);
         AddParam(command, "@StockActual", producto.StockActual);
         AddParam(command, "@StockMinimo", producto.StockMinimo);
         AddParam(command, "@Activo", producto.Activo);
@@ -341,7 +341,7 @@ public class ProductService : IProductService
             TotalProductos = productos.Count,
             StockBajo = productos.Count(p => p.StockActual > 0 && p.StockActual <= p.StockMinimo),
             SinStock = productos.Count(p => p.StockActual == 0),
-            Valorizacion = productos.Sum(p => p.PrecioVenta * p.StockActual)
+            Valorizacion = productos.Sum(p => (p.PrecioMinorista ?? 0) * p.StockActual)
         };
     }
 
@@ -356,6 +356,8 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 }
+
+
 
 
 

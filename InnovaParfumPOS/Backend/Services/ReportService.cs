@@ -63,7 +63,7 @@ public class ReportService : IReportService
             ProductosVendidos = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => d.Cantidad),
             TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => v.TotalNio) : 0,
             UtilidadNeta = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => 
-                d.SubtotalNio - ((d.IdProductoNavigation?.PrecioCompra ?? 0) * d.Cantidad)),
+                d.SubtotalNio - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad)),
             ClientesNuevos = await _context.Personas.CountAsync(p => p.FechaCreacion >= start && p.FechaCreacion <= end && p.EsCliente),
             Anulaciones = await _context.Ventas.CountAsync(v => v.FechaVenta >= start && v.FechaVenta <= end && v.Anulada)
         };
@@ -74,7 +74,7 @@ public class ReportService : IReportService
         stats.PorcentajeFacturas = CalcularVariacion(stats.TotalFacturas, prevVentas.Count);
         
         decimal prevUtilidad = prevVentas.SelectMany(v => v.VentaDetalles).Sum(d => 
-            d.SubtotalNio - ((d.IdProductoNavigation?.PrecioCompra ?? 0) * d.Cantidad));
+            d.SubtotalNio - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad));
         stats.PorcentajeUtilidad = CalcularVariacion(stats.UtilidadNeta, prevUtilidad);
         
         decimal prevTicket = prevVentas.Any() ? prevVentas.Average(v => v.TotalNio) : 0;
@@ -220,8 +220,8 @@ public class ReportService : IReportService
                 StockActual = p.StockActual,
                 StockMinimo = p.StockMinimo,
                 EstadoStock = p.EstadoStock,
-                PrecioCompra = p.PrecioCompra ?? 0m,
-                PrecioVenta = p.PrecioVenta
+                CostoProducto = p.CostoProducto ?? 0m,
+                PrecioMinorista = p.PrecioMinorista ?? 0
             })
             .ToListAsync();
         
@@ -492,6 +492,8 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 }
+
+
 
 
 

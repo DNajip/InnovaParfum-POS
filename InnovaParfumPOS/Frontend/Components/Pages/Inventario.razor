@@ -246,7 +246,7 @@
                                     @(prod.TipoProducto == "PERFUME" ? "Perfume" : "Artículo")
                                 </span>
                             </td>
-                            <td class="text-end fw-semibold">@AppState.CurrencySymbol @prod.PrecioVenta.ToString("N2")</td>
+                            <td class="text-end fw-semibold">@AppState.CurrencySymbol @prod.(PrecioMinorista ?? 0).ToString("N2")</td>
                             <td class="text-center">
                                 <div class="d-inline-block text-start">
                                     <span class="fw-bold fs-5">@prod.StockActual</span>
@@ -256,7 +256,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-end fw-bold">@AppState.CurrencySymbol @((prod.PrecioVenta * prod.StockActual).ToString("N2"))</td>
+                            <td class="text-end fw-bold">@AppState.CurrencySymbol @(((prod.PrecioMinorista ?? 0) * prod.StockActual).ToString("N2"))</td>
                             <td>
                                 @if (!prod.Activo)
                                 {
@@ -444,11 +444,11 @@
                         <!-- Fila 3 -->
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Compra</label>
-                            <input type="number" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" onfocus="this.select()" @bind="editingProduct.PrecioCompra">
+                            <input type="number" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" onfocus="this.select()" @bind="editingProduct.CostoProducto">
                         </div>
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Venta</label>
-                            <input type="number" class="form-control bg-primary bg-opacity-10 border-0 py-2 rounded-3 shadow-none fw-bold text-primary" onfocus="this.select()" @bind="editingProduct.PrecioVenta">
+                            <input type="number" class="form-control bg-primary bg-opacity-10 border-0 py-2 rounded-3 shadow-none fw-bold text-primary" onfocus="this.select()" @bind="editingProduct.PrecioMinorista">
                         </div>
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Mínimo</label>
@@ -597,15 +597,15 @@
                                     <h6 class="fw-bold text-primary text-uppercase extra-small mb-2">Finanzas</h6>
                                     <div class="d-flex justify-content-between mb-1">
                                         <span class="extra-small text-muted">Precio Venta</span>
-                                        <span class="fw-bold text-primary small">@AppState.CurrencySymbol @selectedProduct.PrecioVenta.ToString("N2")</span>
+                                        <span class="fw-bold text-primary small">@AppState.CurrencySymbol @selectedProduct.(PrecioMinorista ?? 0).ToString("N2")</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-1">
                                         <span class="extra-small text-muted">Precio Compra</span>
-                                        <span class="fw-semibold small">@AppState.CurrencySymbol @(selectedProduct.PrecioCompra?.ToString("N2") ?? "0.00")</span>
+                                        <span class="fw-semibold small">@AppState.CurrencySymbol @(selectedProduct.CostoProducto?.ToString("N2") ?? "0.00")</span>
                                     </div>
                                     <div class="border-top pt-1 mt-1 d-flex justify-content-between">
                                         <span class="extra-small fw-bold">Valor Total</span>
-                                        <span class="fw-bold small">@AppState.CurrencySymbol @((selectedProduct.PrecioVenta * selectedProduct.StockActual).ToString("N2"))</span>
+                                        <span class="fw-bold small">@AppState.CurrencySymbol @(((selectedProduct.PrecioMinorista ?? 0) * selectedProduct.StockActual).ToString("N2"))</span>
                                     </div>
                                 </div>
                             </div>
@@ -839,7 +839,7 @@
             Nombre = p.Nombre,
             Marca = p.Marca,
             IdGenero = p.IdGenero,
-            PrecioVenta = p.PrecioVenta,
+            PrecioMinorista = p.PrecioMinorista,
             StockActual = p.StockActual,
             StockMinimo = p.StockMinimo,
             Activo = p.Activo,
@@ -849,7 +849,7 @@
             IdConcentracion = p.IdConcentracion,
             FechaVencimiento = p.FechaVencimiento,
             Ml = p.Ml.HasValue && p.Ml.Value % 1 == 0 ? Math.Truncate(p.Ml.Value) : p.Ml,
-            PrecioCompra = p.PrecioCompra
+            CostoProducto = p.CostoProducto
         };
         showEditModal = true;
         StateHasChanged();
@@ -871,7 +871,7 @@
             return;
         }
 
-        if (editingProduct.PrecioVenta <= 0)
+        if (editingProduct.PrecioMinorista <= 0)
         {
             ToastService.ShowWarning("El precio de venta debe ser mayor a 0.");
             return;
@@ -1078,6 +1078,9 @@
         margin-bottom: 0px;
     }
 </style>
+
+
+
 
 
 

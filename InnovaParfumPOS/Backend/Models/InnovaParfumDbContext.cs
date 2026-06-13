@@ -657,7 +657,7 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasDefaultValue(false)
                 .HasColumnName("ARCHIVADO");
             entity.Property(e => e.IdCategoria).HasColumnName("ID_CATEGORIA");
-            entity.Property(e => e.Marca)
+                        entity.Property(e => e.Marca)
                 .HasMaxLength(100)
                 .HasColumnName("MARCA");
             entity.Property(e => e.IdGenero).HasColumnName("ID_GENERO");
@@ -665,12 +665,24 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("NOMBRE");
-            entity.Property(e => e.PrecioCompra)
+            entity.Property(e => e.CostoProducto)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("PRECIO_COMPRA");
-            entity.Property(e => e.PrecioVenta)
+                .HasColumnName("COSTO_PRODUCTO");
+            entity.Property(e => e.CostoEnvio)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("PRECIO_VENTA");
+                .HasColumnName("COSTO_ENVIO");
+            entity.Property(e => e.PorcGananciaMayorista)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("PORC_GANANCIA_MAYORISTA");
+            entity.Property(e => e.PrecioMayorista)
+                .HasColumnType("decimal(12, 2)")
+                .HasColumnName("PRECIO_MAYORISTA");
+            entity.Property(e => e.PorcGananciaMinorista)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("PORC_GANANCIA_MINORISTA");
+            entity.Property(e => e.PrecioMinorista)
+                .HasColumnType("decimal(12, 2)")
+                .HasColumnName("PRECIO_MINORISTA");
             entity.Property(e => e.StockActual).HasColumnName("STOCK_ACTUAL");
             entity.Property(e => e.StockMinimo).HasColumnName("STOCK_MINIMO");
             entity.Property(e => e.TipoProducto)
@@ -1254,6 +1266,7 @@ public partial class InnovaParfumDbContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+
 
 
 

@@ -111,7 +111,7 @@ public class LabelService : ILabelService
                 .SetMarginBottom(2);
             doc.Add(namePara);
 
-            var pricePara = new Paragraph($"C$ {product.PrecioVenta:N2}")
+            var pricePara = new Paragraph($"C$ {product.PrecioMinorista:N2}")
                 .SetFont(bold)
                 .SetFontSize(14)
                 .SetTextAlignment(TextAlignment.CENTER)
@@ -163,7 +163,7 @@ public class LabelService : ILabelService
             Table priceTable = new Table(UnitValue.CreatePercentArray(new float[] { 30, 70 })).UseAllAvailableWidth();
             priceTable.SetMarginBottom(3);
             priceTable.AddCell(new Cell().Add(new Paragraph("Precio:").SetFont(regular).SetFontSize(10).SetFixedLeading(10)).SetBorder(iText.Layout.Borders.Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.BOTTOM));
-            priceTable.AddCell(new Cell().Add(new Paragraph($"C$ {product.PrecioVenta:N2}").SetFont(bold).SetFontSize(18).SetFixedLeading(18)).SetBorder(iText.Layout.Borders.Border.NO_BORDER).SetTextAlignment(TextAlignment.RIGHT).SetVerticalAlignment(VerticalAlignment.BOTTOM));
+            priceTable.AddCell(new Cell().Add(new Paragraph($"C$ {product.PrecioMinorista:N2}").SetFont(bold).SetFontSize(18).SetFixedLeading(18)).SetBorder(iText.Layout.Borders.Border.NO_BORDER).SetTextAlignment(TextAlignment.RIGHT).SetVerticalAlignment(VerticalAlignment.BOTTOM));
             doc.Add(priceTable);
 
             if (!string.IsNullOrEmpty(product.CodigoBarras))
@@ -198,6 +198,7 @@ public class LabelService : ILabelService
         }
     }
 }
+
 
 
 

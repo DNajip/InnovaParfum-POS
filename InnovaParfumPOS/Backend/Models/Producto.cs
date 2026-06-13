@@ -21,25 +21,18 @@ public partial class Producto
 
     public decimal? Ml { get; set; }
 
-    public DateTime? FechaVencimiento { get; set; }
-
+        public DateTime? FechaVencimiento { get; set; }
     public int? IdCategoria { get; set; }
-
-    
     public string TipoProducto { get; set; } = "PERFUME";
-
-
-
-    public decimal? PrecioCompra { get; set; }
-
-    public decimal PrecioVenta { get; set; }
-
+    public decimal? CostoProducto { get; set; }
+    public decimal? CostoEnvio { get; set; }
+    public decimal? PorcGananciaMayorista { get; set; }
+    public decimal? PrecioMayorista { get; set; }
+    public decimal? PorcGananciaMinorista { get; set; }
+    public decimal? PrecioMinorista { get; set; }
     public int StockActual { get; set; }
-
     public int StockMinimo { get; set; }
-
     public bool Activo { get; set; }
-
     public DateTime? FechaDesactivacion { get; set; }
 
     public bool Archivado { get; set; }
@@ -68,4 +61,5 @@ public partial class Producto
 
     public virtual ICollection<VentaDetalle> VentaDetalles { get; set; } = new List<VentaDetalle>();
 }
+
 

@@ -81,10 +81,10 @@ public class VStockValorizadoDTO
     public int StockActual { get; set; }
     public int StockMinimo { get; set; }
     public string EstadoStock { get; set; } = "";
-    public decimal PrecioCompra { get; set; }
-    public decimal PrecioVenta { get; set; }
-    public decimal ValorCostoTotal => StockActual * PrecioCompra;
-    public decimal ValorVentaTotal => StockActual * PrecioVenta;
+    public decimal CostoProducto { get; set; }
+    public decimal PrecioMinorista { get; set; }
+    public decimal ValorCostoTotal => StockActual * CostoProducto;
+    public decimal ValorVentaTotal => StockActual * PrecioMinorista;
 }
 
 public class ProductNoMovementDTO
@@ -178,5 +178,6 @@ public class MovimientoTurnoDTO
     public string MetodoPago { get; set; } = "";
     public string Estado { get; set; } = ""; // EFECTUADA, ANULADA, COMPLETADO
 }
+
 
 

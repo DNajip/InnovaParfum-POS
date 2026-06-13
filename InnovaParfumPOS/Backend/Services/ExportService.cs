@@ -67,7 +67,7 @@ public class ExportService : IExportService
                 worksheet.Cell(row, 7).Value = p.IdCategoriaNavigation?.Nombre ?? "S/C";
                 
                 // Financiero
-                worksheet.Cell(row, 8).Value = p.PrecioVenta;
+                worksheet.Cell(row, 8).Value = p.PrecioMinorista ?? 0;
                 worksheet.Cell(row, 8).Style.NumberFormat.Format = "$ #,##0.00";
 
                 // Stock
@@ -262,7 +262,7 @@ public class ExportService : IExportService
                     table.AddCell(new Cell().Add(new Paragraph(p.IdCategoriaNavigation?.Nombre ?? "S/C")).SetBackgroundColor(rowBg).SetPadding(4).SetFontSize(8.5f));
                     
                     // Precio Venta
-                    table.AddCell(new Cell().Add(new Paragraph($"C$ {p.PrecioVenta:N2}")).SetBackgroundColor(rowBg).SetPadding(4).SetFontSize(8.5f).SetTextAlignment(TextAlignment.RIGHT));
+                    table.AddCell(new Cell().Add(new Paragraph($"C$ {p.PrecioMinorista:N2}")).SetBackgroundColor(rowBg).SetPadding(4).SetFontSize(8.5f).SetTextAlignment(TextAlignment.RIGHT));
                     
                     // Stock (A/M)
                     table.AddCell(new Cell().Add(new Paragraph($"{p.StockActual} / {p.StockMinimo}")).SetBackgroundColor(rowBg).SetPadding(4).SetFontSize(8.5f).SetTextAlignment(TextAlignment.CENTER));
@@ -337,5 +337,7 @@ public class ExportService : IExportService
         return new Cell().Add(p).SetBackgroundColor(bg).SetPadding(5).SetFontSize(9);
     }
 }
+
+
 
 

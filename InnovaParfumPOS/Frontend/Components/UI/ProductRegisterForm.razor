@@ -74,14 +74,14 @@
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo (Compra)</label>
                             <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
                                 <i class="fas fa-coins text-success me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="_precioCompra">
+                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="_CostoProducto">
                             </div>
                         </div>
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">P. Venta</label>
                             <div class="input-group-custom bg-primary bg-opacity-10 rounded-3 d-flex align-items-center px-2 py-1">
                                 <span class="text-primary me-1 fw-bold">@SimboloMoneda</span>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none fw-bold text-primary" @bind="_precioVenta">
+                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none fw-bold text-primary" @bind="_PrecioMinorista">
                             </div>
                         </div>
                         <div class="col-lg-3">
@@ -148,8 +148,8 @@
     private Categoria? SelectedCategory => Categorias.FirstOrDefault(c => c.IdCategoria == newProduct.IdCategoria);
     private bool isSaving = false;
     private string SimboloMoneda = "C$";
-    private decimal? _precioVenta;
-    private decimal? _precioCompra;
+    private decimal? _PrecioMinorista;
+    private decimal? _CostoProducto;
 
     protected override async Task OnInitializedAsync()
     {
@@ -179,8 +179,8 @@
     private async Task Close()
     {
         newProduct = new Producto { Activo = true, StockActual = 0, StockMinimo = 5 };
-        _precioVenta = null;
-        _precioCompra = null;
+        _PrecioMinorista = null;
+        _CostoProducto = null;
         await IsVisibleChanged.InvokeAsync(false);
     }
 
@@ -192,11 +192,11 @@
             return;
         }
 
-        newProduct.PrecioVenta = _precioVenta ?? 0;
-        newProduct.PrecioCompra = _precioCompra;
-        if (newProduct.PrecioVenta <= 0)
+        newProduct.PrecioMinorista = _PrecioMinorista ?? 0;
+        newProduct.CostoProducto = _CostoProducto;
+        if ((newProduct.PrecioMinorista ?? 0) <= 0)
         {
-            Toast.ShowWarning("Debe ingresar un precio de venta al crear un producto.");
+            Toast.ShowWarning("Debe ingresar un precio minorista al crear un producto.");
             return;
         }
 
@@ -236,6 +236,8 @@
         }
     }
 }
+
+
 
 
 
