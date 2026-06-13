@@ -1,4 +1,4 @@
-@page "/inventario"
+﻿@page "/inventario"
 @using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.DTOs
 @using InnovaParfumPOS.Backend.Models
@@ -13,7 +13,7 @@
 <PageTitle>Inventario - InnovaTec</PageTitle>
 
 <div class="inv-container">
-    <!-- Header del Módulo -->
+    <!-- Header del MÃ³dulo -->
     <div class="inv-header">
         <div class="inv-title-group">
             <h2>Inventario</h2>
@@ -66,17 +66,17 @@
                 <i class="fas fa-coins"></i>
             </div>
             <div class="kpi-info">
-                <span class="kpi-label">Valorización</span>
+                <span class="kpi-label">ValorizaciÃ³n</span>
                 <span class="kpi-value">@AppState.CurrencySymbol @stats.Valorizacion.ToString("N2")</span>
             </div>
         </div>
     </div>
 
-    <!-- Barra de Búsqueda y Filtros -->
+    <!-- Barra de BÃºsqueda y Filtros -->
     <div class="p-3 bg-white border rounded shadow-sm d-flex gap-3 align-items-center position-relative">
         <div class="position-relative flex-grow-1">
             <i class="fas fa-search position-absolute top-50 translate-middle-y text-muted ms-3"></i>
-            <input type="text" class="form-control ps-5" placeholder="Buscar por nombre o código... (Presione Enter)" 
+            <input type="text" class="form-control ps-5" placeholder="Buscar por nombre o cÃ³digo... (Presione Enter)" 
                    @bind="_filter.SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
         </div>
         
@@ -111,12 +111,12 @@
                             <select class="form-select form-select-sm" @bind="_filter.StockStatus">
                                 <option value="todos">Todos</option>
                                 <option value="con_stock">Con Stock (>0)</option>
-                                <option value="stock_bajo">Stock Bajo/Crítico</option>
+                                <option value="stock_bajo">Stock Bajo/CrÃ­tico</option>
                                 <option value="sin_stock">Sin stock</option>
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted mb-1">Categoría</label>
+                            <label class="form-label small fw-bold text-muted mb-1">CategorÃ­a</label>
                             <select class="form-select form-select-sm" @bind="_filter.IdCategoria">
                                 <option value="">Todas</option>
                                 @foreach(var cat in categorias)
@@ -146,7 +146,7 @@
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted mb-1">Género</label>
+                            <label class="form-label small fw-bold text-muted mb-1">GÃ©nero</label>
                             <select class="form-select form-select-sm" @bind="_filter.IdGenero">
                                 <option value="">Todos</option>
                                 @foreach(var g in filterGeneros)
@@ -180,7 +180,7 @@
                 </div>
             }
             
-            <!-- Overlay para cerrar el menú haciendo clic afuera -->
+            <!-- Overlay para cerrar el menÃº haciendo clic afuera -->
             @if(showFilterMenu)
             {
                 <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2;" @onclick="() => showFilterMenu = false"></div>
@@ -206,7 +206,7 @@
                 @if (filteredProductos == null)
                 {
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <div class="spinner-border text-primary" role="status"></div>
                             <p class="mt-2 text-muted">Cargando inventario...</p>
                         </td>
@@ -215,7 +215,7 @@
                 else if (!filteredProductos.Any())
                 {
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
                             <p class="text-muted">No se encontraron productos.</p>
                         </td>
@@ -243,14 +243,14 @@
                             </td>
                             <td>
                                 <span class="badge-tipo @(prod.TipoProducto == "PERFUME" ? "badge-tipo-telefono" : "badge-tipo-accesorio")">
-                                    @(prod.TipoProducto == "PERFUME" ? "Perfume" : "Artículo")
+                                    @(prod.TipoProducto == "PERFUME" ? "Perfume" : "ArtÃ­culo")
                                 </span>
                             </td>
                             <td class="text-end fw-semibold">@AppState.CurrencySymbol @prod.(PrecioMinorista ?? 0).ToString("N2")</td>
                             <td class="text-center">
                                 <div class="d-inline-block text-start">
                                     <span class="fw-bold fs-5">@prod.StockActual</span>
-                                    <small class="text-muted">/ @prod.StockMinimo mín.</small>
+                                    <small class="text-muted">/ @prod.StockMinimo mÃ­n.</small>
                                     <div class="stock-bar-container">
                                         <div class="stock-bar @GetStockBarClass(prod)" style="width: @GetStockPercent(prod)%"></div>
                                     </div>
@@ -265,7 +265,7 @@
                                 else
                                 {
                                     <span class="badge-estado @GetEstadoClass(prod)">
-                                        @(prod.EstadoStock == "DISPONIBLE" ? "Disponible" : prod.EstadoStock == "CRITICO" ? "Crítico" : "Agotado")
+                                        @(prod.EstadoStock == "DISPONIBLE" ? "Disponible" : prod.EstadoStock == "CRITICO" ? "CrÃ­tico" : "Agotado")
                                     </span>
                                 }
                             </td>
@@ -289,7 +289,7 @@
         </table>
     </div>
 
-    <!-- Paginación Premium tipo Carrusel -->
+    <!-- PaginaciÃ³n Premium tipo Carrusel -->
     @if (productos != null && productos.Any())
     {
         var totalPages = (int)Math.Ceiling((double)productos.Count / pageSize);
@@ -308,7 +308,7 @@
                         </li>
                         
                         @{
-                            // Lógica de ventana deslizante (Carrusel de 6 números)
+                            // LÃ³gica de ventana deslizante (Carrusel de 6 nÃºmeros)
                             int maxVisible = 6;
                             int startPage = Math.Max(1, Math.Min(currentPage - 2, totalPages - maxVisible + 1));
                             int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
@@ -324,7 +324,7 @@
                                 </li>
                             }
 
-                            // Mostrar Elipsis y Última Página si es necesario
+                            // Mostrar Elipsis y Ãšltima PÃ¡gina si es necesario
                             if (endPage < totalPages)
                             {
                                 if (endPage < totalPages - 1)
@@ -376,7 +376,7 @@
                     <div class="row g-2">
                         <!-- Fila 1 -->
                         <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Código de Barras</label>
+                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">CÃ³digo de Barras</label>
                             <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
                                 <i class="fas fa-barcode text-muted me-2 small"></i>
                                 <input type="text" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="editingProduct.CodigoBarras">
@@ -387,7 +387,7 @@
                             <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.Nombre">
                         </div>
                         <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Categoría</label>
+                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">CategorÃ­a</label>
                             <select class="form-select bg-light border-0 py-1 rounded-3 shadow-none" @bind="editingProduct.IdCategoria" style="height: 38px;">
                                 <option value="">Seleccione...</option>
                                 @foreach (var cat in categorias)
@@ -408,7 +408,7 @@
                         @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirGenero == true)
                           {
                               <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Género</label>
+                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">GÃ©nero</label>
                                   <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.IdGenero"><option value="">Seleccione...</option>@foreach(var g in filterGeneros){<option value="@g.IdGenero">@g.DescGenero</option>}</select>
                               </div>
                           }
@@ -422,7 +422,7 @@
                         @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirConcentracion == true)
                           {
                               <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Concentración</label>
+                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">ConcentraciÃ³n</label>
                                   <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.IdConcentracion"><option value="">Seleccione...</option>@foreach(var c in filterConcentraciones){<option value="@c.IdConcentracion">@c.Nombre</option>}</select>
                               </div>
                           }
@@ -451,7 +451,7 @@
                             <input type="number" class="form-control bg-primary bg-opacity-10 border-0 py-2 rounded-3 shadow-none fw-bold text-primary" onfocus="this.select()" @bind="editingProduct.PrecioMinorista">
                         </div>
                         <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Mínimo</label>
+                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock MÃ­nimo</label>
                             <input type="number" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" onfocus="this.select()" @bind="editingProduct.StockMinimo">
                         </div>
                         <div class="col-lg-3 d-flex align-items-end">
@@ -507,7 +507,7 @@
 
                         <!-- Selector de Movimiento Horizontal -->
                         <div class="col-12 mt-2">
-                            <label class="form-label fw-bold small text-muted text-uppercase mb-2">Tipo de Operación</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase mb-2">Tipo de OperaciÃ³n</label>
                             <div class="d-flex gap-2 p-1 bg-light rounded-pill border">
                                 <button class="btn flex-grow-1 rounded-pill py-2 d-flex align-items-center justify-content-center gap-2 border-0 @(adjustType == "INGRESO" ? "btn-success shadow-sm" : "bg-transparent text-muted")" 
                                         @onclick='() => adjustType = "INGRESO"'>
@@ -550,7 +550,7 @@
                             </div>
                             <div>
                                 <h5 class="modal-title fw-bold mb-0">Detalle del Producto</h5>
-                                <p class="text-muted extra-small mb-0">Auditoría completa y Kardex de movimientos</p>
+                                <p class="text-muted extra-small mb-0">AuditorÃ­a completa y Kardex de movimientos</p>
                             </div>
                         </div>
                         <div class="text-end">
@@ -572,7 +572,7 @@
                                         <span class="fw-bold text-dark small d-block">@selectedProduct.Nombre</span>
                                     </div>
                                     <div class="mb-2">
-                                        <label class="d-block extra-small text-muted mb-0">SKU / Código</label>
+                                        <label class="d-block extra-small text-muted mb-0">SKU / CÃ³digo</label>
                                         <span class="item-code py-0 px-2" style="font-size: 0.75rem;">@(selectedProduct.CodigoBarras ?? "S/N")</span>
                                     </div>
                                     <div class="row g-2 mb-2">
@@ -581,12 +581,12 @@
                                             <span class="fw-semibold small">@selectedProduct.Marca</span>
                                         </div>
                                         <div class="col-6">
-                                            <label class="d-block extra-small text-muted mb-0">Género</label>
+                                            <label class="d-block extra-small text-muted mb-0">GÃ©nero</label>
                                             <span class="fw-semibold small">@selectedProduct.IdGeneroNavigation?.DescGenero</span>
                                         </div>
                                     </div>
                                     <div class="mb-1">
-                                        <label class="d-block extra-small text-muted mb-0">Categoría</label>
+                                        <label class="d-block extra-small text-muted mb-0">CategorÃ­a</label>
                                         <span class="badge-tipo badge-tipo-articulo w-100 text-center py-1">
                                             @(selectedProduct.IdCategoriaNavigation?.Nombre ?? "S/C")
                                         </span>
@@ -641,7 +641,7 @@
                                             <thead class="bg-light sticky-top">
                                                 <tr>
                                                     <th class="border-0 small text-uppercase text-muted ps-3">Fecha</th>
-                                                    <th class="border-0 small text-uppercase text-muted">Operación</th>
+                                                    <th class="border-0 small text-uppercase text-muted">OperaciÃ³n</th>
                                                     <th class="border-0 small text-uppercase text-muted text-center">Cant.</th>
                                                     <th class="border-0 small text-uppercase text-muted text-center">Stock Final</th>
                                                     <th class="border-0 small text-uppercase text-muted">Referencia</th>
@@ -735,7 +735,7 @@
 
 @code {
     private List<Producto>? productos;
-    private List<Producto>? filteredProductos; // Ahora será igual a productos (filtrado en BD)
+    private List<Producto>? filteredProductos; // Ahora serÃ¡ igual a productos (filtrado en BD)
     private List<Categoria> categorias = new();
     private InventoryStatsDto stats = new();
     
@@ -793,7 +793,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Redireccionar si no hay sesión (Simulado para este ejemplo)
+        // Redireccionar si no hay sesiÃ³n (Simulado para este ejemplo)
         if (!UserSession.IsAuthenticated)
         {
             // Navigation.NavigateTo("/login"); 
@@ -819,7 +819,7 @@
             if (agotados.Any())
             {
                 string nombres = agotados.Count > 3 
-                    ? string.Join(", ", agotados.Take(3)) + $" y {agotados.Count - 3} más" 
+                    ? string.Join(", ", agotados.Take(3)) + $" y {agotados.Count - 3} mÃ¡s" 
                     : string.Join(", ", agotados);
                 ToastService.ShowWarning($"{nombres} se encuentran sin stock actualmente.");
             }
@@ -867,7 +867,7 @@
 
         if (editingProduct.IdCategoria == null || editingProduct.IdCategoria == 0)
         {
-            ToastService.ShowWarning("Debe seleccionar una categoría para el producto.");
+            ToastService.ShowWarning("Debe seleccionar una categorÃ­a para el producto.");
             return;
         }
 
@@ -888,7 +888,7 @@
         
         try 
         {
-            // La normalización de barcode y asignación de TipoProducto se hace ahora en el SP INV.sp_MantenerProducto
+            // La normalizaciÃ³n de barcode y asignaciÃ³n de TipoProducto se hace ahora en el SP INV.sp_MantenerProducto
             await ProductService.UpdateProductAsync(editingProduct);
             ToastService.ShowSuccess("Los cambios se guardaron correctamente");
             showEditModal = false;
@@ -936,7 +936,7 @@
             var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"Inventario_{DateTime.Now:ddMMyy}.xlsx", streamRef);
-            ToastService.ShowSuccess("Archivo Excel generado con éxito");
+            ToastService.ShowSuccess("Archivo Excel generado con Ã©xito");
         }
         catch (Exception ex)
         {
@@ -952,7 +952,7 @@
             var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"Inventario_{DateTime.Now:ddMMyy}.pdf", streamRef);
-            ToastService.ShowSuccess("Reporte PDF generado con éxito");
+            ToastService.ShowSuccess("Reporte PDF generado con Ã©xito");
         }
         catch (Exception ex)
         {
@@ -1078,6 +1078,8 @@
         margin-bottom: 0px;
     }
 </style>
+
+
 
 
 
