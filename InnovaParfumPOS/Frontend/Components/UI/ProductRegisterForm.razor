@@ -8,39 +8,39 @@
 @if (IsVisible)
 {
     <div class="modal show d-block" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-                <div class="modal-header bg-white border-0 p-4 pb-0">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon kpi-blue" style="width: 45px; height: 45px; background: rgba(52, 152, 219, 0.1); color: #3498db; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header bg-white border-0 p-3 pb-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="kpi-icon kpi-blue" style="width: 35px; height: 35px; background: rgba(52, 152, 219, 0.1); color: #3498db; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
                             <i class="fas fa-box-open"></i>
                         </div>
                         <div>
-                            <h4 class="modal-title fw-bold mb-0">Registrar Nuevo Producto</h4>
-                            <p class="text-muted small mb-0">Complete los datos maestros del producto</p>
+                            <h5 class="modal-title fw-bold mb-0">Registrar Nuevo Producto</h5>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem;">Complete los datos maestros del producto</p>
                         </div>
                     </div>
                 </div>
-                <div class="modal-body p-4 pt-3">
-                    <div class="row g-3">
+                <div class="modal-body p-3 pt-2" style="max-height: 80vh; overflow-y: auto;">
+                    <div class="row g-2">
                         <!-- Fila 1 -->
                         <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Código de Barras</label>
-                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
-                                <i class="fas fa-barcode text-muted me-2 small"></i>
-                                <input type="text" class="form-control bg-transparent border-0 py-1 shadow-none" placeholder="Escanear..." @bind="newProduct.CodigoBarras">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Código de Barras</label>
+                            <div class="input-group-custom bg-light rounded-2 d-flex align-items-center px-2 py-1">
+                                <i class="fas fa-barcode text-muted me-2" style="font-size: 0.8rem;"></i>
+                                <input type="text" class="form-control bg-transparent border-0 p-0 shadow-none" style="font-size: 0.85rem;" placeholder="Escanear..." @bind="newProduct.CodigoBarras">
                             </div>
                         </div>
                         <div class="col-lg-6">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Nombre del Producto</label>
-                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
-                                <i class="fas fa-tag text-muted me-2 small"></i>
-                                <input type="text" class="form-control bg-transparent border-0 py-1 shadow-none" placeholder="Nombre completo" @bind="newProduct.Nombre">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Nombre del Producto</label>
+                            <div class="input-group-custom bg-light rounded-2 d-flex align-items-center px-2 py-1">
+                                <i class="fas fa-tag text-muted me-2" style="font-size: 0.8rem;"></i>
+                                <input type="text" class="form-control bg-transparent border-0 p-0 shadow-none" style="font-size: 0.85rem;" placeholder="Nombre completo" @bind="newProduct.Nombre">
                             </div>
                         </div>
                         <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Categoría</label>
-                            <select class="form-select bg-light border-0 py-1 rounded-3 shadow-none" @bind="newProduct.IdCategoria" style="height: 38px;">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Categoría</label>
+                            <select class="form-select bg-light border-0 rounded-2 shadow-none px-2 py-1" @bind="newProduct.IdCategoria" style="font-size: 0.85rem; height: 28px;">
                                 <option value="" disabled hidden>Seleccione...</option>
                                 @foreach (var cat in Categorias)
                                 {
@@ -50,184 +50,151 @@
                         </div>
 
                         <!-- Fila 2 -->
-                        @if(SelectedCategory?.PedirMarca == true) { <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Marca</label>
-                            <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Marca" @bind="newProduct.Marca">
+                        @if(SelectedCategory?.PedirMarca == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Marca</label>
+                            <input type="text" class="form-control bg-light border-0 py-1 px-2 rounded-2 shadow-none" style="font-size: 0.85rem;" placeholder="Marca" @bind="newProduct.Marca">
                         </div> }
-                        @if(SelectedCategory?.PedirGenero == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Género</label><select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.IdGenero"><option value="">Seleccione...</option>@foreach(var g in Generos){<option value="@g.IdGenero">@g.DescGenero</option>}</select></div> }
-                        @if(SelectedCategory?.PedirOrigen == true) { <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Origen/Tipo</label>
-                            <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.IdOrigen"><option value="">Seleccione...</option>@foreach(var o in Origenes){<option value="@o.IdOrigen">@o.Nombre</option>}</select>
+                        @if(SelectedCategory?.PedirGenero == true) { <div class="col-lg-2"><label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Género</label><select class="form-select bg-light border-0 py-1 px-2 rounded-2 shadow-none" style="font-size: 0.85rem;" @bind="newProduct.IdGenero"><option value="">Sel...</option>@foreach(var g in Generos){<option value="@g.IdGenero">@g.DescGenero</option>}</select></div> }
+                        @if(SelectedCategory?.PedirOrigen == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Origen</label>
+                            <select class="form-select bg-light border-0 py-1 px-2 rounded-2 shadow-none" style="font-size: 0.85rem;" @bind="newProduct.IdOrigen"><option value="">Sel...</option>@foreach(var o in Origenes){<option value="@o.IdOrigen">@o.Nombre</option>}</select>
                         </div> }
-                        @if(SelectedCategory?.PedirConcentracion == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Concentración</label><select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.IdConcentracion"><option value="">Seleccione...</option>@foreach(var c in Concentraciones){<option value="@c.IdConcentracion">@c.Nombre</option>}</select></div> }
-                        @if(SelectedCategory?.PedirVencimiento == true) { <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Vencimiento</label>
-                            <input type="date" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.FechaVencimiento">
+                        @if(SelectedCategory?.PedirConcentracion == true) { <div class="col-lg-2"><label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Concentración</label><select class="form-select bg-light border-0 py-1 px-2 rounded-2 shadow-none" style="font-size: 0.85rem;" @bind="newProduct.IdConcentracion"><option value="">Sel...</option>@foreach(var c in Concentraciones){<option value="@c.IdConcentracion">@c.Nombre</option>}</select></div> }
+                        @if(SelectedCategory?.PedirVencimiento == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Vencimiento</label>
+                            <input type="date" class="form-control bg-light border-0 py-1 px-2 rounded-2 shadow-none" style="font-size: 0.85rem;" @bind="newProduct.FechaVencimiento">
                         </div> }
-                        @if(SelectedCategory?.PedirMl == true) { <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">ML</label>
-                            <input type="number" step="any" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="ML" @bind="newProduct.Ml">
+                        @if(SelectedCategory?.PedirMl == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">ML</label>
+                            <input type="number" step="any" class="form-control bg-light border-0 py-1 px-2 rounded-2 shadow-none" style="font-size: 0.85rem;" placeholder="ML" @bind="newProduct.Ml">
                         </div> }
 
-                        <!-- SECCIÓN COSTOS -->
-                        <div class="col-12 mt-4">
-                            <div class="p-3 bg-light rounded-4 border" style="border-color: #e2e8f0 !important;">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-coins text-success"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold text-success">1. COSTOS</h6>
-                                        <small class="text-muted">Ingrese los costos para calcular los precios de venta</small>
-                                    </div>
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo Perfume</label>
-                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <i class="fas fa-money-bill-wave text-success me-2"></i>
-                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
-                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.CostoProducto" @bind:event="oninput" @bind:after="CalculatePrices">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo Envío</label>
-                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <i class="fas fa-money-bill-wave text-success me-2"></i>
-                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
-                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.CostoEnvio" @bind:event="oninput" @bind:after="CalculatePrices">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo Total (Automático)</label>
-                                        <div class="input-group-custom bg-success bg-opacity-10 rounded-3 d-flex align-items-center px-3 py-2 border border-success border-opacity-25">
-                                            <span class="text-success me-2 fw-bold">@SimboloMoneda</span>
-                                            <input type="text" readonly class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold text-success" value="@CostoTotal.ToString("N2")">
-                                        </div>
-                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Cálculo: Costo Perfume + Costo Envío</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="col-12 mt-1"></div>
 
-                        <!-- SECCIÓN PRECIO MAYORISTA -->
-                        <div class="col-12 mt-3">
-                            <div class="p-3 bg-white rounded-4 border border-primary border-opacity-25">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-users text-primary"></i>
+                        <!-- SECCIÓN COSTOS Y STOCK (LADO A LADO) -->
+                        <div class="col-lg-6">
+                            <div class="p-2 bg-light rounded-3 border h-100" style="border-color: #e2e8f0 !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                        <i class="fas fa-coins text-success" style="font-size: 0.75rem;"></i>
                                     </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold text-primary">2. PRECIO MAYORISTA</h6>
-                                        <small class="text-muted">Defina el porcentaje de ganancia y/o el precio para mayoristas</small>
-                                    </div>
+                                    <h6 class="mb-0 fw-bold text-success" style="font-size: 0.85rem;">1. COSTOS</h6>
                                 </div>
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">% Ganancia Mayorista</label>
-                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <div class="bg-primary bg-opacity-10 text-primary rounded px-2 py-1 me-2 fw-bold">%</div>
-                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PorcGananciaMayorista" @bind:event="oninput" @bind:after="CalculateMayoristaFromPorc">
-                                            <span class="text-muted ms-2">%</span>
-                                        </div>
-                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Basado en el costo total</small>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Mayorista</label>
-                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <i class="fas fa-money-bill-wave text-primary me-2"></i>
-                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
-                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PrecioMayorista" @bind:event="oninput" @bind:after="CalculatePorcFromMayorista">
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Perfume</label>
+                                        <div class="input-group-custom bg-white rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <span class="text-muted me-1 fw-bold" style="font-size: 0.75rem;">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" style="font-size: 0.8rem;" placeholder="0.00" @bind="newProduct.CostoProducto" @bind:event="oninput" @bind:after="CalculatePrices">
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 border border-primary border-opacity-25 h-100 d-flex align-items-center">
-                                            <i class="fas fa-info-circle text-primary me-3 fs-4"></i>
-                                            <small class="text-primary fw-medium mb-0" style="line-height: 1.2;">Puede ingresar el porcentaje o el precio, el otro se calculará automáticamente.</small>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Envío</label>
+                                        <div class="input-group-custom bg-white rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <span class="text-muted me-1 fw-bold" style="font-size: 0.75rem;">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" style="font-size: 0.8rem;" placeholder="0.00" @bind="newProduct.CostoEnvio" @bind:event="oninput" @bind:after="CalculatePrices">
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Total</label>
+                                        <div class="input-group-custom bg-success bg-opacity-10 rounded-2 d-flex align-items-center px-2 py-1 border border-success border-opacity-25">
+                                            <span class="text-success me-1 fw-bold" style="font-size: 0.75rem;">@SimboloMoneda</span>
+                                            <input type="text" readonly class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold text-success" style="font-size: 0.8rem;" value="@CostoTotal.ToString("N2")">
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- SECCIÓN PRECIO MINORISTA -->
-                        <div class="col-12 mt-3">
-                            <div class="p-3 bg-white rounded-4 border" style="border-color: #d8b4fe !important;">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background-color: #f3e8ff;">
-                                        <i class="fas fa-user" style="color: #9333ea;"></i>
+                        <div class="col-lg-6">
+                            <div class="p-2 bg-white rounded-3 border border-warning border-opacity-50 h-100" style="background-color: #fffbeb !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                        <i class="fas fa-box-open text-warning" style="font-size: 0.75rem;"></i>
                                     </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold" style="color: #9333ea;">3. PRECIO MINORISTA</h6>
-                                        <small class="text-muted">Defina el porcentaje de ganancia y/o el precio para minoristas</small>
-                                    </div>
+                                    <h6 class="mb-0 fw-bold text-warning" style="font-size: 0.85rem;">4. STOCK Y ESTADO</h6>
                                 </div>
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">% Ganancia Minorista</label>
-                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <div class="rounded px-2 py-1 me-2 fw-bold" style="background-color: #f3e8ff; color: #9333ea;">%</div>
-                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PorcGananciaMinorista" @bind:event="oninput" @bind:after="CalculateMinoristaFromPorc">
-                                            <span class="text-muted ms-2">%</span>
-                                        </div>
-                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Basado en el costo total</small>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Minorista</label>
-                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <i class="fas fa-money-bill-wave me-2" style="color: #9333ea;"></i>
-                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
-                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="newProduct.PrecioMinorista" @bind:event="oninput" @bind:after="CalculatePorcFromMinorista">
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Inicial</label>
+                                        <div class="input-group-custom bg-white rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" style="font-size: 0.8rem;" placeholder="0" @bind="newProduct.StockActual" onfocus="this.select()">
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="p-3 rounded-3 border h-100 d-flex align-items-center" style="background-color: #faf5ff; border-color: #e9d5ff !important;">
-                                            <i class="fas fa-info-circle me-3 fs-4" style="color: #9333ea;"></i>
-                                            <small class="fw-medium mb-0" style="color: #7e22ce; line-height: 1.2;">Puede ingresar el porcentaje o el precio, el otro se calculará automáticamente.</small>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Alerta</label>
+                                        <div class="input-group-custom bg-white rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" style="font-size: 0.8rem;" placeholder="5" @bind="newProduct.StockMinimo" onfocus="this.select()">
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN STOCK Y ESTADO -->
-                        <div class="col-12 mt-3">
-                            <div class="p-3 bg-white rounded-4 border border-warning border-opacity-25" style="background-color: #fffbeb !important;">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-box-open text-warning"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold text-warning">4. STOCK Y ESTADO</h6>
-                                        <small class="text-muted">Configure el stock inicial, mínimo y el estado del producto</small>
-                                    </div>
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Inicial</label>
-                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <i class="fas fa-boxes text-warning me-2"></i>
-                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none" placeholder="0" @bind="newProduct.StockActual" onfocus="this.select()">
-                                        </div>
-                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Cantidad inicial en inventario</small>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Mínimo (Alerta)</label>
-                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-3 py-2 border">
-                                            <i class="fas fa-bell text-warning me-2"></i>
-                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none" placeholder="5" @bind="newProduct.StockMinimo" onfocus="this.select()">
-                                        </div>
-                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Se genera alerta al llegar a este nivel</small>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Producto Activo</label>
-                                        <div class="bg-white rounded-3 d-flex align-items-center px-3 py-2 border h-auto" style="height: 40px !important;">
-                                            <div class="form-check form-switch p-0 m-0 d-flex align-items-center w-100">
-                                                <input class="form-check-input ms-0 me-3" type="checkbox" style="width: 2.5rem; height: 1.25rem;" id="chkActivo" @bind="newProduct.Activo">
-                                                <label class="form-check-label fw-bold m-0" for="chkActivo">Sí, activar producto</label>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Activo</label>
+                                        <div class="bg-white rounded-2 d-flex align-items-center justify-content-center border h-auto" style="padding: 3px 0;">
+                                            <div class="form-check form-switch p-0 m-0 d-flex align-items-center justify-content-center">
+                                                <input class="form-check-input ms-0 m-0" type="checkbox" style="width: 2rem; height: 1rem; cursor: pointer;" id="chkActivo" @bind="newProduct.Activo">
                                             </div>
                                         </div>
-                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Solo los productos activos pueden ser vendidos en el POS</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN PRECIOS (LADO A LADO) -->
+                        <div class="col-lg-6 mt-2">
+                            <div class="p-2 bg-white rounded-3 border border-primary border-opacity-25 h-100">
+                                <div class="d-flex align-items-center mb-2 justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                            <i class="fas fa-users text-primary" style="font-size: 0.75rem;"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold text-primary" style="font-size: 0.85rem;">2. PRECIO MAYORISTA</h6>
+                                    </div>
+                                    <i class="fas fa-info-circle text-primary opacity-50" title="Ingrese % o Precio. Se auto-calculan mutuamente."></i>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">% Ganancia</label>
+                                        <div class="input-group-custom bg-light rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <div class="text-primary me-1 fw-bold" style="font-size: 0.75rem;">%</div>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" style="font-size: 0.8rem;" placeholder="0.00" @bind="newProduct.PorcGananciaMayorista" @bind:event="oninput" @bind:after="CalculateMayoristaFromPorc">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Precio Sugerido</label>
+                                        <div class="input-group-custom bg-light rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <span class="text-muted me-1 fw-bold" style="font-size: 0.75rem;">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold text-primary" style="font-size: 0.8rem;" placeholder="0.00" @bind="newProduct.PrecioMayorista" @bind:event="oninput" @bind:after="CalculatePorcFromMayorista">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 mt-2">
+                            <div class="p-2 bg-white rounded-3 border h-100" style="border-color: #d8b4fe !important;">
+                                <div class="d-flex align-items-center mb-2 justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; background-color: #f3e8ff;">
+                                            <i class="fas fa-user" style="color: #9333ea; font-size: 0.75rem;"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold" style="color: #9333ea; font-size: 0.85rem;">3. PRECIO MINORISTA</h6>
+                                    </div>
+                                    <i class="fas fa-info-circle opacity-50" style="color: #9333ea;" title="Ingrese % o Precio. Se auto-calculan mutuamente."></i>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">% Ganancia</label>
+                                        <div class="input-group-custom bg-light rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <div class="me-1 fw-bold" style="color: #9333ea; font-size: 0.75rem;">%</div>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" style="font-size: 0.8rem;" placeholder="0.00" @bind="newProduct.PorcGananciaMinorista" @bind:event="oninput" @bind:after="CalculateMinoristaFromPorc">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.6rem;">Precio Público</label>
+                                        <div class="input-group-custom bg-light rounded-2 d-flex align-items-center px-2 py-1 border">
+                                            <span class="text-muted me-1 fw-bold" style="font-size: 0.75rem;">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" style="color: #9333ea; font-size: 0.8rem;" placeholder="0.00" @bind="newProduct.PrecioMinorista" @bind:event="oninput" @bind:after="CalculatePorcFromMinorista">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -235,9 +202,9 @@
 
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-2">
-                    <button class="btn btn-link text-muted text-decoration-none px-4" @onclick="Close">Cancelar</button>
-                    <button class="btn btn-dark rounded-pill px-5 shadow fw-bold py-2" @onclick="HandleCreateProduct" disabled="@isSaving">
+                <div class="modal-footer border-0 p-3 pt-2">
+                    <button class="btn btn-link text-muted text-decoration-none px-3" style="font-size: 0.85rem;" @onclick="Close">Cancelar</button>
+                    <button class="btn btn-dark rounded-pill px-4 shadow fw-bold py-1" style="font-size: 0.85rem;" @onclick="HandleCreateProduct" disabled="@isSaving">
                         @if (isSaving)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
