@@ -69,7 +69,7 @@
                             <input type="number" step="any" class="form-control bg-light border-0 py-1 px-3 rounded-3 shadow-none" placeholder="ML" @bind="newProduct.Ml">
                         </div> }
 
-                        <!-- SECCIÓN COSTOS Y STOCK (LADO A LADO) -->
+                        <!-- BLOQUE 1: COSTOS -->
                         <div class="col-lg-6 mt-2">
                             <div class="p-2 bg-light rounded-4 border h-100" style="border-color: #e2e8f0 !important;">
                                 <div class="d-flex align-items-center mb-2">
@@ -104,40 +104,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-6 mt-2">
-                            <div class="p-2 bg-white rounded-4 border border-warning border-opacity-50 h-100" style="background-color: #fffbeb !important;">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px;">
-                                        <i class="fas fa-box-open text-warning" style="font-size: 0.85rem;"></i>
-                                    </div>
-                                    <h6 class="mb-0 fw-bold text-warning" style="font-size: 0.95rem;">4. STOCK Y ESTADO</h6>
-                                </div>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Inicial</label>
-                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
-                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" placeholder="0" @bind="newProduct.StockActual" onfocus="this.select()">
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Alerta</label>
-                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
-                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" placeholder="5" @bind="newProduct.StockMinimo" onfocus="this.select()">
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Activo</label>
-                                        <div class="bg-white rounded-3 d-flex align-items-center justify-content-center border h-auto" style="padding: 3px 0;">
-                                            <div class="form-check form-switch p-0 m-0 d-flex align-items-center justify-content-center">
-                                                <input class="form-check-input ms-0 m-0" type="checkbox" style="width: 2rem; height: 1.1rem; cursor: pointer;" id="chkActivo" @bind="newProduct.Activo">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN PRECIOS (LADO A LADO) -->
+                        <!-- BLOQUE 2: PRECIO MAYORISTA -->
                         <div class="col-lg-6 mt-2">
                             <div class="p-2 bg-white rounded-4 border border-primary border-opacity-25 h-100">
                                 <div class="d-flex align-items-center mb-2 justify-content-between">
@@ -168,6 +135,7 @@
                             </div>
                         </div>
 
+                        <!-- BLOQUE 3: PRECIO MINORISTA -->
                         <div class="col-lg-6 mt-2">
                             <div class="p-2 bg-white rounded-4 border h-100" style="border-color: #d8b4fe !important;">
                                 <div class="d-flex align-items-center mb-2 justify-content-between">
@@ -192,6 +160,40 @@
                                         <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-1 border">
                                             <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
                                             <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" style="color: #9333ea;" placeholder="0.00" @bind="newProduct.PrecioMinorista" @bind:event="oninput" @bind:after="CalculatePorcFromMinorista">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE 4: STOCK Y ESTADO -->
+                        <div class="col-lg-6 mt-2">
+                            <div class="p-2 bg-white rounded-4 border border-warning border-opacity-50 h-100" style="background-color: #fffbeb !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px;">
+                                        <i class="fas fa-box-open text-warning" style="font-size: 0.85rem;"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-warning" style="font-size: 0.95rem;">4. STOCK Y ESTADO</h6>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Inicial</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" placeholder="0" @bind="newProduct.StockActual" onfocus="this.select()">
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Alerta</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" placeholder="5" @bind="newProduct.StockMinimo" onfocus="this.select()">
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Activo</label>
+                                        <div class="bg-white rounded-3 d-flex align-items-center justify-content-center border h-auto" style="padding: 3px 0;">
+                                            <div class="form-check form-switch p-0 m-0 d-flex align-items-center justify-content-center">
+                                                <input class="form-check-input ms-0 m-0" type="checkbox" style="width: 2rem; height: 1.1rem; cursor: pointer;" id="chkActivo" @bind="newProduct.Activo">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
