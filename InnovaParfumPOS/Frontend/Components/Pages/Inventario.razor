@@ -848,6 +848,7 @@
             IdOrigen = p.IdOrigen,
             IdConcentracion = p.IdConcentracion,
             FechaVencimiento = p.FechaVencimiento,
+            Ml = p.Ml.HasValue && p.Ml.Value % 1 == 0 ? Math.Truncate(p.Ml.Value) : p.Ml,
             PrecioCompra = p.PrecioCompra
         };
         showEditModal = true;
@@ -1077,6 +1078,8 @@
         margin-bottom: 0px;
     }
 </style>
+
+
 
 
 
