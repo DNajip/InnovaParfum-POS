@@ -1,0 +1,44 @@
+
+El software debera ser compatible con scaner de pistola (cualquier tipo de escaner),impresora termica (detectar impresora termica para imprimir recibos(al iniciar el software)) y caja de efectivo.
+Moneda principal: cordobas
+Tasa de cambio de dolar(Solo el admin lo puede cambiar )
+DECIMALES 2
+1.	Modulo de roles y usuarios
+Tendremos 2 roles: Admin y Cajero
+se podrán asignar modulos de acceso. 
+2.	Modulo de inventario
+Registrar producto
+Manejo de stock
+visualizar que productos están críticos
+En el inventario podemos manjar teléfonos o artículos varios.Ambos tienen maneja difentes de cerrar ventas. El teléfono debe ponerse el IMEI al cerrar venta y los artículos no. Si un cliente lleva muchas unidades de teléfono a cana uno debe ponerse su imai correspondiente. 
+Al registrar un teléfono en el inventario de debe poder nombre, color, capacidad, precio, cantidad(unidades) stock mínimo (según al manejar cantidades contiene todo esto: id, nombre, marca, modelo, almacenamiento, color, código de barras, cantidad(unidad), stock minimo)
+
+3.	Modulo de caja y Ventas
+Debe contener manejo de caja: Apertura y cierre de caja
+conteo de billetes Cordobas: 10,20,50,100,200,500,1000 
+ya que pueden pagar con dólares: manejo de billetes en dólares 1,2, 5,10,20,50,100
+podemos registrar que una venta se hizo en efectivo, por transferencia o tarjeta. 
+Al registrar que la venta se hizo por transferencia o tarjeta un comentario de código de transferencia. Ya que si se hacer transferencia o si se pago por tarjeta no afectaría el manejo de caja. REGLA: SE ACEPTA PAGOS EN DOLARES, PERO NO SE DA VUELTO EN DOLARES SOLO EN CORDOBAS Y SE APLICA LA TASA DE CAMBIO QUE APLICA EL ADMINISTRADOR.
+
+FLUJO DE VENTAS: El cajero debe aperturar caja oblgatoriamente al inicar el turno o dia. Cajero escanea productos -> Se puede modificar cantidad del producto o telefono (por defecto 1) -> si es un teléfono el sistema pide IMEI por cada teléfono -> Se guarda la venta – se descuenta del stock
+
+Claramente se debe definir que abra un flujo de Ventas y luego detalle de ventas donde incluso  se debe identificar al cliente que se vende el producto
+
+en el proceso de detalle de venta se debe seleccionar al cliente(si no tiene registro se guarda el cliente: nombre, cedula, numero), rellenar el imei del cada telefono si esta comprando un teléfono. Seria con un método validad si el producto agregado al detalle de venta es un teléfono no estará habilitado la salida del producto hasta tener el IMEI. Ejemplo: Si en la venta seleccionan 3 unidades en el detalle de venta se desglosan para ponerle los imei a cada uno.
+si es un producto no pide imei
+ 
+Al realizar una venta el cajero tendra la optunidad de aplicar un descuento a la factura, 
+Tambien se manejan tiempo de garantia al telefono o articulos tiempo de garantia 1,2,3,4,5,6,7,8,9,10,11,12. meses de garantia.El cajero podra seleccionar el tiempo de garantia 
+Al realizar una venta se debe registrar el identificador del cajero. 
+
+4.	Modulo de reportes (modulo controlado por el admin.(Puede ser asignado por el administrador ))
+
+Reporte de transacciones  realizadas (Hoy, semana, mes, año)
+Reporte de Ganancias total de ventas
+Reporte de Manejo de caja (tal dia se abrio, se cerro (faltante) se puede manejar en general o por cajeros )
+Reporte de ventas por cajeros (Se podra visualizar el desempeño del cajero: historico de ventas, detalles por cada venta (ahi se vera que vendio, cuanto vendio, el descuento que aplico, la  garantia que aplico))
+
+Los reportes pueden ser impresos por PDF o Excel
+Al abrir el software la primera ventana será un Login para ingresar al programa el usuario deberá ingresar con la Cedula del usuario y su contraseña
+Ya que el software sera con Windows From es necesario definir que la ventada principal deberá abarcar el ancho completo posterior a iniciar sesion. 
+ 

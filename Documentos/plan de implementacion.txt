@@ -1,0 +1,64 @@
+Plan de Implementación: Software InnovaTec (POS e Inventario)
+Este documento detalla el plan para construir un sistema de escritorio premium para la gestión de ventas e inventario de teléfonos y artículos varios, optimizado para el mercado nicaragüense.
+User Review Required
+IMPORTANT
+Tecnología Sugerida: ASP.NET Core MVC
+Archivo de Base de Datos (SQL Server)
+Se diseñará un esquema robusto para manejar la dualidad de productos (artículos vs teléfonos) y el control detallado de caja.
+Tablas Principales:
+•	Usuarios y Roles: Control de acceso y asignación de módulos.
+•	Productos: Maestro de inventario con flag EsTelefono.
+•	EquiposIMEI: Tabla para rastrear los IMEIs individuales de los teléfonos en stock.
+•	Ventas y DetalleVentas: Registro histórico de transacciones.
+•	CierreCaja: Registro de aperturas y cierres con desglose de billetes (COR/USD).
+________________________________________
+Módulos del Sistema
+1. Sistema Base y Login
+•	Pantalla de inicio de sesión con validación de Cédula.
+•	Interfaz principal responsiva que utiliza Anchor/Dock para expandirse a pantalla completa.
+•	Menú lateral moderno para navegación entre módulos.
+2. Módulo de Inventario
+•	Registro de productos con campos dinámicos según el tipo.
+•	Panel de "Stock Crítico" con indicadores visuales de alerta.
+•	Gestión de IMEIs para teléfonos: Al agregar stock de teléfonos, se deben ingresar los IMEIs correspondientes.
+3. Módulo de Ventas y Detalle (El Corazón del Sistema) 
+•	Flujo de Venta:
+1.	Escaneo de productos.
+2.	Modificación de cantidades.
+3.	Validación IMEI: Si hay teléfonos, se despliega un diálogo emergente para ingresar/validar los IMEIs de las unidades vendidas (uno por unidad).
+4.	Selección de Cliente (búsqueda rápida por cédula o registro resumido: nombre, cédula, número).
+5.	Descuento y Garantía:
+•	El cajero podrá digitar un monto fijo de descuento (ej: 10 o 100 pesos).
+•	Selección de garantía mediante un selector (Combobox) de 1 a 12 meses.
+•	Manejo de Pagos:
+•	Soporte para Efectivo (COR/USD), Tarjeta y Transferencia.
+•	Para Transferencia/Tarjeta: Se solicita código de confirmación (no afecta el saldo físico de caja).
+•	Aplicación automática de Tasa de Cambio en pagos USD.
+•	El cambio (vuelto) se entrega únicamente en Córdobas.
+•	Impresión: Generación automática de recibo térmico con detector de impresora configurada.
+4. Gestión de Caja (Apertura y Cierre)
+•	Apertura de Caja: Es obligatoria al iniciar el turno. Requiere un conteo inicial detallado por denominación (monedas y billetes) para establecer el saldo de apertura.
+•	Cierre de Caja: Conteo final obligatorio por denominación:
+•	COR: 10, 20, 50, 100, 200, 500, 1000.
+•	USD: 1, 2, 5, 10, 20, 50, 100.
+•	Reporte de cuadre: Diferencia entre ventas registradas y efectivo físico contado.
+5. Módulo de Reportes (Panel Admin)
+•	Filtros por fecha (Día, Semana, Mes, Año).
+•	Reportes de Ganancias y Transacciones.
+•	Desempeño de cajeros (descuentos aplicados, garantías).
+•	Exportación a PDF (usando QuestPDF) y Excel (usando ClosedXML).
+Arquitectura Técnica
+•	Lenguaje: c# asp.net core mvc.
+•	UI: Windows Forms con Custom Controls para estética premium.
+•	Acceso a Datos: Entity Framework Core.
+•	Patrón: Capas (UI -> Services -> Repository).
+Open Questions
+•	No hay preguntas abiertas pendientes. El plan está listo para ejecución.
+Verification Plan
+Automated Tests
+•	Pruebas unitarias para el cálculo de conversión de moneda y lógica de vuelto.
+•	Validación de integridad de stock al realizar ventas concurrentes.
+Manual Verification
+•	Pruebas de flujo completo: Apertura -> Venta de Teléfono (con IMEI) -> Venta de Artículo -> Cierre de Caja con diferencia de efectivo.
+•	Verificación de renderizado de la interfaz en diferentes resoluciones de pantalla.
+•	Simulación de escaneo de códigos de barras.

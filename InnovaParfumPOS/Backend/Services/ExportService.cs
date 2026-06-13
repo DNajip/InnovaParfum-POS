@@ -61,9 +61,9 @@ public class ExportService : IExportService
                 worksheet.Cell(row, 1).Value = p.CodigoBarras ?? "S/N";
                 worksheet.Cell(row, 2).Value = p.Nombre;
                 worksheet.Cell(row, 3).Value = p.Marca ?? "N/A";
-                worksheet.Cell(row, 4).Value = p.Genero ?? "N/A";
-                worksheet.Cell(row, 5).Value = p.Concentracion ?? "N/A";
-                worksheet.Cell(row, 6).Value = p.OrigenTipo ?? "N/A";
+                worksheet.Cell(row, 4).Value = p.IdGeneroNavigation.DescGenero ?? "N/A";
+                worksheet.Cell(row, 5).Value = p.IdConcentracionNavigation.Nombre ?? "N/A";
+                worksheet.Cell(row, 6).Value = p.IdOrigenNavigation.Nombre ?? "N/A";
                 worksheet.Cell(row, 7).Value = p.IdCategoriaNavigation?.Nombre ?? "S/C";
                 
                 // Financiero
@@ -251,10 +251,10 @@ public class ExportService : IExportService
                     table.AddCell(new Cell().Add(new Paragraph(p.CodigoBarras ?? "S/N")).SetBackgroundColor(rowBg).SetPadding(4).SetFontSize(8.5f));
                     
                     // Producto Detallado
-                    string fullDesc = $"{p.Nombre} {p.Marca} {p.Genero}";
-                    if (!string.IsNullOrEmpty(p.Concentracion) || !string.IsNullOrEmpty(p.OrigenTipo))
+                    string fullDesc = $"{p.Nombre} {p.Marca} {p.IdGeneroNavigation.DescGenero}";
+                    if (!string.IsNullOrEmpty(p.IdConcentracionNavigation.Nombre) || !string.IsNullOrEmpty(p.IdOrigenNavigation.Nombre))
                     {
-                        fullDesc += $" ({p.Concentracion}{(string.IsNullOrEmpty(p.OrigenTipo) ? "" : " - " + p.OrigenTipo)})";
+                        fullDesc += $" ({p.IdConcentracionNavigation.Nombre}{(string.IsNullOrEmpty(p.IdOrigenNavigation.Nombre) ? "" : " - " + p.IdOrigenNavigation.Nombre)})";
                     }
                     table.AddCell(new Cell().Add(new Paragraph(fullDesc)).SetBackgroundColor(rowBg).SetPadding(4).SetFontSize(8.5f));
                     
@@ -337,4 +337,5 @@ public class ExportService : IExportService
         return new Cell().Add(p).SetBackgroundColor(bg).SetPadding(5).SetFontSize(9);
     }
 }
+
 

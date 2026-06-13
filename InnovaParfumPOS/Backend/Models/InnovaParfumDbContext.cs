@@ -63,6 +63,10 @@ public partial class InnovaParfumDbContext : DbContext
 
     public virtual DbSet<Persona> Personas { get; set; }
 
+    public virtual DbSet<Origen> Origenes { get; set; }
+
+    public virtual DbSet<Concentracion> Concentraciones { get; set; }
+
     public virtual DbSet<Producto> Productos { get; set; }
 
     public virtual DbSet<ReclamosGarantium> ReclamosGarantia { get; set; }
@@ -598,6 +602,26 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasConstraintName("FK__PERSONAS__ID_TIP__7A672E12");
         });
 
+        modelBuilder.Entity<Origen>(entity =>
+        {
+            entity.HasKey(e => e.IdOrigen).HasName("PK_CAT_ORIGENES");
+            entity.ToTable("ORIGENES", "CAT");
+            entity.Property(e => e.IdOrigen).HasColumnName("ID_ORIGEN");
+            entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("NOMBRE");
+            entity.Property(e => e.IdEstado).HasDefaultValue(1).HasColumnName("ID_ESTADO");
+            entity.HasOne(d => d.IdEstadoNavigation).WithMany().HasForeignKey(d => d.IdEstado).OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<Concentracion>(entity =>
+        {
+            entity.HasKey(e => e.IdConcentracion).HasName("PK_CAT_CONCENTRACIONES");
+            entity.ToTable("CONCENTRACIONES", "CAT");
+            entity.Property(e => e.IdConcentracion).HasColumnName("ID_CONCENTRACION");
+            entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("NOMBRE");
+            entity.Property(e => e.IdEstado).HasDefaultValue(1).HasColumnName("ID_ESTADO");
+            entity.HasOne(d => d.IdEstadoNavigation).WithMany().HasForeignKey(d => d.IdEstado).OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
         modelBuilder.Entity<Producto>(entity =>
         {
             entity.HasKey(e => e.IdProducto).HasName("PK_INV_PRODUCTOS");
@@ -610,15 +634,11 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.Activo)
                 .HasDefaultValue(true)
                 .HasColumnName("ACTIVO");
-            entity.Property(e => e.OrigenTipo)
-                .HasMaxLength(50)
-                .HasColumnName("ORIGEN_TIPO");
+            entity.Property(e => e.IdOrigen).HasColumnName("ID_ORIGEN");
             entity.Property(e => e.CodigoBarras)
                 .HasMaxLength(100)
                 .HasColumnName("CODIGO_BARRAS");
-            entity.Property(e => e.Concentracion)
-                .HasMaxLength(50)
-                .HasColumnName("CONCENTRACION");
+            entity.Property(e => e.IdConcentracion).HasColumnName("ID_CONCENTRACION");
             entity.Property(e => e.CreadoPor).HasColumnName("CREADO_POR");
 
             entity.Property(e => e.EstadoStock)
@@ -640,9 +660,7 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.Marca)
                 .HasMaxLength(100)
                 .HasColumnName("MARCA");
-            entity.Property(e => e.Genero)
-                .HasMaxLength(100)
-                .HasColumnName("GENERO");
+            entity.Property(e => e.IdGenero).HasColumnName("ID_GENERO");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(80)
                 .IsUnicode(false)
@@ -668,6 +686,18 @@ public partial class InnovaParfumDbContext : DbContext
             entity.HasOne(d => d.IdCategoriaNavigation).WithMany(p => p.Productos)
                 .HasForeignKey(d => d.IdCategoria)
                 .HasConstraintName("FK__PRODUCTOS__ID_CA__1EA48E88");
+
+            entity.HasOne(d => d.IdOrigenNavigation).WithMany(p => p.Productos)
+                .HasForeignKey(d => d.IdOrigen)
+                .HasConstraintName("FK_PRODUCTOS_ORIGEN");
+
+            entity.HasOne(d => d.IdConcentracionNavigation).WithMany(p => p.Productos)
+                .HasForeignKey(d => d.IdConcentracion)
+                .HasConstraintName("FK_PRODUCTOS_CONCENTRACION");
+
+            entity.HasOne(d => d.IdGeneroNavigation).WithMany(p => p.Productos)
+                .HasForeignKey(d => d.IdGenero)
+                .HasConstraintName("FK_PRODUCTOS_GENERO");
         });
 
         modelBuilder.Entity<ReclamosGarantium>(entity =>
@@ -1048,12 +1078,9 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.Marca)
                 .HasMaxLength(100)
                 .HasColumnName("MARCA");
-            entity.Property(e => e.OrigenTipo)
+            entity.Property(e => e.Genero)
                 .HasMaxLength(100)
-                .HasColumnName("ORIGEN_TIPO");
-            entity.Property(e => e.Concentracion)
-                .HasMaxLength(100)
-                .HasColumnName("CONCENTRACION");
+                .HasColumnName("GENERO");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(80)
                 .IsUnicode(false)
@@ -1227,6 +1254,7 @@ public partial class InnovaParfumDbContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+
 
 
 

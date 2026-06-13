@@ -127,11 +127,11 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold text-muted mb-1">Origen / Tipo</label>
-                            <select class="form-select form-select-sm" @bind="_filter.OrigenTipo">
+                            <select class="form-select form-select-sm" @bind="_filter.IdOrigen">
                                 <option value="">Todos</option>
                                 @foreach(var o in filterOrigenes)
                                 {
-                                    <option value="@o">@(char.ToUpper(o[0]) + o.Substring(1))</option>
+                                    <option value="@o.IdOrigen">@o.Nombre</option>
                                 }
                             </select>
                         </div>
@@ -147,11 +147,11 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold text-muted mb-1">Género</label>
-                            <select class="form-select form-select-sm" @bind="_filter.Genero">
+                            <select class="form-select form-select-sm" @bind="_filter.IdGenero">
                                 <option value="">Todos</option>
                                 @foreach(var g in filterGeneros)
                                 {
-                                    <option value="@g">@(char.ToUpper(g[0]) + g.Substring(1))</option>
+                                    <option value="@g.IdGenero">@g.DescGenero</option>
                                 }
                             </select>
                         </div>
@@ -233,7 +233,7 @@
                                     </div>
                                     <div style="min-width: 200px;">
                                         <span class="d-block fw-bold">@prod.Nombre</span>
-                                        <small class="text-muted">@prod.Marca @prod.OrigenTipo @prod.Concentracion</small>
+                                        <small class="text-muted">@prod.Marca @prod.IdOrigenNavigation?.Nombre @prod.IdConcentracionNavigation?.Nombre</small>
                                         @if(prod.FechaVencimiento.HasValue)
                                         {
                                             <br><small class="text-danger" style="font-size: 0.75rem;"><i class="fas fa-calendar-alt"></i> Vence: @prod.FechaVencimiento.Value.ToString("dd/MM/yyyy")</small>
@@ -354,7 +354,7 @@
 <!-- MODALES (BOOTSTRAP ADAPTADO) -->
 <!-- ============================================================ -->
 
-<ProductRegisterForm @bind-IsVisible="showRegisterModal" Categorias="categorias" OnProductSaved="LoadData" />
+<ProductRegisterForm @bind-IsVisible="showRegisterModal" Categorias="categorias" Generos="filterGeneros" Origenes="filterOrigenes" Concentraciones="filterConcentraciones" OnProductSaved="LoadData" />
 
 @if (showEditModal && editingProduct != null)
 {
@@ -409,21 +409,21 @@
                           {
                               <div class="col-lg-3">
                                   <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Género</label>
-                                  <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Género" @bind="editingProduct.Genero">
+                                  <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.IdGenero"><option value="">Seleccione...</option>@foreach(var g in filterGeneros){<option value="@g.IdGenero">@g.DescGenero</option>}</select>
                               </div>
                           }
                         @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirOrigen == true)
                           {
                               <div class="col-lg-3">
                                   <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Origen / Tipo</label>
-                                  <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Diseñador, Árabe..." @bind="editingProduct.OrigenTipo">
+                                  <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Diseñador, Árabe..." @bind="editingProduct.IdOrigen">
                               </div>
                           }
                         @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirConcentracion == true)
                           {
                               <div class="col-lg-3">
                                   <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Concentración</label>
-                                  <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="EDP, EDT..." @bind="editingProduct.Concentracion">
+                                  <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.IdConcentracion"><option value="">Seleccione...</option>@foreach(var c in filterConcentraciones){<option value="@c.IdConcentracion">@c.Nombre</option>}</select>
                               </div>
                           }
                         @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirVencimiento == true)
@@ -582,7 +582,7 @@
                                         </div>
                                         <div class="col-6">
                                             <label class="d-block extra-small text-muted mb-0">Género</label>
-                                            <span class="fw-semibold small">@selectedProduct.Genero</span>
+                                            <span class="fw-semibold small">@selectedProduct.IdGeneroNavigation?.DescGenero</span>
                                         </div>
                                     </div>
                                     <div class="mb-1">
@@ -743,8 +743,10 @@
     private ProductFilterDto _filter = new();
     private bool showFilterMenu = false;
     private List<string> filterMarcas = new();
-    private List<string> filterGeneros = new();
-    private List<string> filterOrigenes = new();
+    private List<Genero> filterGeneros = new();
+    private List<Origen> filterOrigenes = new();
+    private List<Concentracion> filterConcentraciones = new();
+    
     
     private string? selectedHistoryFilterType = null;
 
@@ -762,8 +764,8 @@
             if (_filter.IdCategoria.HasValue && _filter.IdCategoria > 0) count++;
             if (_filter.ExpireInMonths.HasValue || _filter.ShowExpiredOnly) count++;
             if (!string.IsNullOrEmpty(_filter.Marca)) count++;
-            if (!string.IsNullOrEmpty(_filter.Genero)) count++;
-            if (!string.IsNullOrEmpty(_filter.OrigenTipo)) count++;
+            if (_filter.IdGenero.HasValue && _filter.IdGenero > 0) count++;
+            if (_filter.IdOrigen.HasValue && _filter.IdOrigen > 0) count++;
             if (_filter.Ml.HasValue) count++;
             return count;
         }
@@ -803,8 +805,10 @@
         
         categorias = await ProductService.GetCategoriasAsync();
         filterMarcas = await ProductService.GetDistinctMarcasAsync();
-        filterGeneros = await ProductService.GetDistinctGenerosAsync();
-        filterOrigenes = await ProductService.GetDistinctOrigenesAsync();
+        filterGeneros = await ProductService.GetGenerosAsync();
+        filterOrigenes = await ProductService.GetOrigenesAsync();
+        filterConcentraciones = await ProductService.GetConcentracionesAsync();
+        filterOrigenes = await ProductService.GetOrigenesAsync();
 
         await LoadData();
 
@@ -834,15 +838,15 @@
             IdProducto = p.IdProducto,
             Nombre = p.Nombre,
             Marca = p.Marca,
-            Genero = p.Genero,
+            IdGenero = p.IdGenero,
             PrecioVenta = p.PrecioVenta,
             StockActual = p.StockActual,
             StockMinimo = p.StockMinimo,
             Activo = p.Activo,
             IdCategoria = p.IdCategoria,
             CodigoBarras = p.CodigoBarras,
-            OrigenTipo = p.OrigenTipo,
-            Concentracion = p.Concentracion,
+            IdOrigen = p.IdOrigen,
+            IdConcentracion = p.IdConcentracion,
             FechaVencimiento = p.FechaVencimiento,
             PrecioCompra = p.PrecioCompra
         };
@@ -1073,6 +1077,14 @@
         margin-bottom: 0px;
     }
 </style>
+
+
+
+
+
+
+
+
 
 
 

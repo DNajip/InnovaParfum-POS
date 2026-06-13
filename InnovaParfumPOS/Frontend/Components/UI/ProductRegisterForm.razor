@@ -53,12 +53,12 @@
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Marca</label>
                             <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Marca" @bind="newProduct.Marca">
                         </div> }
-                        @if(SelectedCategory?.PedirGenero == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Género</label><input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Género" @bind="newProduct.Genero"></div> }
+                        @if(SelectedCategory?.PedirGenero == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Género</label><select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.IdGenero"><option value="">Seleccione...</option>@foreach(var g in Generos){<option value="@g.IdGenero">@g.DescGenero</option>}</select></div> }
                         @if(SelectedCategory?.PedirOrigen == true) { <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Origen/Tipo</label>
-                            <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Diseñador, Árabe..." @bind="newProduct.OrigenTipo">
+                            <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Diseñador, Árabe..." @bind="newProduct.IdOrigen">
                         </div> }
-                        @if(SelectedCategory?.PedirConcentracion == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Concentración</label><input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="EDP, EDT..." @bind="newProduct.Concentracion"></div> }
+                        @if(SelectedCategory?.PedirConcentracion == true) { <div class="col-lg-3"><label class="form-label mb-1 fw-bold small text-muted text-uppercase">Concentración</label><select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.IdConcentracion"><option value="">Seleccione...</option>@foreach(var c in Concentraciones){<option value="@c.IdConcentracion">@c.Nombre</option>}</select></div> }
                         @if(SelectedCategory?.PedirVencimiento == true) { <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Vencimiento</label>
                             <input type="date" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="newProduct.FechaVencimiento">
@@ -136,7 +136,10 @@
 @code {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
-    [Parameter] public List<Categoria> Categorias { get; set; } = new();
+        [Parameter] public List<Categoria> Categorias { get; set; } = new();
+    [Parameter] public List<Genero> Generos { get; set; } = new();
+    [Parameter] public List<Origen> Origenes { get; set; } = new();
+    [Parameter] public List<Concentracion> Concentraciones { get; set; } = new();
     [Parameter] public EventCallback<Producto> OnProductSaved { get; set; }
     [Parameter] public string? InitialBarcode { get; set; }
 
@@ -219,6 +222,10 @@
         }
     }
 }
+
+
+
+
 
 
 

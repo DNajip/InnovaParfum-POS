@@ -19,7 +19,8 @@ public class ProductFilterDto
 
     // Atributos dinámicos
     public string? Marca { get; set; }
-    public string? Genero { get; set; }
-    public string? OrigenTipo { get; set; }
+    public int? IdGenero { get; set; }
+    public int? IdOrigen { get; set; }
     public decimal? Ml { get; set; }
 }
+

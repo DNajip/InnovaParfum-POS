@@ -1,0 +1,35 @@
+Crearemos un software Web con las siguientes tecnologías:
+
+ASP.NET Core MVC
+C#
+SQL Server
+Entity Framework Core
+Bootstrap
+JavaScript
+JQuery
+HTML 5
+CSS3
+Impresión térmica: System.Drawing + PrintDocument
+Lectores de código: Input tipo teclado (HID) → NO necesitas librería especial
+Exportación:
+PDF: iText7
+Excel: EPPlus
+
+Dividiendo el software en Frontend y Backend
+
+Frontend: 
+    HTML5
+    CSS3
+    JavaScript
+    JQuery
+    Bootstrap
+Backend: 
+    ASP.NET Core MVC
+    C#
+    SQL Server
+    Entity Framework Core
+    Impresión térmica: System.Drawing + PrintDocument
+    Lectores de código: Input tipo teclado (HID) → NO necesitas librería especial
+    Exportación:
+    PDF: iText7
+    Excel: EPPlus

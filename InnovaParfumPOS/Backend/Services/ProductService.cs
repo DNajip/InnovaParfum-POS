@@ -1,4 +1,4 @@
-﻿using InnovaParfumPOS.Backend.Models;
+using InnovaParfumPOS.Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using InnovaParfumPOS.Backend.Services;
 using InnovaParfumPOS.Backend.DTOs;
@@ -13,8 +13,9 @@ public interface IProductService
     Task<List<Producto>> GetAllProductsAsync(string? search = null, int? idCategoria = null, bool includeInactive = false, bool onlyInStock = false);
     Task<List<Producto>> GetFilteredProductsAsync(ProductFilterDto filter);
     Task<List<string>> GetDistinctMarcasAsync();
-    Task<List<string>> GetDistinctGenerosAsync();
-    Task<List<string>> GetDistinctOrigenesAsync();
+    Task<List<Genero>> GetGenerosAsync();
+    Task<List<Origen>> GetOrigenesAsync();
+    Task<List<Concentracion>> GetConcentracionesAsync();
     Task<Producto?> GetProductByIdAsync(int id);
     Task<Producto?> GetProductByCodeAsync(string code);
     Task<Producto?> GetProductByBarcodeAsync(string barcode);
@@ -71,7 +72,7 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 
-        public async Task<List<string>> GetDistinctMarcasAsync()
+    public async Task<List<string>> GetDistinctMarcasAsync()
     {
         using var context = await _factory.CreateDbContextAsync();
         return await context.Productos
@@ -81,24 +82,22 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 
-    public async Task<List<string>> GetDistinctGenerosAsync()
+    public async Task<List<Genero>> GetGenerosAsync()
     {
         using var context = await _factory.CreateDbContextAsync();
-        return await context.Productos
-            .Where(p => p.Genero != null && p.Genero != "")
-            .Select(p => p.Genero.ToLower().Trim())
-            .Distinct()
-            .ToListAsync();
+        return await context.Generos.Where(g => g.IdEstado == 1).OrderBy(g => g.DescGenero).ToListAsync();
     }
 
-    public async Task<List<string>> GetDistinctOrigenesAsync()
+    public async Task<List<Origen>> GetOrigenesAsync()
     {
         using var context = await _factory.CreateDbContextAsync();
-        return await context.Productos
-            .Where(p => p.OrigenTipo != null && p.OrigenTipo != "")
-            .Select(p => p.OrigenTipo.ToLower().Trim())
-            .Distinct()
-            .ToListAsync();
+        return await context.Origenes.Where(o => o.IdEstado == 1).OrderBy(o => o.Nombre).ToListAsync();
+    }
+
+    public async Task<List<Concentracion>> GetConcentracionesAsync()
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Concentraciones.Where(c => c.IdEstado == 1).OrderBy(c => c.Nombre).ToListAsync();
     }
 
     public async Task<List<Producto>> GetFilteredProductsAsync(ProductFilterDto filter)
@@ -144,16 +143,16 @@ public class ProductService : IProductService
             query = query.Where(p => p.Marca != null && p.Marca.ToLower().Contains(marca));
         }
 
-        if (!string.IsNullOrWhiteSpace(filter.Genero))
+        if (filter.IdGenero.HasValue && filter.IdGenero > 0)
         {
-            var genero = filter.Genero.ToLower().Trim();
-            query = query.Where(p => p.Genero != null && p.Genero.ToLower().Contains(genero));
+            
+            query = query.Where(p => p.IdGenero == filter.IdGenero);
         }
 
-        if (!string.IsNullOrWhiteSpace(filter.OrigenTipo))
+        if (filter.IdOrigen.HasValue && filter.IdOrigen > 0)
         {
-            var origen = filter.OrigenTipo.ToLower().Trim();
-            query = query.Where(p => p.OrigenTipo != null && p.OrigenTipo.ToLower().Contains(origen));
+            
+            query = query.Where(p => p.IdOrigen == filter.IdOrigen);
         }
 
         if (filter.Ml.HasValue)
@@ -215,9 +214,9 @@ public class ProductService : IProductService
         AddParam(command, "@CodigoBarras", (object?)producto.CodigoBarras ?? DBNull.Value);
         AddParam(command, "@Nombre", producto.Nombre);
         AddParam(command, "@Marca", (object?)producto.Marca ?? DBNull.Value);
-        AddParam(command, "@Genero", (object?)producto.Genero ?? DBNull.Value);
-        AddParam(command, "@OrigenTipo", (object?)producto.OrigenTipo ?? DBNull.Value);
-        AddParam(command, "@Concentracion", (object?)producto.Concentracion ?? DBNull.Value);
+        AddParam(command, "@IdGenero", (object?)producto.IdGenero ?? DBNull.Value);
+        AddParam(command, "@IdOrigen", (object?)producto.IdOrigen ?? DBNull.Value);
+        AddParam(command, "@IdConcentracion", (object?)producto.IdConcentracion ?? DBNull.Value);
         AddParam(command, "@Ml", (object?)producto.Ml ?? DBNull.Value);
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
@@ -251,9 +250,9 @@ public class ProductService : IProductService
         AddParam(command, "@CodigoBarras", (object?)producto.CodigoBarras ?? DBNull.Value);
         AddParam(command, "@Nombre", producto.Nombre);
         AddParam(command, "@Marca", (object?)producto.Marca ?? DBNull.Value);
-        AddParam(command, "@Genero", (object?)producto.Genero ?? DBNull.Value);
-        AddParam(command, "@OrigenTipo", (object?)producto.OrigenTipo ?? DBNull.Value);
-        AddParam(command, "@Concentracion", (object?)producto.Concentracion ?? DBNull.Value);
+        AddParam(command, "@IdGenero", (object?)producto.IdGenero ?? DBNull.Value);
+        AddParam(command, "@IdOrigen", (object?)producto.IdOrigen ?? DBNull.Value);
+        AddParam(command, "@IdConcentracion", (object?)producto.IdConcentracion ?? DBNull.Value);
         AddParam(command, "@Ml", (object?)producto.Ml ?? DBNull.Value);
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
@@ -357,6 +356,9 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 }
+
+
+
 
 
 

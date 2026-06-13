@@ -152,7 +152,7 @@ public class LabelService : ILabelService
                 .SetMarginBottom(1);
             doc.Add(namePara);
 
-            var metaPara = new Paragraph($"{product.Genero ?? "N/A"} | {product.Concentracion ?? "Gen"}")
+            var metaPara = new Paragraph($"{product.IdGeneroNavigation?.DescGenero ?? "N/A"} | {product.IdConcentracionNavigation?.Nombre ?? "Gen"}")
                 .SetFont(regular)
                 .SetFontSize(8)
                 .SetTextAlignment(TextAlignment.CENTER)
@@ -198,4 +198,7 @@ public class LabelService : ILabelService
         }
     }
 }
+
+
+
 

@@ -219,7 +219,7 @@
                                 @if (selectedTemplate == "grande")
                                 {
                                     <p class="label-product-meta">
-                                        @(printSelectedProduct.Genero ?? "N/A") | @(printSelectedProduct.Concentracion ?? "N/A")
+                                        @(printSelectedProduct.IdGeneroNavigation?.DescGenero ?? "N/A") | @(printSelectedProduct.IdConcentracionNavigation?.Nombre ?? "N/A")
                                     </p>
                                 }
 
@@ -792,5 +792,8 @@
         Toast.ShowInfo("Inventario Actualizado", "El nuevo producto ya está disponible.");
     }
 }
+
+
+
 
 

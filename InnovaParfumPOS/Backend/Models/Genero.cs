@@ -14,5 +14,7 @@ public partial class Genero
     public virtual Estado IdEstadoNavigation { get; set; } = null!;
 
     public virtual ICollection<Persona> Personas { get; set; } = new List<Persona>();
+    public virtual ICollection<Producto> Productos { get; set; } = new List<Producto>();
 }
+
 

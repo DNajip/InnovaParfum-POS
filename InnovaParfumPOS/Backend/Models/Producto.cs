@@ -13,17 +13,18 @@ public partial class Producto
 
     public string? Marca { get; set; }
 
-    public string? OrigenTipo { get; set; }
+    public int? IdOrigen { get; set; }
 
-    public string? Genero { get; set; }
+    public int? IdGenero { get; set; }
 
-    public string? Concentracion { get; set; }
+    public int? IdConcentracion { get; set; }
 
     public decimal? Ml { get; set; }
 
     public DateTime? FechaVencimiento { get; set; }
 
     public int? IdCategoria { get; set; }
+
     
     public string TipoProducto { get; set; } = "PERFUME";
 
@@ -54,6 +55,12 @@ public partial class Producto
     public virtual ICollection<Garantia> Garantia { get; set; } = new List<Garantia>();
 
     public virtual Categoria? IdCategoriaNavigation { get; set; }
+
+    public virtual Origen? IdOrigenNavigation { get; set; }
+
+    public virtual Concentracion? IdConcentracionNavigation { get; set; }
+
+    public virtual Genero? IdGeneroNavigation { get; set; }
 
     public virtual ICollection<Movimiento> Movimientos { get; set; } = new List<Movimiento>();
 

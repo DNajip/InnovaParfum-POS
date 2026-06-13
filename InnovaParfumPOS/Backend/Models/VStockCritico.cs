@@ -11,6 +11,8 @@ public partial class VStockCritico
 
     public string? Marca { get; set; }
 
+    public string? Genero { get; set; }
+
     public string? OrigenTipo { get; set; }
 
     public string? Concentracion { get; set; }
@@ -23,4 +25,5 @@ public partial class VStockCritico
 
     public string Categoria { get; set; } = null!;
 }
+
 

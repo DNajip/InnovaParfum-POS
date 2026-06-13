@@ -343,7 +343,7 @@
                                             <span class="fw-bold">@g.IdProductoNavigation?.Nombre</span>
                                             <span class="badge @(g.EstadoGarantia == "ACTIVA" ? "bg-success" : "bg-secondary")">@g.EstadoGarantia</span>
                                         </div>
-                                        <div class="small text-muted mb-2">@g.IdProductoNavigation?.Marca - @g.IdProductoNavigation?.Concentracion</div>
+                                        <div class="small text-muted mb-2">@g.IdProductoNavigation?.Marca - @g.IdProductoNavigation?.IdConcentracionNavigation?.Nombre</div>
                                         
                                         <div class="warranty-timeline">
                                             <div class="d-flex justify-content-between small text-muted mb-1">
@@ -538,4 +538,5 @@
         debounceTimer?.Dispose();
     }
 }
+
 

@@ -215,8 +215,8 @@ public class ReportService : IReportService
                 Nombre = p.Nombre,
                 Categoria = p.IdCategoriaNavigation != null ? p.IdCategoriaNavigation.Nombre : "Sin categoría",
                 Marca = p.Marca ?? "",
-                OrigenTipo = p.OrigenTipo ?? "",
-                Concentracion = p.Concentracion ?? "",
+                OrigenTipo = p.IdOrigenNavigation.Nombre ?? "",
+                Concentracion = p.IdConcentracionNavigation.Nombre ?? "",
                 StockActual = p.StockActual,
                 StockMinimo = p.StockMinimo,
                 EstadoStock = p.EstadoStock,
@@ -492,4 +492,8 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 }
+
+
+
+
 
