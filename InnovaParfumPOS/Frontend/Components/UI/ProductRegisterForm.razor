@@ -3,6 +3,7 @@
 @inject IProductService ProductService
 @inject ToastService Toast
 @inject UserSession Session
+@inject InnovaParfumPOS.Backend.Services.ConfiguracionService ConfigService
 
 @if (IsVisible)
 {
@@ -73,28 +74,28 @@
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Costo (Compra)</label>
                             <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
                                 <i class="fas fa-coins text-success me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="newProduct.PrecioCompra">
+                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="_precioCompra">
                             </div>
                         </div>
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">P. Venta</label>
                             <div class="input-group-custom bg-primary bg-opacity-10 rounded-3 d-flex align-items-center px-2 py-1">
-                                <i class="fas fa-dollar-sign text-primary me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none fw-bold text-primary" @bind="newProduct.PrecioVenta">
+                                <span class="text-primary me-1 fw-bold">@SimboloMoneda</span>
+                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none fw-bold text-primary" @bind="_precioVenta">
                             </div>
                         </div>
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock Inicial</label>
                             <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
                                 <i class="fas fa-boxes text-muted me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="newProduct.StockActual">
+                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" onfocus="this.select()" @bind="newProduct.StockActual">
                             </div>
                         </div>
                         <div class="col-lg-3">
                             <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Mínimo Alerta</label>
                             <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
                                 <i class="fas fa-bell text-warning me-2 small"></i>
-                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="newProduct.StockMinimo">
+                                <input type="number" class="form-control bg-transparent border-0 py-1 shadow-none" onfocus="this.select()" @bind="newProduct.StockMinimo">
                             </div>
                         </div>
 
@@ -146,6 +147,15 @@
     private Producto newProduct = new() { Activo = true, StockActual = 0, StockMinimo = 5 };
     private Categoria? SelectedCategory => Categorias.FirstOrDefault(c => c.IdCategoria == newProduct.IdCategoria);
     private bool isSaving = false;
+    private string SimboloMoneda = "C$";
+    private decimal? _precioVenta;
+    private decimal? _precioCompra;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var moneda = await ConfigService.GetSettingAsync("Moneda_Principal");
+        SimboloMoneda = moneda == "USD" ? "$" : "C$";
+    }
 
     protected override void OnParametersSet()
     {
@@ -169,6 +179,8 @@
     private async Task Close()
     {
         newProduct = new Producto { Activo = true, StockActual = 0, StockMinimo = 5 };
+        _precioVenta = null;
+        _precioCompra = null;
         await IsVisibleChanged.InvokeAsync(false);
     }
 
@@ -180,6 +192,8 @@
             return;
         }
 
+        newProduct.PrecioVenta = _precioVenta ?? 0;
+        newProduct.PrecioCompra = _precioCompra;
         if (newProduct.PrecioVenta <= 0)
         {
             Toast.ShowWarning("Debe ingresar un precio de venta al crear un producto.");
@@ -222,6 +236,7 @@
         }
     }
 }
+
 
 
 
