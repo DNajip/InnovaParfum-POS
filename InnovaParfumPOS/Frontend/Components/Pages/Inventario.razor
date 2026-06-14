@@ -38,9 +38,21 @@
             <div class="kpi-icon">
                 <i class="fas fa-boxes"></i>
             </div>
-            <div class="kpi-info">
-                <span class="kpi-label">Total Productos</span>
-                <span class="kpi-value">@stats.TotalProductos</span>
+            <div class="kpi-info flex-grow-1 w-100">
+                <span class="kpi-label mb-2">Recuento</span>
+                <div class="d-flex justify-content-between align-items-center w-100 px-2 mt-1">
+                    <div class="text-center">
+                        <span class="d-block extra-small text-muted text-uppercase fw-bold mb-1">Productos</span>
+                        <span class="fs-5 fw-bold text-dark">@stats.TotalProductos</span>
+                        <span class="d-block" style="font-size: 0.65rem; color: #adb5bd;">Registrados</span>
+                    </div>
+                    <div class="border-end h-100 mx-2"></div>
+                    <div class="text-center">
+                        <span class="d-block extra-small text-muted text-uppercase fw-bold mb-1">Cantidad</span>
+                        <span class="fs-5 fw-bold text-primary">@stats.TotalCantidades</span>
+                        <span class="d-block" style="font-size: 0.65rem; color: #adb5bd;">En total</span>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="inv-kpi-card kpi-yellow">
@@ -61,13 +73,23 @@
                 <span class="kpi-value">@stats.SinStock</span>
             </div>
         </div>
-        <div class="inv-kpi-card kpi-cyan">
-            <div class="kpi-icon">
+        <div class="inv-kpi-card kpi-cyan" style="padding: 1rem 0.5rem;">
+            <div class="kpi-icon me-2">
                 <i class="fas fa-coins"></i>
             </div>
-            <div class="kpi-info">
-                <span class="kpi-label">Valorización</span>
-                <span class="kpi-value">@AppState.CurrencySymbol @stats.Valorizacion.ToString("N2")</span>
+            <div class="kpi-info flex-grow-1 w-100">
+                <span class="kpi-label mb-2 text-center w-100">Valorización de Inventario</span>
+                <div class="d-flex justify-content-between align-items-center w-100 mt-1">
+                    <div class="text-center w-50">
+                        <span class="d-block extra-small text-muted text-uppercase fw-bold mb-1">Mayorista</span>
+                        <span class="fw-bold text-dark" style="font-size: 1.1rem;">@AppState.CurrencySymbol @stats.ValorizacionMayorista.ToString("N2")</span>
+                    </div>
+                    <div class="border-end h-100 mx-1"></div>
+                    <div class="text-center w-50">
+                        <span class="d-block extra-small text-muted text-uppercase fw-bold mb-1">Minorista</span>
+                        <span class="fw-bold text-info" style="font-size: 1.1rem;">@AppState.CurrencySymbol @stats.ValorizacionMinorista.ToString("N2")</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -931,6 +953,9 @@
         margin-bottom: 0px;
     }
 </style>
+
+
+
 
 
 

@@ -142,7 +142,7 @@ public class ProductService : IProductService
             query = query.Where(p => p.FechaVencimiento.HasValue && p.FechaVencimiento.Value >= today && p.FechaVencimiento.Value <= maxDate);
         }
 
-        // 5. Atributos dinï¿½micos (Insensibles a mayï¿½sculas/minï¿½sculas)
+        // 5. Atributos dinÃ¯Â¿Â½micos (Insensibles a mayÃ¯Â¿Â½sculas/minÃ¯Â¿Â½sculas)
         if (!string.IsNullOrWhiteSpace(filter.Marca))
         {
             var marca = filter.Marca.ToLower().Trim();
@@ -166,7 +166,7 @@ public class ProductService : IProductService
             query = query.Where(p => p.Ml == filter.Ml.Value);
         }
 
-        // 6. Bï¿½squeda por texto (Nombre o Cï¿½digo)
+        // 6. BÃ¯Â¿Â½squeda por texto (Nombre o CÃ¯Â¿Â½digo)
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var s = filter.SearchTerm.ToLower().Trim();
@@ -359,9 +359,11 @@ public class ProductService : IProductService
         return new InventoryStatsDto
         {
             TotalProductos = productos.Count,
+            TotalCantidades = productos.Sum(p => p.StockActual),
             StockBajo = productos.Count(p => p.StockActual > 0 && p.StockActual <= p.StockMinimo),
             SinStock = productos.Count(p => p.StockActual == 0),
-            Valorizacion = productos.Sum(p => (p.PrecioMinorista ?? 0) * p.StockActual)
+            ValorizacionMayorista = productos.Sum(p => (p.PrecioMayorista ?? 0) * p.StockActual),
+            ValorizacionMinorista = productos.Sum(p => (p.PrecioMinorista ?? 0) * p.StockActual)
         };
     }
 
@@ -376,6 +378,8 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 }
+
+
 
 
 
