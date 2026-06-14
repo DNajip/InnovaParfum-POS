@@ -1,4 +1,4 @@
-﻿@page "/inventario"
+@page "/inventario"
 @using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.DTOs
 @using InnovaParfumPOS.Backend.Models
@@ -13,7 +13,7 @@
 <PageTitle>Inventario - InnovaTec</PageTitle>
 
 <div class="inv-container">
-    <!-- Header del MÃ³dulo -->
+    <!-- Header del MÃƒÂ³dulo -->
     <div class="inv-header">
         <div class="inv-title-group">
             <h2>Inventario</h2>
@@ -72,11 +72,11 @@
         </div>
     </div>
 
-    <!-- Barra de BÃºsqueda y Filtros -->
+    <!-- Barra de BÃƒÂºsqueda y Filtros -->
     <div class="p-3 bg-white border rounded shadow-sm d-flex gap-3 align-items-center position-relative">
         <div class="position-relative flex-grow-1">
             <i class="fas fa-search position-absolute top-50 translate-middle-y text-muted ms-3"></i>
-            <input type="text" class="form-control ps-5" placeholder="Buscar por nombre o cÃ³digo... (Presione Enter)" 
+            <input type="text" class="form-control ps-5" placeholder="Buscar por nombre o cÃƒÂ³digo... (Presione Enter)" 
                    @bind="_filter.SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
         </div>
         
@@ -116,7 +116,7 @@
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted mb-1">CategorÃ­a</label>
+                            <label class="form-label small fw-bold text-muted mb-1">Categoría</label>
                             <select class="form-select form-select-sm" @bind="_filter.IdCategoria">
                                 <option value="">Todas</option>
                                 @foreach(var cat in categorias)
@@ -137,16 +137,10 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold text-muted mb-1">Marca</label>
-                            <select class="form-select form-select-sm" @bind="_filter.Marca">
-                                <option value="">Todas</option>
-                                @foreach(var m in filterMarcas)
-                                {
-                                    <option value="@m">@(char.ToUpper(m[0]) + m.Substring(1))</option>
-                                }
-                            </select>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ej. Premium" @bind="_filter.Marca" @bind:event="oninput" />
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted mb-1">GÃ©nero</label>
+                            <label class="form-label small fw-bold text-muted mb-1">Género</label>
                             <select class="form-select form-select-sm" @bind="_filter.IdGenero">
                                 <option value="">Todos</option>
                                 @foreach(var g in filterGeneros)
@@ -180,7 +174,7 @@
                 </div>
             }
             
-            <!-- Overlay para cerrar el menÃº haciendo clic afuera -->
+            <!-- Overlay para cerrar el menÃƒÂº haciendo clic afuera -->
             @if(showFilterMenu)
             {
                 <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2;" @onclick="() => showFilterMenu = false"></div>
@@ -195,9 +189,11 @@
                 <tr>
                     <th>Producto</th>
                     <th>Tipo</th>
-                    <th class="text-end">Precio Unit.</th>
+                    <th>Marca</th>
+                    <th>GÃ©nero</th>
+                    <th class="text-end">Precio Mayorista</th>
+                    <th class="text-end">Precio Minorista</th>
                     <th class="text-center">Stock Actual</th>
-                    <th class="text-end">Valor Total</th>
                     <th>Estado</th>
                     <th class="text-center">Acciones</th>
                 </tr>
@@ -233,7 +229,10 @@
                                     </div>
                                     <div style="min-width: 200px;">
                                         <span class="d-block fw-bold">@prod.Nombre</span>
-                                        <small class="text-muted">@prod.Marca @prod.IdOrigenNavigation?.Nombre @prod.IdConcentracionNavigation?.Nombre</small>
+                                        @if (prod.IdOrigenNavigation != null || prod.IdConcentracionNavigation != null)
+                                        {
+                                            <small class="text-muted">@(string.Join(" - ", new[] { prod.IdOrigenNavigation?.Nombre, prod.IdConcentracionNavigation?.Nombre }.Where(s => !string.IsNullOrEmpty(s))))</small>
+                                        }
                                         @if(prod.FechaVencimiento.HasValue)
                                         {
                                             <br><small class="text-danger" style="font-size: 0.75rem;"><i class="fas fa-calendar-alt"></i> Vence: @prod.FechaVencimiento.Value.ToString("dd/MM/yyyy")</small>
@@ -246,7 +245,14 @@
                                     @(prod.TipoProducto == "PERFUME" ? "Perfume" : "ArtÃ­culo")
                                 </span>
                             </td>
-                            <td class="text-end fw-semibold">@AppState.CurrencySymbol @prod.(PrecioMinorista ?? 0).ToString("N2")</td>
+                            <td>
+                                <span class="fw-semibold">@prod.Marca</span>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-muted" style="font-size: 0.85rem;">@prod.IdGeneroNavigation?.DescGenero</span>
+                            </td>
+                            <td class="text-end fw-semibold" style="color: #3498db;">@AppState.CurrencySymbol @(prod.PrecioMayorista?.ToString("N2") ?? "0.00")</td>
+                            <td class="text-end fw-semibold" style="color: #9b59b6;">@AppState.CurrencySymbol @(prod.PrecioMinorista?.ToString("N2") ?? "0.00")</td>
                             <td class="text-center">
                                 <div class="d-inline-block text-start">
                                     <span class="fw-bold fs-5">@prod.StockActual</span>
@@ -256,7 +262,6 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-end fw-bold">@AppState.CurrencySymbol @(((prod.PrecioMinorista ?? 0) * prod.StockActual).ToString("N2"))</td>
                             <td>
                                 @if (!prod.Activo)
                                 {
@@ -289,7 +294,7 @@
         </table>
     </div>
 
-    <!-- PaginaciÃ³n Premium tipo Carrusel -->
+    <!-- PaginaciÃƒÂ³n Premium tipo Carrusel -->
     @if (productos != null && productos.Any())
     {
         var totalPages = (int)Math.Ceiling((double)productos.Count / pageSize);
@@ -308,7 +313,7 @@
                         </li>
                         
                         @{
-                            // LÃ³gica de ventana deslizante (Carrusel de 6 nÃºmeros)
+                            // LÃƒÂ³gica de ventana deslizante (Carrusel de 6 nÃƒÂºmeros)
                             int maxVisible = 6;
                             int startPage = Math.Max(1, Math.Min(currentPage - 2, totalPages - maxVisible + 1));
                             int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
@@ -324,7 +329,7 @@
                                 </li>
                             }
 
-                            // Mostrar Elipsis y Ãšltima PÃ¡gina si es necesario
+                            // Mostrar Elipsis y ÃƒÅ¡ltima PÃƒÂ¡gina si es necesario
                             if (endPage < totalPages)
                             {
                                 if (endPage < totalPages - 1)
@@ -358,119 +363,7 @@
 
 @if (showEditModal && editingProduct != null)
 {
-    <div class="modal show d-block" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-                <div class="modal-header bg-white border-0 p-4 pb-0">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon kpi-blue" style="width: 45px; height: 45px; background: rgba(52, 152, 219, 0.1); color: #3498db;">
-                            <i class="fas fa-pen-nib"></i>
-                        </div>
-                        <div>
-                            <h4 class="modal-title fw-bold mb-0">Editar Producto</h4>
-                            <p class="text-primary small fw-bold mb-0">@editingProduct.Nombre</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-body p-4 pt-3">
-                    <div class="row g-2">
-                        <!-- Fila 1 -->
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">CÃ³digo de Barras</label>
-                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-2 py-1">
-                                <i class="fas fa-barcode text-muted me-2 small"></i>
-                                <input type="text" class="form-control bg-transparent border-0 py-1 shadow-none" @bind="editingProduct.CodigoBarras">
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Nombre</label>
-                            <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.Nombre">
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">CategorÃ­a</label>
-                            <select class="form-select bg-light border-0 py-1 rounded-3 shadow-none" @bind="editingProduct.IdCategoria" style="height: 38px;">
-                                <option value="">Seleccione...</option>
-                                @foreach (var cat in categorias)
-                                {
-                                    <option value="@cat.IdCategoria">@cat.Nombre</option>
-                                }
-                            </select>
-                        </div>
-
-                        <!-- Fila 2 -->
-                        @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirMarca == true)
-                          {
-                              <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Marca</label>
-                                  <input type="text" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.Marca">
-                              </div>
-                          }
-                        @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirGenero == true)
-                          {
-                              <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">GÃ©nero</label>
-                                  <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.IdGenero"><option value="">Seleccione...</option>@foreach(var g in filterGeneros){<option value="@g.IdGenero">@g.DescGenero</option>}</select>
-                              </div>
-                          }
-                        @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirOrigen == true)
-                          {
-                              <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Origen / Tipo</label>
-                                  <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.IdOrigen"><option value="">Seleccione...</option>@foreach(var o in filterOrigenes){<option value="@o.IdOrigen">@o.Nombre</option>}</select>
-                              </div>
-                          }
-                        @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirConcentracion == true)
-                          {
-                              <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">ConcentraciÃ³n</label>
-                                  <select class="form-select bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.IdConcentracion"><option value="">Seleccione...</option>@foreach(var c in filterConcentraciones){<option value="@c.IdConcentracion">@c.Nombre</option>}</select>
-                              </div>
-                          }
-                        @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirVencimiento == true)
-                          {
-                              <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Vencimiento</label>
-                                  <input type="date" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" @bind="editingProduct.FechaVencimiento">
-                              </div>
-                          }
-                        @if (categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria)?.PedirMl == true)
-                          {
-                              <div class="col-lg-3">
-                                  <label class="form-label mb-1 fw-bold small text-muted text-uppercase">ML (Mililitros)</label>
-                                  <input type="number" step="any" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" placeholder="Ej. 100" @bind="editingProduct.Ml">
-                              </div>
-                          }
-
-                        <!-- Fila 3 -->
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Compra</label>
-                            <input type="number" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" onfocus="this.select()" @bind="editingProduct.CostoProducto">
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Precio Venta</label>
-                            <input type="number" class="form-control bg-primary bg-opacity-10 border-0 py-2 rounded-3 shadow-none fw-bold text-primary" onfocus="this.select()" @bind="editingProduct.PrecioMinorista">
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label mb-1 fw-bold small text-muted text-uppercase">Stock MÃ­nimo</label>
-                            <input type="number" class="form-control bg-light border-0 py-2 rounded-3 shadow-none" onfocus="this.select()" @bind="editingProduct.StockMinimo">
-                        </div>
-                        <div class="col-lg-3 d-flex align-items-end">
-                            <div class="form-check form-switch mb-2">
-                                <input class="form-check-input" type="checkbox" id="editSwitchChecked" @bind="editingProduct.Activo">
-                                <label class="form-check-label fw-bold" for="editSwitchChecked">Producto Activo</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-4 pt-2">
-                    <button class="btn btn-link text-muted text-decoration-none px-4" @onclick="() => showEditModal = false">Cancelar</button>
-                    <button class="btn btn-primary rounded-pill px-5 shadow fw-bold py-2" @onclick="HandleUpdateProduct">
-                        <i class="fas fa-sync me-2"></i>Actualizar Datos
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <ProductEditForm @bind-IsVisible="showEditModal" Product="editingProduct" Categorias="categorias" Generos="filterGeneros" Origenes="filterOrigenes" Concentraciones="filterConcentraciones" OnProductSaved="LoadData" />
 }
 
 @if (showAdjustModal && adjustingProduct != null)
@@ -507,7 +400,7 @@
 
                         <!-- Selector de Movimiento Horizontal -->
                         <div class="col-12 mt-2">
-                            <label class="form-label fw-bold small text-muted text-uppercase mb-2">Tipo de OperaciÃ³n</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase mb-2">Tipo de OperaciÃƒÂ³n</label>
                             <div class="d-flex gap-2 p-1 bg-light rounded-pill border">
                                 <button class="btn flex-grow-1 rounded-pill py-2 d-flex align-items-center justify-content-center gap-2 border-0 @(adjustType == "INGRESO" ? "btn-success shadow-sm" : "bg-transparent text-muted")" 
                                         @onclick='() => adjustType = "INGRESO"'>
@@ -550,7 +443,7 @@
                             </div>
                             <div>
                                 <h5 class="modal-title fw-bold mb-0">Detalle del Producto</h5>
-                                <p class="text-muted extra-small mb-0">AuditorÃ­a completa y Kardex de movimientos</p>
+                                <p class="text-muted extra-small mb-0">AuditorÃƒÂ­a completa y Kardex de movimientos</p>
                             </div>
                         </div>
                         <div class="text-end">
@@ -572,7 +465,7 @@
                                         <span class="fw-bold text-dark small d-block">@selectedProduct.Nombre</span>
                                     </div>
                                     <div class="mb-2">
-                                        <label class="d-block extra-small text-muted mb-0">SKU / CÃ³digo</label>
+                                        <label class="d-block extra-small text-muted mb-0">SKU / CÃƒÂ³digo</label>
                                         <span class="item-code py-0 px-2" style="font-size: 0.75rem;">@(selectedProduct.CodigoBarras ?? "S/N")</span>
                                     </div>
                                     <div class="row g-2 mb-2">
@@ -586,7 +479,7 @@
                                         </div>
                                     </div>
                                     <div class="mb-1">
-                                        <label class="d-block extra-small text-muted mb-0">CategorÃ­a</label>
+                                        <label class="d-block extra-small text-muted mb-0">Categoría</label>
                                         <span class="badge-tipo badge-tipo-articulo w-100 text-center py-1">
                                             @(selectedProduct.IdCategoriaNavigation?.Nombre ?? "S/C")
                                         </span>
@@ -641,7 +534,7 @@
                                             <thead class="bg-light sticky-top">
                                                 <tr>
                                                     <th class="border-0 small text-uppercase text-muted ps-3">Fecha</th>
-                                                    <th class="border-0 small text-uppercase text-muted">OperaciÃ³n</th>
+                                                    <th class="border-0 small text-uppercase text-muted">OperaciÃƒÂ³n</th>
                                                     <th class="border-0 small text-uppercase text-muted text-center">Cant.</th>
                                                     <th class="border-0 small text-uppercase text-muted text-center">Stock Final</th>
                                                     <th class="border-0 small text-uppercase text-muted">Referencia</th>
@@ -735,7 +628,7 @@
 
 @code {
     private List<Producto>? productos;
-    private List<Producto>? filteredProductos; // Ahora serÃ¡ igual a productos (filtrado en BD)
+    private List<Producto>? filteredProductos; // Ahora serÃƒÂ¡ igual a productos (filtrado en BD)
     private List<Categoria> categorias = new();
     private InventoryStatsDto stats = new();
     
@@ -793,7 +686,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Redireccionar si no hay sesiÃ³n (Simulado para este ejemplo)
+        // Redireccionar si no hay sesiÃƒÂ³n (Simulado para este ejemplo)
         if (!UserSession.IsAuthenticated)
         {
             // Navigation.NavigateTo("/login"); 
@@ -819,7 +712,7 @@
             if (agotados.Any())
             {
                 string nombres = agotados.Count > 3 
-                    ? string.Join(", ", agotados.Take(3)) + $" y {agotados.Count - 3} mÃ¡s" 
+                    ? string.Join(", ", agotados.Take(3)) + $" y {agotados.Count - 3} mÃƒÂ¡s" 
                     : string.Join(", ", agotados);
                 ToastService.ShowWarning($"{nombres} se encuentran sin stock actualmente.");
             }
@@ -849,57 +742,17 @@
             IdConcentracion = p.IdConcentracion,
             FechaVencimiento = p.FechaVencimiento,
             Ml = p.Ml.HasValue && p.Ml.Value % 1 == 0 ? Math.Truncate(p.Ml.Value) : p.Ml,
-            CostoProducto = p.CostoProducto
+            CostoProducto = p.CostoProducto,
+            CostoEnvio = p.CostoEnvio,
+            PorcGananciaMayorista = p.PorcGananciaMayorista,
+            PrecioMayorista = p.PrecioMayorista,
+            PorcGananciaMinorista = p.PorcGananciaMinorista
         };
         showEditModal = true;
         StateHasChanged();
     }
 
-    private async Task HandleUpdateProduct()
-    {
-        if (editingProduct == null) return;
-        
-        if (string.IsNullOrWhiteSpace(editingProduct.Nombre))
-        {
-            ToastService.ShowWarning("El nombre del producto es obligatorio.");
-            return;
-        }
-
-        if (editingProduct.IdCategoria == null || editingProduct.IdCategoria == 0)
-        {
-            ToastService.ShowWarning("Debe seleccionar una categorÃ­a para el producto.");
-            return;
-        }
-
-        if (editingProduct.PrecioMinorista <= 0)
-        {
-            ToastService.ShowWarning("El precio de venta debe ser mayor a 0.");
-            return;
-        }
-
-        var selectedCat = categorias.FirstOrDefault(c => c.IdCategoria == editingProduct.IdCategoria);
-        if (selectedCat != null)
-        {
-            if (selectedCat.Nombre != null && selectedCat.Nombre.Contains("PERFUME", StringComparison.OrdinalIgnoreCase))
-                editingProduct.TipoProducto = "PERFUME";
-            else
-                editingProduct.TipoProducto = "ARTICULO_VARIO";
-        }
-        
-        try 
-        {
-            // La normalizaciÃ³n de barcode y asignaciÃ³n de TipoProducto se hace ahora en el SP INV.sp_MantenerProducto
-            await ProductService.UpdateProductAsync(editingProduct);
-            ToastService.ShowSuccess("Los cambios se guardaron correctamente");
-            showEditModal = false;
-            await LoadData();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error updating product: {ex.Message}");
-            ToastService.ShowError($"No se pudieron guardar los cambios: {ex.Message}");
-        }
-    }
+    
 
     private void OpenAdjustModal(Producto p)
     {
@@ -936,7 +789,7 @@
             var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"Inventario_{DateTime.Now:ddMMyy}.xlsx", streamRef);
-            ToastService.ShowSuccess("Archivo Excel generado con Ã©xito");
+            ToastService.ShowSuccess("Archivo Excel generado con ÃƒÂ©xito");
         }
         catch (Exception ex)
         {
@@ -952,7 +805,7 @@
             var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"Inventario_{DateTime.Now:ddMMyy}.pdf", streamRef);
-            ToastService.ShowSuccess("Reporte PDF generado con Ã©xito");
+            ToastService.ShowSuccess("Reporte PDF generado con ÃƒÂ©xito");
         }
         catch (Exception ex)
         {
@@ -1078,6 +931,14 @@
         margin-bottom: 0px;
     }
 </style>
+
+
+
+
+
+
+
+
 
 
 

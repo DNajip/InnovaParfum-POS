@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -99,7 +99,7 @@ public class ReportService : IReportService
             {
                 Label = g.Key.ToString("dd MMM"),
                 ValorNio = g.Sum(v => v.TotalNio),
-                ValorUsd = g.Sum(v => v.TotalNio / 36.5m) // Asumiendo tasa fija por ahora para el gráfico
+                ValorUsd = g.Sum(v => v.TotalNio / 36.5m) // Asumiendo tasa fija por ahora para el grÃ¡fico
             })
             .ToList();
     }
@@ -155,7 +155,7 @@ public class ReportService : IReportService
             {
                 Fecha = g.Key,
                 VentasBrutas = g.Sum(v => v.TotalNio),
-                Devoluciones = 0, // Por implementar lógica de devoluciones real si existe
+                Devoluciones = 0, // Por implementar lÃ³gica de devoluciones real si existe
                 VentasNetas = g.Sum(v => v.TotalNio),
                 Facturas = g.Count(),
                 TicketPromedio = g.Average(v => v.TotalNio)
@@ -187,7 +187,7 @@ public class ReportService : IReportService
             }
         }
 
-        // Calcular intensidad relativa al máximo del dataset
+        // Calcular intensidad relativa al mÃ¡ximo del dataset
         var maxTotal = result.Any() ? result.Max(r => r.Total) : 0;
         if (maxTotal > 0)
         {
@@ -195,7 +195,7 @@ public class ReportService : IReportService
             {
                 if (item.Total > 0)
                 {
-                    // Escala de 1-10 proporcional al máximo
+                    // Escala de 1-10 proporcional al mÃ¡ximo
                     item.Intensity = Math.Max(1, (int)Math.Ceiling((double)(item.Total / maxTotal * 10)));
                 }
             }
@@ -213,10 +213,10 @@ public class ReportService : IReportService
             {
                 IdProducto = p.IdProducto,
                 Nombre = p.Nombre,
-                Categoria = p.IdCategoriaNavigation != null ? p.IdCategoriaNavigation.Nombre : "Sin categoría",
+                Categoria = p.IdCategoriaNavigation != null ? p.IdCategoriaNavigation.Nombre : "Sin categorÃ­a",
                 Marca = p.Marca ?? "",
-                OrigenTipo = p.IdOrigenNavigation.Nombre ?? "",
-                Concentracion = p.IdConcentracionNavigation.Nombre ?? "",
+                OrigenTipo = p.IdOrigenNavigation!.Nombre ?? "",
+                Concentracion = p.IdConcentracionNavigation!.Nombre ?? "",
                 StockActual = p.StockActual,
                 StockMinimo = p.StockMinimo,
                 EstadoStock = p.EstadoStock,
@@ -441,7 +441,7 @@ public class ReportService : IReportService
             .Include(d => d.IdProductoNavigation)
                 .ThenInclude(p => p.IdCategoriaNavigation)
             .Where(d => d.IdVentaNavigation.FechaVenta >= start && d.IdVentaNavigation.FechaVenta <= end && !d.IdVentaNavigation.Anulada)
-            .GroupBy(d => d.IdProductoNavigation.IdCategoriaNavigation != null ? d.IdProductoNavigation.IdCategoriaNavigation.Nombre : "Sin categoría")
+            .GroupBy(d => d.IdProductoNavigation.IdCategoriaNavigation != null ? d.IdProductoNavigation.IdCategoriaNavigation.Nombre : "Sin categorÃ­a")
             .Select(g => new CategoryStatDTO
             {
                 Categoria = g.Key ?? "Otros",
@@ -459,8 +459,8 @@ public class ReportService : IReportService
         if (stockCritico > 0)
         {
             alerts.Add(new SystemAlertDTO {
-                Titulo = "Stock Crítico Detectado",
-                Mensaje = $"Hay {stockCritico} productos por debajo del mínimo.",
+                Titulo = "Stock CrÃ­tico Detectado",
+                Mensaje = $"Hay {stockCritico} productos por debajo del mÃ­nimo.",
                 Tipo = "danger",
                 Fecha = DateTime.Now
             });
@@ -492,6 +492,9 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 }
+
+
+
 
 
 

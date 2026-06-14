@@ -19,6 +19,7 @@ public partial class Producto
 
     public int? IdConcentracion { get; set; }
 
+    [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(8,2)")]
     public decimal? Ml { get; set; }
 
         public DateTime? FechaVencimiento { get; set; }

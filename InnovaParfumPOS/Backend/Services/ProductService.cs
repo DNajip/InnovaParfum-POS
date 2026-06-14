@@ -1,4 +1,4 @@
-using InnovaParfumPOS.Backend.Models;
+﻿using InnovaParfumPOS.Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using InnovaParfumPOS.Backend.Services;
 using InnovaParfumPOS.Backend.DTOs;
@@ -50,6 +50,9 @@ public class ProductService : IProductService
         var query = context.Productos
             .FromSqlRaw("SELECT * FROM INV.V_PRODUCTOS_DETALLE")
             .Include(p => p.IdCategoriaNavigation)
+            .Include(p => p.IdOrigenNavigation)
+            .Include(p => p.IdConcentracionNavigation)
+            .Include(p => p.IdGeneroNavigation)
             .AsNoTracking();
 
         if (!includeInactive)
@@ -77,7 +80,7 @@ public class ProductService : IProductService
         using var context = await _factory.CreateDbContextAsync();
         return await context.Productos
             .Where(p => p.Marca != null && p.Marca != "")
-            .Select(p => p.Marca.ToLower().Trim())
+            .Select(p => p.Marca!.ToLower().Trim())
             .Distinct()
             .ToListAsync();
     }
@@ -107,6 +110,9 @@ public class ProductService : IProductService
         var query = context.Productos
             .FromSqlRaw("SELECT * FROM INV.V_PRODUCTOS_DETALLE")
             .Include(p => p.IdCategoriaNavigation)
+            .Include(p => p.IdOrigenNavigation)
+            .Include(p => p.IdConcentracionNavigation)
+            .Include(p => p.IdGeneroNavigation)
             .AsNoTracking();
 
         // 1. Estado de Actividad
@@ -136,11 +142,11 @@ public class ProductService : IProductService
             query = query.Where(p => p.FechaVencimiento.HasValue && p.FechaVencimiento.Value >= today && p.FechaVencimiento.Value <= maxDate);
         }
 
-        // 5. Atributos din�micos (Insensibles a may�sculas/min�sculas)
+        // 5. Atributos dinï¿½micos (Insensibles a mayï¿½sculas/minï¿½sculas)
         if (!string.IsNullOrWhiteSpace(filter.Marca))
         {
             var marca = filter.Marca.ToLower().Trim();
-            query = query.Where(p => p.Marca != null && p.Marca.ToLower().Contains(marca));
+            query = query.Where(p => p.Marca != null && p.Marca!.ToLower().Contains(marca));
         }
 
         if (filter.IdGenero.HasValue && filter.IdGenero > 0)
@@ -160,7 +166,7 @@ public class ProductService : IProductService
             query = query.Where(p => p.Ml == filter.Ml.Value);
         }
 
-        // 6. B�squeda por texto (Nombre o C�digo)
+        // 6. Bï¿½squeda por texto (Nombre o Cï¿½digo)
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var s = filter.SearchTerm.ToLower().Trim();
@@ -177,6 +183,9 @@ public class ProductService : IProductService
         using var context = await _factory.CreateDbContextAsync();
         return await context.Productos
             .Include(p => p.IdCategoriaNavigation)
+            .Include(p => p.IdOrigenNavigation)
+            .Include(p => p.IdConcentracionNavigation)
+            .Include(p => p.IdGeneroNavigation)
             .FirstOrDefaultAsync(p => p.IdProducto == id);
     }
 
@@ -185,6 +194,9 @@ public class ProductService : IProductService
         using var context = await _factory.CreateDbContextAsync();
         return await context.Productos
             .Include(p => p.IdCategoriaNavigation)
+            .Include(p => p.IdOrigenNavigation)
+            .Include(p => p.IdConcentracionNavigation)
+            .Include(p => p.IdGeneroNavigation)
             .FirstOrDefaultAsync(p => p.CodigoBarras == code && p.Activo == true);
     }
 
@@ -221,8 +233,12 @@ public class ProductService : IProductService
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
         AddParam(command, "@TipoProducto", producto.TipoProducto);
-        AddParam(command, "@CostoProducto", producto.CostoProducto);
-        AddParam(command, "@PrecioMinorista", producto.PrecioMinorista);
+        AddParam(command, "@CostoProducto", (object?)producto.CostoProducto ?? DBNull.Value);
+          AddParam(command, "@CostoEnvio", (object?)producto.CostoEnvio ?? DBNull.Value);
+          AddParam(command, "@PorcGananciaMayorista", (object?)producto.PorcGananciaMayorista ?? DBNull.Value);
+          AddParam(command, "@PrecioMayorista", (object?)producto.PrecioMayorista ?? DBNull.Value);
+          AddParam(command, "@PorcGananciaMinorista", (object?)producto.PorcGananciaMinorista ?? DBNull.Value);
+          AddParam(command, "@PrecioMinorista", (object?)producto.PrecioMinorista ?? DBNull.Value);
         AddParam(command, "@StockActual", producto.StockActual);
         AddParam(command, "@StockMinimo", producto.StockMinimo);
         AddParam(command, "@Activo", producto.Activo);
@@ -257,8 +273,12 @@ public class ProductService : IProductService
         AddParam(command, "@FechaVencimiento", (object?)producto.FechaVencimiento ?? DBNull.Value);
         AddParam(command, "@IdCategoria", (object?)producto.IdCategoria ?? DBNull.Value);
         AddParam(command, "@TipoProducto", producto.TipoProducto);
-        AddParam(command, "@CostoProducto", producto.CostoProducto);
-        AddParam(command, "@PrecioMinorista", producto.PrecioMinorista);
+        AddParam(command, "@CostoProducto", (object?)producto.CostoProducto ?? DBNull.Value);
+          AddParam(command, "@CostoEnvio", (object?)producto.CostoEnvio ?? DBNull.Value);
+          AddParam(command, "@PorcGananciaMayorista", (object?)producto.PorcGananciaMayorista ?? DBNull.Value);
+          AddParam(command, "@PrecioMayorista", (object?)producto.PrecioMayorista ?? DBNull.Value);
+          AddParam(command, "@PorcGananciaMinorista", (object?)producto.PorcGananciaMinorista ?? DBNull.Value);
+          AddParam(command, "@PrecioMinorista", (object?)producto.PrecioMinorista ?? DBNull.Value);
         AddParam(command, "@StockActual", producto.StockActual);
         AddParam(command, "@StockMinimo", producto.StockMinimo);
         AddParam(command, "@Activo", producto.Activo);
@@ -356,6 +376,9 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 }
+
+
+
 
 
 

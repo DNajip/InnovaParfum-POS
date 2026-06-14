@@ -1,0 +1,359 @@
+﻿@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.Services
+@inject IProductService ProductService
+@inject ToastService Toast
+@inject UserSession Session
+@inject InnovaParfumPOS.Backend.Services.ConfiguracionService ConfigService
+
+@if (IsVisible)
+{
+    <div class="modal show d-block" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 1000px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
+                <div class="modal-header bg-white border-0 p-3 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon kpi-blue" style="width: 40px; height: 40px; background: rgba(52, 152, 219, 0.1); color: #3498db; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+                            <i class="fas fa-pen-nib"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" style="color: #1e293b;">Editar Producto</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body p-3 pt-2" style="max-height: 85vh; overflow-y: auto;">
+                    <div class="row g-2">
+                        <!-- Fila 1 -->
+                        <div class="col-lg-3">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Código de Barras</label>
+                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-1">
+                                <i class="fas fa-barcode text-muted me-2"></i>
+                                <input type="text" class="form-control bg-transparent border-0 p-0 shadow-none" placeholder="Escanear..." @bind="Product.CodigoBarras">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Nombre del Producto</label>
+                            <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-1">
+                                <i class="fas fa-tag text-muted me-2"></i>
+                                <input type="text" class="form-control bg-transparent border-0 p-0 shadow-none" placeholder="Nombre completo" @bind="Product.Nombre">
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Categoría</label>
+                            <select class="form-select bg-light border-0 rounded-3 shadow-none px-3 py-1" @bind="Product.IdCategoria">
+                                <option value="" disabled hidden>Seleccione...</option>
+                                @foreach (var cat in Categorias)
+                                {
+                                    <option value="@cat.IdCategoria">@cat.Nombre</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Fila 2 -->
+                        @if(SelectedCategory?.PedirMarca == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Marca</label>
+                            <input type="text" class="form-control bg-light border-0 py-1 px-3 rounded-3 shadow-none" placeholder="Marca" @bind="Product.Marca">
+                        </div> }
+                        @if(SelectedCategory?.PedirGenero == true) { <div class="col-lg-2"><label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Género</label><select class="form-select bg-light border-0 py-1 px-3 rounded-3 shadow-none" @bind="Product.IdGenero"><option value="">Seleccione...</option>@foreach(var g in Generos){<option value="@g.IdGenero">@g.DescGenero</option>}</select></div> }
+                        @if(SelectedCategory?.PedirOrigen == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Origen</label>
+                            <select class="form-select bg-light border-0 py-1 px-3 rounded-3 shadow-none" @bind="Product.IdOrigen"><option value="">Seleccione...</option>@foreach(var o in Origenes){<option value="@o.IdOrigen">@o.Nombre</option>}</select>
+                        </div> }
+                        @if(SelectedCategory?.PedirConcentracion == true) { <div class="col-lg-2"><label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Concentración</label><select class="form-select bg-light border-0 py-1 px-3 rounded-3 shadow-none" @bind="Product.IdConcentracion"><option value="">Seleccione...</option>@foreach(var c in Concentraciones){<option value="@c.IdConcentracion">@c.Nombre</option>}</select></div> }
+                        @if(SelectedCategory?.PedirVencimiento == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Vencimiento</label>
+                            <input type="date" class="form-control bg-light border-0 py-1 px-3 rounded-3 shadow-none" @bind="Product.FechaVencimiento">
+                        </div> }
+                        @if(SelectedCategory?.PedirMl == true) { <div class="col-lg-2">
+                            <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">ML</label>
+                            <input type="number" step="any" class="form-control bg-light border-0 py-1 px-3 rounded-3 shadow-none" placeholder="ML" @bind="Product.Ml">
+                        </div> }
+
+                        <!-- BLOQUE 1: COSTOS -->
+                        <div class="col-lg-6 mt-2">
+                            <div class="p-2 bg-light rounded-4 border h-100" style="border-color: #e2e8f0 !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px;">
+                                        <i class="fas fa-coins text-success" style="font-size: 0.85rem;"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-success" style="font-size: 0.95rem;">1. COSTOS</h6>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Perfume</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
+                                            <span class="text-muted me-1 fw-bold" style="font-size: 0.85rem;">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="Product.CostoProducto" @bind:event="oninput" @bind:after="CalculatePrices">
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Envío</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
+                                            <span class="text-muted me-1 fw-bold" style="font-size: 0.85rem;">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="Product.CostoEnvio" @bind:event="oninput" @bind:after="CalculatePrices">
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Total</label>
+                                        <div class="input-group-custom bg-success bg-opacity-10 rounded-3 d-flex align-items-center px-2 py-1 border border-success border-opacity-25">
+                                            <span class="text-success me-1 fw-bold" style="font-size: 0.85rem;">@SimboloMoneda</span>
+                                            <input type="text" readonly class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold text-success" value="@CostoTotal.ToString("N2")">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE 2: PRECIO MAYORISTA -->
+                        <div class="col-lg-6 mt-2">
+                            <div class="p-2 bg-white rounded-4 border border-primary border-opacity-25 h-100">
+                                <div class="d-flex align-items-center mb-2 justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px;">
+                                            <i class="fas fa-users text-primary" style="font-size: 0.85rem;"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold text-primary" style="font-size: 0.95rem;">2. PRECIO MAYORISTA</h6>
+                                    </div>
+                                    <i class="fas fa-info-circle text-primary opacity-50" title="Ingrese % o Precio. Se auto-calculan mutuamente."></i>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">% Ganancia</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-1 border">
+                                            <div class="text-primary me-2 fw-bold">%</div>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="Product.PorcGananciaMayorista" @bind:event="oninput" @bind:after="CalculateMayoristaFromPorc">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Precio Sugerido</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-1 border">
+                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold text-primary" placeholder="0.00" @bind="Product.PrecioMayorista" @bind:event="oninput" @bind:after="CalculatePorcFromMayorista">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE 3: PRECIO MINORISTA -->
+                        <div class="col-lg-6 mt-2">
+                            <div class="p-2 bg-white rounded-4 border h-100" style="border-color: #d8b4fe !important;">
+                                <div class="d-flex align-items-center mb-2 justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background-color: #f3e8ff;">
+                                            <i class="fas fa-user" style="color: #9333ea; font-size: 0.85rem;"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold" style="color: #9333ea; font-size: 0.95rem;">3. PRECIO MINORISTA</h6>
+                                    </div>
+                                    <i class="fas fa-info-circle opacity-50" style="color: #9333ea;" title="Ingrese % o Precio. Se auto-calculan mutuamente."></i>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">% Ganancia</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-1 border">
+                                            <div class="fw-bold me-2" style="color: #9333ea;">%</div>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" placeholder="0.00" @bind="Product.PorcGananciaMinorista" @bind:event="oninput" @bind:after="CalculateMinoristaFromPorc">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Precio Público</label>
+                                        <div class="input-group-custom bg-light rounded-3 d-flex align-items-center px-3 py-1 border">
+                                            <span class="text-muted me-2 fw-bold">@SimboloMoneda</span>
+                                            <input type="number" step="0.01" class="form-control bg-transparent border-0 p-0 shadow-none text-end fw-bold" style="color: #9333ea;" placeholder="0.00" @bind="Product.PrecioMinorista" @bind:event="oninput" @bind:after="CalculatePorcFromMinorista">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE 4: STOCK Y ESTADO -->
+                        <div class="col-lg-6 mt-2">
+                            <div class="p-2 bg-white rounded-4 border border-warning border-opacity-50 h-100" style="background-color: #fffbeb !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px;">
+                                        <i class="fas fa-pen-nib text-warning" style="font-size: 0.85rem;"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-warning" style="font-size: 0.95rem;">4. STOCK Y ESTADO</h6>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Inicial</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" placeholder="0" @bind="Product.StockActual" onfocus="this.select()">
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Alerta</label>
+                                        <div class="input-group-custom bg-white rounded-3 d-flex align-items-center px-2 py-1 border">
+                                            <input type="number" class="form-control bg-transparent border-0 p-0 shadow-none text-center" placeholder="5" @bind="Product.StockMinimo" onfocus="this.select()">
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.65rem;">Activo</label>
+                                        <div class="bg-white rounded-3 d-flex align-items-center justify-content-center border h-auto" style="padding: 3px 0;">
+                                            <div class="form-check form-switch p-0 m-0 d-flex align-items-center justify-content-center">
+                                                <input class="form-check-input ms-0 m-0" type="checkbox" style="width: 2rem; height: 1.1rem; cursor: pointer;" id="chkActivo" @bind="Product.Activo">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 pt-2 bg-light" style="border-radius: 0 0 18px 18px;">
+                    <button class="btn btn-link text-muted text-decoration-none px-4 fw-medium" @onclick="Close">Cancelar</button>
+                    <button class="btn btn-dark rounded-pill px-5 shadow-sm fw-bold py-2 d-flex align-items-center gap-2" @onclick="HandleUpdateProduct" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-sync"></i>
+                            <span>Actualizar Datos</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public List<Categoria> Categorias { get; set; } = new();
+    [Parameter] public List<Genero> Generos { get; set; } = new();
+    [Parameter] public List<Origen> Origenes { get; set; } = new();
+    [Parameter] public List<Concentracion> Concentraciones { get; set; } = new();
+    [Parameter] public EventCallback<Producto> OnProductSaved { get; set; }
+    [Parameter] public string? InitialBarcode { get; set; }
+
+    [Parameter] public Producto Product { get; set; } = new();
+    private Categoria? SelectedCategory => Categorias.FirstOrDefault(c => c.IdCategoria == Product.IdCategoria);
+    private bool isSaving = false;
+    private string SimboloMoneda = "C$";
+
+    private decimal CostoTotal => (Product.CostoProducto ?? 0) + (Product.CostoEnvio ?? 0);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible)
+        {
+            var moneda = await ConfigService.GetSettingAsync("Moneda_Principal");
+            SimboloMoneda = moneda == "USD" ? "$" : "C$";
+
+            if (!string.IsNullOrEmpty(InitialBarcode))
+            {
+                Product.CodigoBarras = InitialBarcode;
+            }
+            if ((Product.IdCategoria == null || Product.IdCategoria == 0) && Categorias != null && Categorias.Any())
+            {
+                var defaultCategory = Categorias.FirstOrDefault(c => c.Nombre != null && c.Nombre.Equals("PERFUMES", StringComparison.OrdinalIgnoreCase));
+                if (defaultCategory != null)
+                {
+                    Product.IdCategoria = defaultCategory.IdCategoria;
+                }
+            }
+        }
+    }
+
+    private void CalculatePrices()
+    {
+        CalculateMayoristaFromPorc();
+        CalculateMinoristaFromPorc();
+    }
+
+    private void CalculateMayoristaFromPorc()
+    {
+        if (Product.PorcGananciaMayorista.HasValue && CostoTotal > 0)
+        {
+            Product.PrecioMayorista = Math.Round(CostoTotal + (CostoTotal * (Product.PorcGananciaMayorista.Value / 100m)), 2);
+        }
+    }
+
+    private void CalculatePorcFromMayorista()
+    {
+        if (Product.PrecioMayorista.HasValue && CostoTotal > 0)
+        {
+            Product.PorcGananciaMayorista = Math.Round(((Product.PrecioMayorista.Value - CostoTotal) / CostoTotal) * 100m, 2);
+        }
+    }
+
+    private void CalculateMinoristaFromPorc()
+    {
+        if (Product.PorcGananciaMinorista.HasValue && CostoTotal > 0)
+        {
+            Product.PrecioMinorista = Math.Round(CostoTotal + (CostoTotal * (Product.PorcGananciaMinorista.Value / 100m)), 2);
+        }
+    }
+
+    private void CalculatePorcFromMinorista()
+    {
+        if (Product.PrecioMinorista.HasValue && CostoTotal > 0)
+        {
+            Product.PorcGananciaMinorista = Math.Round(((Product.PrecioMinorista.Value - CostoTotal) / CostoTotal) * 100m, 2);
+        }
+    }
+
+    private async Task Close()
+    {
+        
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleUpdateProduct()
+    {
+        if (string.IsNullOrWhiteSpace(Product.Nombre))
+        {
+            Toast.ShowWarning("El nombre del producto es obligatorio.");
+            return;
+        }
+
+        if ((Product.PrecioMinorista ?? 0) <= 0)
+        {
+            Toast.ShowWarning("Debe ingresar un precio minorista al actualizar un producto.");
+            return;
+        }
+
+        if (Product.IdCategoria == null || Product.IdCategoria == 0)
+        {
+            Toast.ShowWarning("Debe seleccionar una categoría.");
+            return;
+        }
+
+        var selectedCat = Categorias.FirstOrDefault(c => c.IdCategoria == Product.IdCategoria);
+        if (selectedCat != null)
+        {
+            if (selectedCat.Nombre != null && selectedCat.Nombre.Contains("PERFUME", StringComparison.OrdinalIgnoreCase))
+                Product.TipoProducto = "PERFUME";
+            else
+                Product.TipoProducto = "ARTICULO_VARIO";
+        }
+
+        try
+        {
+            isSaving = true;
+            
+            await ProductService.UpdateProductAsync(Product);
+            Toast.ShowSuccess("Producto registrado", $"{Product.Nombre} ha sido creado correctamente.");
+            
+            var savedProduct = Product;
+            await OnProductSaved.InvokeAsync(savedProduct);
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError("Error al guardar", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}
+
+
+
