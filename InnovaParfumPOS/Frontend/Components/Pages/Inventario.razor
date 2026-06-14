@@ -1,4 +1,4 @@
-@page "/inventario"
+﻿@page "/inventario"
 @using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.DTOs
 @using InnovaParfumPOS.Backend.Models
@@ -13,7 +13,7 @@
 <PageTitle>Inventario - InnovaTec</PageTitle>
 
 <div class="inv-container">
-    <!-- Header del MÃƒÂ³dulo -->
+    <!-- Header del Módulo -->
     <div class="inv-header">
         <div class="inv-title-group">
             <h2>Inventario</h2>
@@ -66,17 +66,17 @@
                 <i class="fas fa-coins"></i>
             </div>
             <div class="kpi-info">
-                <span class="kpi-label">ValorizaciÃ³n</span>
+                <span class="kpi-label">Valorización</span>
                 <span class="kpi-value">@AppState.CurrencySymbol @stats.Valorizacion.ToString("N2")</span>
             </div>
         </div>
     </div>
 
-    <!-- Barra de BÃƒÂºsqueda y Filtros -->
+    <!-- Barra de Búsqueda y Filtros -->
     <div class="p-3 bg-white border rounded shadow-sm d-flex gap-3 align-items-center position-relative">
         <div class="position-relative flex-grow-1">
             <i class="fas fa-search position-absolute top-50 translate-middle-y text-muted ms-3"></i>
-            <input type="text" class="form-control ps-5" placeholder="Buscar por nombre o cÃƒÂ³digo... (Presione Enter)" 
+            <input type="text" class="form-control ps-5" placeholder="Buscar por nombre o código... (Presione Enter)" 
                    @bind="_filter.SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
         </div>
         
@@ -111,7 +111,7 @@
                             <select class="form-select form-select-sm" @bind="_filter.StockStatus">
                                 <option value="todos">Todos</option>
                                 <option value="con_stock">Con Stock (>0)</option>
-                                <option value="stock_bajo">Stock Bajo/CrÃ­tico</option>
+                                <option value="stock_bajo">Stock Bajo/Crítico</option>
                                 <option value="sin_stock">Sin stock</option>
                             </select>
                         </div>
@@ -174,7 +174,7 @@
                 </div>
             }
             
-            <!-- Overlay para cerrar el menÃƒÂº haciendo clic afuera -->
+            <!-- Overlay para cerrar el menú haciendo clic afuera -->
             @if(showFilterMenu)
             {
                 <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2;" @onclick="() => showFilterMenu = false"></div>
@@ -190,7 +190,7 @@
                     <th>Producto</th>
                     <th>Tipo</th>
                     <th>Marca</th>
-                    <th>GÃ©nero</th>
+                    <th>Género</th>
                     <th class="text-end">Precio Mayorista</th>
                     <th class="text-end">Precio Minorista</th>
                     <th class="text-center">Stock Actual</th>
@@ -242,7 +242,7 @@
                             </td>
                             <td>
                                 <span class="badge-tipo @(prod.TipoProducto == "PERFUME" ? "badge-tipo-telefono" : "badge-tipo-accesorio")">
-                                    @(prod.TipoProducto == "PERFUME" ? "Perfume" : "ArtÃ­culo")
+                                    @(prod.TipoProducto == "PERFUME" ? "Perfume" : "Artículo")
                                 </span>
                             </td>
                             <td>
@@ -256,7 +256,7 @@
                             <td class="text-center">
                                 <div class="d-inline-block text-start">
                                     <span class="fw-bold fs-5">@prod.StockActual</span>
-                                    <small class="text-muted">/ @prod.StockMinimo mÃ­n.</small>
+                                    <small class="text-muted">/ @prod.StockMinimo mín.</small>
                                     <div class="stock-bar-container">
                                         <div class="stock-bar @GetStockBarClass(prod)" style="width: @GetStockPercent(prod)%"></div>
                                     </div>
@@ -270,7 +270,7 @@
                                 else
                                 {
                                     <span class="badge-estado @GetEstadoClass(prod)">
-                                        @(prod.EstadoStock == "DISPONIBLE" ? "Disponible" : prod.EstadoStock == "CRITICO" ? "CrÃ­tico" : "Agotado")
+                                        @(prod.EstadoStock == "DISPONIBLE" ? "Disponible" : prod.EstadoStock == "CRITICO" ? "Crítico" : "Agotado")
                                     </span>
                                 }
                             </td>
@@ -294,7 +294,7 @@
         </table>
     </div>
 
-    <!-- PaginaciÃƒÂ³n Premium tipo Carrusel -->
+    <!-- Paginación Premium tipo Carrusel -->
     @if (productos != null && productos.Any())
     {
         var totalPages = (int)Math.Ceiling((double)productos.Count / pageSize);
@@ -313,7 +313,7 @@
                         </li>
                         
                         @{
-                            // LÃƒÂ³gica de ventana deslizante (Carrusel de 6 nÃƒÂºmeros)
+                            // Lógica de ventana deslizante (Carrusel de 6 números)
                             int maxVisible = 6;
                             int startPage = Math.Max(1, Math.Min(currentPage - 2, totalPages - maxVisible + 1));
                             int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
@@ -329,7 +329,7 @@
                                 </li>
                             }
 
-                            // Mostrar Elipsis y ÃƒÅ¡ltima PÃƒÂ¡gina si es necesario
+                            // Mostrar Elipsis y Última Página si es necesario
                             if (endPage < totalPages)
                             {
                                 if (endPage < totalPages - 1)
@@ -400,7 +400,7 @@
 
                         <!-- Selector de Movimiento Horizontal -->
                         <div class="col-12 mt-2">
-                            <label class="form-label fw-bold small text-muted text-uppercase mb-2">Tipo de OperaciÃƒÂ³n</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase mb-2">Tipo de Operación</label>
                             <div class="d-flex gap-2 p-1 bg-light rounded-pill border">
                                 <button class="btn flex-grow-1 rounded-pill py-2 d-flex align-items-center justify-content-center gap-2 border-0 @(adjustType == "INGRESO" ? "btn-success shadow-sm" : "bg-transparent text-muted")" 
                                         @onclick='() => adjustType = "INGRESO"'>
@@ -443,7 +443,7 @@
                             </div>
                             <div>
                                 <h5 class="modal-title fw-bold mb-0">Detalle del Producto</h5>
-                                <p class="text-muted extra-small mb-0">AuditorÃƒÂ­a completa y Kardex de movimientos</p>
+                                <p class="text-muted extra-small mb-0">Auditoría completa y Kardex de movimientos</p>
                             </div>
                         </div>
                         <div class="text-end">
@@ -465,7 +465,7 @@
                                         <span class="fw-bold text-dark small d-block">@selectedProduct.Nombre</span>
                                     </div>
                                     <div class="mb-2">
-                                        <label class="d-block extra-small text-muted mb-0">SKU / CÃƒÂ³digo</label>
+                                        <label class="d-block extra-small text-muted mb-0">SKU / Código</label>
                                         <span class="item-code py-0 px-2" style="font-size: 0.75rem;">@(selectedProduct.CodigoBarras ?? "S/N")</span>
                                     </div>
                                     <div class="row g-2 mb-2">
@@ -474,7 +474,7 @@
                                             <span class="fw-semibold small">@selectedProduct.Marca</span>
                                         </div>
                                         <div class="col-6">
-                                            <label class="d-block extra-small text-muted mb-0">GÃ©nero</label>
+                                            <label class="d-block extra-small text-muted mb-0">Género</label>
                                             <span class="fw-semibold small">@selectedProduct.IdGeneroNavigation?.DescGenero</span>
                                         </div>
                                     </div>
@@ -534,7 +534,7 @@
                                             <thead class="bg-light sticky-top">
                                                 <tr>
                                                     <th class="border-0 small text-uppercase text-muted ps-3">Fecha</th>
-                                                    <th class="border-0 small text-uppercase text-muted">OperaciÃƒÂ³n</th>
+                                                    <th class="border-0 small text-uppercase text-muted">Operación</th>
                                                     <th class="border-0 small text-uppercase text-muted text-center">Cant.</th>
                                                     <th class="border-0 small text-uppercase text-muted text-center">Stock Final</th>
                                                     <th class="border-0 small text-uppercase text-muted">Referencia</th>
@@ -628,7 +628,7 @@
 
 @code {
     private List<Producto>? productos;
-    private List<Producto>? filteredProductos; // Ahora serÃƒÂ¡ igual a productos (filtrado en BD)
+    private List<Producto>? filteredProductos; // Ahora será igual a productos (filtrado en BD)
     private List<Categoria> categorias = new();
     private InventoryStatsDto stats = new();
     
@@ -686,7 +686,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Redireccionar si no hay sesiÃƒÂ³n (Simulado para este ejemplo)
+        // Redireccionar si no hay sesión (Simulado para este ejemplo)
         if (!UserSession.IsAuthenticated)
         {
             // Navigation.NavigateTo("/login"); 
@@ -712,7 +712,7 @@
             if (agotados.Any())
             {
                 string nombres = agotados.Count > 3 
-                    ? string.Join(", ", agotados.Take(3)) + $" y {agotados.Count - 3} mÃƒÂ¡s" 
+                    ? string.Join(", ", agotados.Take(3)) + $" y {agotados.Count - 3} más" 
                     : string.Join(", ", agotados);
                 ToastService.ShowWarning($"{nombres} se encuentran sin stock actualmente.");
             }
@@ -789,7 +789,7 @@
             var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"Inventario_{DateTime.Now:ddMMyy}.xlsx", streamRef);
-            ToastService.ShowSuccess("Archivo Excel generado con ÃƒÂ©xito");
+            ToastService.ShowSuccess("Archivo Excel generado con éxito");
         }
         catch (Exception ex)
         {
@@ -805,7 +805,7 @@
             var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"Inventario_{DateTime.Now:ddMMyy}.pdf", streamRef);
-            ToastService.ShowSuccess("Reporte PDF generado con ÃƒÂ©xito");
+            ToastService.ShowSuccess("Reporte PDF generado con éxito");
         }
         catch (Exception ex)
         {
@@ -931,6 +931,9 @@
         margin-bottom: 0px;
     }
 </style>
+
+
+
 
 
 
