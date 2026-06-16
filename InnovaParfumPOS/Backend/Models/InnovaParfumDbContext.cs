@@ -97,6 +97,10 @@ public partial class InnovaParfumDbContext : DbContext
 
     public virtual DbSet<MovimientoVario> MovimientosVarios { get; set; }
 
+    public virtual DbSet<TiposVentum> TiposVenta { get; set; }
+
+    public virtual DbSet<CondicionesPago> CondicionesPagos { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -1176,6 +1180,16 @@ public partial class InnovaParfumDbContext : DbContext
             entity.HasOne(d => d.IdUsuarioAnulaNavigation).WithMany(p => p.VentaIdUsuarioAnulaNavigations)
                 .HasForeignKey(d => d.IdUsuarioAnula)
                 .HasConstraintName("FK__VENTAS__ID_USUAR__51300E55");
+
+            entity.HasOne(d => d.IdTipoVentaNavigation).WithMany(p => p.Ventas)
+                .HasForeignKey(d => d.IdTipoVenta)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__VENTAS__ID_TIPO_VENTA");
+
+            entity.HasOne(d => d.IdCondicionPagoNavigation).WithMany(p => p.Ventas)
+                .HasForeignKey(d => d.IdCondicionPago)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__VENTAS__ID_CONDICION_PAGO");
         });
 
         modelBuilder.Entity<VentaDetalle>(entity =>
@@ -1259,6 +1273,25 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__MOVIMIENT__ID_US__4F47C5E3");
+        });
+
+        modelBuilder.Entity<TiposVentum>(entity =>
+        {
+            entity.HasKey(e => e.IdTipoVenta).HasName("PK__TIPOS_VE__4E090F1CC01BBDEB");
+            entity.ToTable("TIPOS_VENTA", "CAT");
+            entity.Property(e => e.IdTipoVenta).HasColumnName("ID_TIPO_VENTA");
+            entity.Property(e => e.Activo).HasDefaultValue(true).HasColumnName("ACTIVO");
+            entity.Property(e => e.Descripcion).HasMaxLength(50).IsUnicode(false).HasColumnName("DESCRIPCION");
+        });
+
+        modelBuilder.Entity<CondicionesPago>(entity =>
+        {
+            entity.HasKey(e => e.IdCondicion).HasName("PK__CONDICIO__A9CA342AE5C8DCA0");
+            entity.ToTable("CONDICIONES_PAGO", "CAT");
+            entity.Property(e => e.IdCondicion).HasColumnName("ID_CONDICION");
+            entity.Property(e => e.Activo).HasDefaultValue(true).HasColumnName("ACTIVO");
+            entity.Property(e => e.Descripcion).HasMaxLength(50).IsUnicode(false).HasColumnName("DESCRIPCION");
+            entity.Property(e => e.DiasPlazo).HasColumnName("DIAS_PLAZO");
         });
 
         OnModelCreatingPartial(modelBuilder);

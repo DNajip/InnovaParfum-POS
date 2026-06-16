@@ -5,14 +5,18 @@
 @inject UserSession UserSession
 
 <section class="summary-bar">
-    <div class="summary-stats-group">
+    <div class="summary-stats-group gap-4">
         <div class="stat-item">
             <span class="stat-label">Unidades</span>
             <span class="stat-value">@SaleService.TotalUnits</span>
         </div>
         <div class="stat-item">
-            <span class="stat-label">Sub Total</span>
-            <span class="stat-value text-muted">@AppState.CurrencySymbol @SaleService.SubTotal.ToString("N2")</span>
+            <span class="stat-label fw-bold text-primary">Sub Total Mayorista</span>
+            <span class="stat-value text-primary fs-6">@AppState.CurrencySymbol @SaleService.SubTotalMayorista.ToString("N2")</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label fw-bold text-success">Sub Total Minorista</span>
+            <span class="stat-value text-success fs-6">@AppState.CurrencySymbol @SaleService.SubTotalMinorista.ToString("N2")</span>
         </div>
         <div class="stat-item">
             <span class="stat-label">Aplicar descuento</span>
@@ -24,10 +28,26 @@
     </div>
 
     <div class="checkout-area">
-        <div class="total-box">
-            <p class="total-label">Total</p>
-            <span class="total-amount">@AppState.CurrencySymbol @SaleService.Total.ToString("N2")</span>
+        <div class="d-flex align-items-center gap-4">
+            <div class="total-box">
+                <p class="total-label text-primary">Total Mayorista</p>
+                <span class="total-amount fs-5 text-primary">@AppState.CurrencySymbol @SaleService.TotalMayorista.ToString("N2")</span>
+            </div>
+            <div class="total-box">
+                <p class="total-label text-success">Total Minorista</p>
+                <span class="total-amount fs-4 text-success">@AppState.CurrencySymbol @SaleService.TotalMinorista.ToString("N2")</span>
+            </div>
         </div>
+        
+        <div class="d-flex flex-column align-items-center justify-content-center mx-3">
+            <label class="form-check-label fw-bold mb-1" for="tipoVentaSwitch">
+                @(SaleService.IsMayorista ? "MAYORISTA" : "MINORISTA")
+            </label>
+            <div class="form-check form-switch" style="transform: scale(1.5);">
+                <input class="form-check-input" type="checkbox" role="switch" id="tipoVentaSwitch" @bind="SaleService.IsMayorista">
+            </div>
+        </div>
+
         <button class="btn btn-checkout" @onclick="SaleService.RequestCheckout" disabled="@(UserSession.ActiveShift == null)">
             <i class="fas fa-file-invoice me-2"></i>
             FACTURAR

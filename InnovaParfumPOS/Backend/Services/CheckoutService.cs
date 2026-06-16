@@ -5,7 +5,7 @@ namespace InnovaParfumPOS.Backend.Services;
 
 public interface ICheckoutService
 {
-    Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, decimal discount, List<CartItem> items, List<PaymentInput> payments);
+    Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments);
     Task<List<PeriodosGarantium>> GetPeriodosGarantiaAsync();
     Task<List<MetodosPago>> GetMetodosPagoAsync();
 }
@@ -39,11 +39,19 @@ public class CheckoutService : ICheckoutService
             .ToListAsync();
     }
 
-    public async Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, decimal discount, List<CartItem> items, List<PaymentInput> payments)
+    public async Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments)
     {
         using var context = await _factory.CreateDbContextAsync();
-        // 1. Serializar colecciones a JSON para enviarlas al SP
-        var itemsJson = System.Text.Json.JsonSerializer.Serialize(items);
+        
+        // 1. Map items to include dynamic UnitPrice based on TipoVenta
+        var itemsMapped = items.Select(i => new {
+            i.IdProducto,
+            i.Description,
+            UnitPrice = idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista,
+            SubTotal = (idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista) * i.Quantity,
+            i.Details
+        });
+        var itemsJson = System.Text.Json.JsonSerializer.Serialize(itemsMapped);
         
         // Mapeamos pagos para asegurar que las propiedades coincidan con el SP
         var paymentsMapped = payments.Select(p => new {
@@ -57,11 +65,13 @@ public class CheckoutService : ICheckoutService
 
         try 
         {
-            // 2. Ejecutar el SP Maestro de Venta
+            // 2. Ejecutar el SP Maestro de Venta (ahora requiere idTipoVenta e idCondicionPago)
             var result = await context.Ventas
-                .FromSqlRaw("EXEC VEN.sp_ProcesarVenta @IdUsuario={0}, @IdPersona={1}, @DescuentoNio={2}, @TasaCambioUsd={3}, @ItemsJson={4}, @PaymentsJson={5}",
+                .FromSqlRaw("EXEC VEN.sp_ProcesarVenta @IdUsuario={0}, @IdPersona={1}, @IdTipoVenta={2}, @IdCondicionPago={3}, @DescuentoNio={4}, @TasaCambioUsd={5}, @ItemsJson={6}, @PaymentsJson={7}",
                     userId,
                     idPersona ?? (object)DBNull.Value,
+                    idTipoVenta,
+                    idCondicionPago,
                     discount,
                     36.60m, // Podría venir de configuración
                     itemsJson,

@@ -22,13 +22,52 @@ namespace InnovaParfumPOS.Backend.Services
             }
         }
 
+        private bool _isMayorista;
+        public bool IsMayorista
+        {
+            get => _isMayorista;
+            set
+            {
+                if (_isMayorista != value)
+                {
+                    _isMayorista = value;
+                    OnPropertyChanged();
+                    NotifyAll();
+                }
+            }
+        }
+
+        private bool _isCredito;
+        public bool IsCredito
+        {
+            get => _isCredito;
+            set
+            {
+                if (_isCredito != value)
+                {
+                    _isCredito = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public int IdTipoVenta => IsMayorista ? 2 : 1; // 1: Minorista, 2: Mayorista
+        public int IdCondicionPago => IsCredito ? 2 : 1; // 1: Contado, 2: Credito
+
         public List<CartItem> Items { get; } = new();
 
         public event Action? OnCheckoutRequested;
 
         public int TotalUnits => Items.Sum(i => i.Quantity);
-        public decimal SubTotal => Items.Sum(i => i.SubTotal);
+        
+        public decimal SubTotalMayorista => Items.Sum(i => i.SubTotalMayorista);
+        public decimal SubTotalMinorista => Items.Sum(i => i.SubTotalMinorista);
+        
+        // El subtotal y total activos dependen del switch
+        public decimal SubTotal => IsMayorista ? SubTotalMayorista : SubTotalMinorista;
         public decimal Total => Math.Max(0, SubTotal - (Discount ?? 0));
+        public decimal TotalMayorista => Math.Max(0, SubTotalMayorista - (Discount ?? 0));
+        public decimal TotalMinorista => Math.Max(0, SubTotalMinorista - (Discount ?? 0));
 
         public void AddItem(CartItem item)
         {
@@ -65,13 +104,17 @@ namespace InnovaParfumPOS.Backend.Services
         {
             OnPropertyChanged(nameof(Items));
             OnPropertyChanged(nameof(TotalUnits));
+            OnPropertyChanged(nameof(SubTotalMayorista));
+            OnPropertyChanged(nameof(SubTotalMinorista));
             OnPropertyChanged(nameof(SubTotal));
+            OnPropertyChanged(nameof(TotalMayorista));
+            OnPropertyChanged(nameof(TotalMinorista));
             OnPropertyChanged(nameof(Total));
         }
 
         private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(CartItem.Quantity) || e.PropertyName == nameof(CartItem.SubTotal))
+            if (e.PropertyName == nameof(CartItem.Quantity) || e.PropertyName == nameof(CartItem.SubTotalMayorista) || e.PropertyName == nameof(CartItem.SubTotalMinorista))
             {
                 NotifyAll();
             }
@@ -90,8 +133,16 @@ namespace InnovaParfumPOS.Backend.Services
         public int IdProducto { get; set; }
         public string Code { get; set; } = "";
         public string Description { get; set; } = "";
-        public decimal UnitPrice { get; set; }
+        
+        public decimal PrecioMayorista { get; set; }
+        public decimal PrecioMinorista { get; set; }
+
         public int? IdCategoria { get; set; }
+        public string? Marca { get; set; }
+        public string? Genero { get; set; }
+        public string? Origen { get; set; }
+        public string? Concentracion { get; set; }
+        public decimal? Ml { get; set; }
         
         public int StockMax { get; set; } = int.MaxValue;
         
@@ -120,12 +171,14 @@ namespace InnovaParfumPOS.Backend.Services
                     _quantity = value;
                     UpdateDetails();
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(SubTotal));
+                    OnPropertyChanged(nameof(SubTotalMayorista));
+                    OnPropertyChanged(nameof(SubTotalMinorista));
                 }
             }
         }
 
-        public decimal SubTotal => UnitPrice * Quantity;
+        public decimal SubTotalMayorista => PrecioMayorista * Quantity;
+        public decimal SubTotalMinorista => PrecioMinorista * Quantity;
 
         private void UpdateDetails()
         {

@@ -37,7 +37,7 @@
                                     <small class="text-muted">Cód: @prod.CodigoBarras | Disp: @prod.StockActual</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="d-block text-primary fw-bold">@AppState.CurrencySymbol @prod.(PrecioMinorista ?? 0).ToString("N2")</span>
+                                    <span class="d-block text-primary fw-bold">@AppState.CurrencySymbol @((prod.PrecioMinorista ?? 0).ToString("N2"))</span>
                                 </div>
                             </div>
                         </li>
@@ -55,9 +55,9 @@
                 <th style="width: 40px;"></th>
                 <th>Código</th>
                 <th>Descripción</th>
-                <th class="text-end">Precio Unit.</th>
                 <th class="text-center">Cant.</th>
-                <th class="text-end">Subtotal</th>
+                <th class="text-end">SubT Mayorista</th>
+                <th class="text-end">SubT Minorista</th>
                 <th class="text-center">Acción</th>
             </tr>
         </thead>
@@ -71,8 +71,24 @@
                 <tr>
                     <td><i class="fas fa-chevron-right text-muted" style="font-size: 0.8rem;"></i></td>
                     <td><span class="item-code">@item.Code</span></td>
-                    <td><strong>@item.Description</strong></td>
-                    <td class="text-end font-monospace">@AppState.CurrencySymbol @item.UnitPrice.ToString("N2")</td>
+                    <td>
+                        <strong>@item.Description</strong><br/>
+                        @{
+                            var details = new List<string>();
+                            if (!string.IsNullOrEmpty(item.Marca)) details.Add(item.Marca);
+                            if (!string.IsNullOrEmpty(item.Genero)) details.Add(item.Genero);
+                            if (!string.IsNullOrEmpty(item.Origen)) details.Add(item.Origen);
+                            if (!string.IsNullOrEmpty(item.Concentracion)) details.Add(item.Concentracion);
+                            if (item.Ml.HasValue) details.Add($"{item.Ml:0.##} ML");
+                            
+                            if (details.Any())
+                            {
+                                <small class="text-muted" style="font-size:0.75rem">
+                                    @string.Join(" | ", details)
+                                </small>
+                            }
+                        }
+                    </td>
                     <td class="text-center">
                         <div class="d-flex align-items-center justify-content-center gap-2">
                              <button class="btn btn-sm btn-outline-secondary px-2 py-0" @onclick="() => DecrementQuantity(item)">-</button>
@@ -80,7 +96,8 @@
                              <button class="btn btn-sm btn-outline-secondary px-2 py-0" @onclick="() => IncrementQuantity(item)">+</button>
                         </div>
                     </td>
-                    <td class="text-end fw-bold">@AppState.CurrencySymbol @item.SubTotal.ToString("N2")</td>
+                    <td class="text-end fw-bold text-primary">@AppState.CurrencySymbol @item.SubTotalMayorista.ToString("N2")</td>
+                    <td class="text-end fw-bold text-success">@AppState.CurrencySymbol @item.SubTotalMinorista.ToString("N2")</td>
                     <td class="text-center">
                         <button class="btn btn-sm text-danger" @onclick="() => SaleService.RemoveItem(item)"><i class="fas fa-trash"></i></button>
                     </td>
@@ -255,9 +272,15 @@
                 IdProducto = prod.IdProducto,
                 Code = prod.CodigoBarras ?? "",
                 Description = prod.Nombre,
-                UnitPrice = prod.PrecioMinorista ?? 0,
+                PrecioMayorista = prod.PrecioMayorista ?? 0,
+                PrecioMinorista = prod.PrecioMinorista ?? 0,
                 Quantity = 1,
                 IdCategoria = prod.IdCategoria,
+                Marca = prod.Marca,
+                Genero = prod.IdGeneroNavigation?.DescGenero,
+                Origen = prod.IdOrigenNavigation?.Nombre,
+                Concentracion = prod.IdConcentracionNavigation?.Nombre,
+                Ml = prod.Ml,
                 RequiresImei = requiresImei,
                 StockMax = prod.StockActual
             });

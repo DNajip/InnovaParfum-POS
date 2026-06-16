@@ -35,6 +35,12 @@ public partial class Venta
 
     public string? MotivoAnulacion { get; set; }
 
+    public int IdTipoVenta { get; set; }
+
+    public int IdCondicionPago { get; set; }
+
+    public decimal SaldoPendiente { get; set; }
+
     public virtual Persona? IdPersonaNavigation { get; set; }
 
     public virtual Turno IdTurnoNavigation { get; set; } = null!;
@@ -42,6 +48,10 @@ public partial class Venta
     public virtual Usuario? IdUsuarioAnulaNavigation { get; set; }
 
     public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
+
+    public virtual TiposVentum IdTipoVentaNavigation { get; set; } = null!;
+
+    public virtual CondicionesPago IdCondicionPagoNavigation { get; set; } = null!;
 
     public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 

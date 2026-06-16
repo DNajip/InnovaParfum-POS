@@ -125,6 +125,8 @@ public class ClienteService : IClienteService
             .Include(v => v.VentaDetalles)
                 .ThenInclude(d => d.IdPeriodoGarantiaNavigation)
             .Include(v => v.IdUsuarioNavigation)
+            .Include(v => v.IdTipoVentaNavigation)
+            .Include(v => v.IdCondicionPagoNavigation)
             .Where(v => v.IdPersona == idPersona && !v.Anulada)
             .OrderByDescending(v => v.FechaVenta)
             .AsNoTracking()
