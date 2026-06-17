@@ -65,6 +65,22 @@ public class CheckoutService : ICheckoutService
 
         try 
         {
+            // Validacion de Credito
+            if (idCondicionPago == 2) // CREDITO
+            {
+                if (!idPersona.HasValue) throw new Exception("Una venta a crédito requiere seleccionar un cliente.");
+                
+                var perfilCredito = await context.ClientesCredito.FirstOrDefaultAsync(c => c.IdPersona == idPersona.Value);
+                if (perfilCredito == null || !perfilCredito.Activo)
+                    throw new Exception("El cliente no tiene un perfil de crédito activo.");
+
+                decimal totalVenta = itemsMapped.Sum(i => i.SubTotal) - discount;
+                decimal limitDisponible = perfilCredito.LimiteCredito - perfilCredito.SaldoActual;
+
+                if (totalVenta > limitDisponible)
+                    throw new Exception($"Límite de crédito excedido. Disponible: {limitDisponible:C}, Total Venta: {totalVenta:C}");
+            }
+
             // 2. Ejecutar el SP Maestro de Venta (ahora requiere idTipoVenta e idCondicionPago)
             var result = await context.Ventas
                 .FromSqlRaw("EXEC VEN.sp_ProcesarVenta @IdUsuario={0}, @IdPersona={1}, @IdTipoVenta={2}, @IdCondicionPago={3}, @DescuentoNio={4}, @TasaCambioUsd={5}, @ItemsJson={6}, @PaymentsJson={7}",

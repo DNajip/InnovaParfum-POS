@@ -456,5 +456,74 @@ window.qzPrintLabelPdf = async (base64Pdf, printerName, templateType, quantity =
     }
 };
 
+window.qzPrintAbono = async (abono, printerName) => {
+    try {
+        if (!qz.websocket.isActive()) {
+            await qz.websocket.connect({ retries: 1, delay: 1 });
+        }
+
+        let printer = printerName;
+        if (!printer) {
+            try {
+                printer = await qz.printers.getDefault();
+            } catch (e) {}
+        }
+        if (!printer) {
+            throw new Error("No se configuró ninguna impresora válida.");
+        }
+
+        const config = qz.configs.create(printer, { encoding: 'ISO-8859-1' });
+
+        const ESC = '\x1B';
+        const GS = '\x1D';
+        const init = ESC + '@';
+        const center = ESC + 'a' + '\x01';
+        const left = ESC + 'a' + '\x00';
+        const right = ESC + 'a' + '\x02';
+        const boldOn = ESC + 'E' + '\x01';
+        const boldOff = ESC + 'E' + '\x00';
+        const cut = GS + 'V' + '\x41' + '\x00'; 
+        const openDrawer = '\x1B' + '\x70' + '\x00' + '\x19' + '\xFA';
+
+        let data = [init];
+
+        if (abono.abrirCajon) {
+            data.push(openDrawer);
+        }
+
+        data.push(center);
+        data = data.concat([
+            boldOn + (abono.nombreNegocio || "INNOVATEC POS") + "\n" + boldOff,
+            (abono.ruc ? "RUC: " + abono.ruc + "\n" : ""),
+            (abono.direccion ? abono.direccion + "\n" : ""),
+            (abono.telefono ? "Tel: " + abono.telefono + "\n" : ""),
+            "------------------------------------------------\n",
+            boldOn + "COMPROBANTE DE ABONO\n" + boldOff,
+            "------------------------------------------------\n",
+            left,
+            `Crédito #: ${abono.numeroCredito}\n`,
+            `Factura:   ${abono.facturaReferencia}\n`,
+            `Fecha:     ${abono.fecha}\n`,
+            `Cliente:   ${abono.cliente}\n`,
+            "------------------------------------------------\n",
+            right,
+            `Saldo Anterior:    C$ ${abono.saldoAnterior.toFixed(2)}\n`,
+            `Monto Abonado:     C$ ${abono.montoAbonado.toFixed(2)}\n`,
+            boldOn,
+            `NUEVO SALDO:       C$ ${abono.nuevoSaldo.toFixed(2)}\n`,
+            boldOff,
+            center,
+            "\nGuarde este comprobante para\ncualquier reclamo.\n\n\n\n",
+            cut
+        ]);
+
+        await qz.print(config, data);
+
+    } catch (err) {
+        console.error("Error en QZ Tray (Abono):", err);
+        throw err;
+    }
+};
+
 
 

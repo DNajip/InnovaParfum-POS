@@ -4,6 +4,7 @@
 @using InnovaParfumPOS.Backend.Models
 @inject InnovaParfumPOS.Backend.Services.AppState AppState
 @inject IClienteService ClienteService
+@inject ICreditoService CreditoService
 @inject ToastService ToastService
 @inject IJSRuntime JSRuntime
 @implements IDisposable
@@ -284,6 +285,11 @@
                                 <i class="fas fa-shield-alt me-2"></i>Garantías Activas
                             </button>
                         </li>
+                        <li class="nav-item">
+                            <button class="nav-link @(activeTab == "creditos" ? "active" : "")" @onclick='() => activeTab = "creditos"'>
+                                <i class="fas fa-money-check-alt me-2"></i>Créditos
+                            </button>
+                        </li>
                     </ul>
 
                     <div class="tab-content" style="max-height: 450px; overflow-y: auto;">
@@ -326,7 +332,7 @@
                                 }
                             }
                         }
-                        else
+                        else if (activeTab == "garantias")
                         {
                             @if (clientWarranties == null)
                             {
@@ -362,11 +368,131 @@
                                 }
                             }
                         }
+                        else if (activeTab == "creditos")
+                        {
+                            @if (clientCreditoPerfil == null)
+                            {
+                                <div class="text-center py-5">
+                                    <p class="text-muted mb-3">Este cliente no tiene un perfil de crédito activo.</p>
+                                    <button class="btn btn-primary btn-sm" @onclick="AbrirModalAsignarCredito">Asignar Límite de Crédito</button>
+                                </div>
+                            }
+                            else
+                            {
+                                var disponible = clientCreditoPerfil.LimiteCredito - clientCreditoPerfil.SaldoActual;
+                                var porcentajeUtilizado = clientCreditoPerfil.LimiteCredito > 0 
+                                    ? (clientCreditoPerfil.SaldoActual / clientCreditoPerfil.LimiteCredito) * 100 
+                                    : 0;
+
+                                <div class="mb-4 p-3 rounded" style="background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold m-0 text-uppercase" style="color: #495057;">Límite de Crédito</h6>
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="AbrirModalAsignarCredito">
+                                            <i class="fas fa-cog"></i> Editar
+                                        </button>
+                                    </div>
+                                    <div class="row text-center mb-3">
+                                        <div class="col-4">
+                                            <span class="d-block text-muted small">Disponible</span>
+                                            <strong class="text-success fs-5">@AppState.CurrencySymbol @disponible.ToString("N2")</strong>
+                                        </div>
+                                        <div class="col-4 border-start border-end">
+                                            <span class="d-block text-muted small">Utilizado</span>
+                                            <strong class="text-warning fs-5">@AppState.CurrencySymbol @clientCreditoPerfil.SaldoActual.ToString("N2")</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <span class="d-block text-muted small">Límite</span>
+                                            <strong class="text-dark fs-5">@AppState.CurrencySymbol @clientCreditoPerfil.LimiteCredito.ToString("N2")</strong>
+                                        </div>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: @porcentajeUtilizado.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%" aria-valuenow="@porcentajeUtilizado" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="text-end mt-1 small text-muted">@porcentajeUtilizado.ToString("0.#")% Utilizado</div>
+                                </div>
+
+                                <h6 class="fw-bold mb-3 text-uppercase" style="color: #495057;">Créditos Activos</h6>
+                                @if (clientCreditos == null)
+                                {
+                                    <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+                                }
+                                else if (!clientCreditos.Any())
+                                {
+                                    <div class="text-center py-3 text-muted small">No hay créditos activos</div>
+                                }
+                                else
+                                {
+                                    <table class="table table-sm table-hover align-middle">
+                                        <thead class="table-light text-muted small">
+                                            <tr>
+                                                <th>Factura</th>
+                                                <th>Fecha</th>
+                                                <th>Vence</th>
+                                                <th class="text-end">Saldo</th>
+                                                <th class="text-center">Estado</th>
+                                                <th class="text-end">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="small">
+                                            @foreach (var c in clientCreditos)
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold text-primary">@c.Venta?.NumeroFactura</td>
+                                                    <td>@c.FechaCredito.ToString("dd/MM/yy")</td>
+                                                    <td class="@(DateTime.Now.Date > c.FechaVencimiento.Date ? "text-danger fw-bold" : "")">@c.FechaVencimiento.ToString("dd/MM/yy")</td>
+                                                    <td class="text-end fw-bold">@AppState.CurrencySymbol @c.SaldoPendiente.ToString("N2")</td>
+                                                    <td class="text-center">
+                                                        <span class="badge @(c.Estado == "ACTIVO" ? "bg-warning text-dark" : "bg-success")">@c.Estado</span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalAbono(c)">Ver / Abonar</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                            }
+                        }
                     </div>
                 </div>
             </div>
         </div>
     </div>
+}
+
+<!-- Modal Asignar/Editar Límite de Crédito -->
+@if (showCreditoConfigModal && currentClient != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Configurar Crédito</h5>
+                    <button type="button" class="btn-close" @onclick="() => showCreditoConfigModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Límite de Crédito (@AppState.CurrencySymbol)</label>
+                        <input type="number" class="form-control" @bind="tempLimiteCredito" min="0" step="100" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Días de Plazo (Predeterminado)</label>
+                        <input type="number" class="form-control" @bind="tempDiasCredito" min="1" max="120" />
+                    </div>
+                    <button class="btn btn-primary w-100" @onclick="GuardarConfiguracionCredito">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showAbonoModal && selectedCredito != null)
+{
+    <InnovaParfumPOS.Frontend.Components.UI.CreditoAbonoModal 
+        Credito="selectedCredito" 
+        OnClose="CerrarModalAbono" 
+        OnAbonoRegistered="RefreshCreditosActivos" />
 }
 
 @code {
@@ -377,6 +503,15 @@
     private Persona tempPersona = new();
     private List<Venta>? clientSales;
     private List<Garantia>? clientWarranties;
+    
+    private ClienteCredito? clientCreditoPerfil;
+    private List<Credito>? clientCreditos;
+    private bool showCreditoConfigModal = false;
+    private decimal tempLimiteCredito;
+    private int tempDiasCredito;
+    
+    private Credito? selectedCredito;
+    private bool showAbonoModal = false;
 
     private string SearchTerm = "";
     private string activeTab = "compras";
@@ -464,6 +599,12 @@
         
         clientSales = await ClienteService.GetComprasClienteAsync(p.IdPersona);
         clientWarranties = await ClienteService.GetGarantiasClienteAsync(p.IdPersona);
+        clientCreditoPerfil = await CreditoService.GetPerfilCreditoAsync(p.IdPersona);
+        if (clientCreditoPerfil != null)
+        {
+            clientCreditos = await CreditoService.GetCreditosActivosAsync(p.IdPersona);
+        }
+        
         StateHasChanged();
     }
 
@@ -534,6 +675,51 @@
         }
         
         return id;
+    }
+
+    private void AbrirModalAsignarCredito()
+    {
+        tempLimiteCredito = clientCreditoPerfil?.LimiteCredito ?? 0;
+        tempDiasCredito = clientCreditoPerfil?.DiasCredito ?? 30;
+        showCreditoConfigModal = true;
+    }
+
+    private async Task GuardarConfiguracionCredito()
+    {
+        if (currentClient == null) return;
+        try
+        {
+            clientCreditoPerfil = await CreditoService.AsignarLimiteCreditoAsync(currentClient.IdPersona, tempLimiteCredito, tempDiasCredito);
+            clientCreditos = await CreditoService.GetCreditosActivosAsync(currentClient.IdPersona);
+            ToastService.ShowSuccess("Configuración de crédito actualizada.");
+            showCreditoConfigModal = false;
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Error: " + ex.Message);
+        }
+    }
+
+    private void AbrirModalAbono(Credito c)
+    {
+        selectedCredito = c;
+        showAbonoModal = true;
+    }
+
+    private void CerrarModalAbono()
+    {
+        showAbonoModal = false;
+        selectedCredito = null;
+    }
+
+    private async Task RefreshCreditosActivos()
+    {
+        if (currentClient != null)
+        {
+            clientCreditoPerfil = await CreditoService.GetPerfilCreditoAsync(currentClient.IdPersona);
+            clientCreditos = await CreditoService.GetCreditosActivosAsync(currentClient.IdPersona);
+            StateHasChanged();
+        }
     }
 
     public void Dispose()

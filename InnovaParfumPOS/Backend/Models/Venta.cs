@@ -39,7 +39,7 @@ public partial class Venta
 
     public int IdCondicionPago { get; set; }
 
-    public decimal SaldoPendiente { get; set; }
+
 
     public virtual Persona? IdPersonaNavigation { get; set; }
 

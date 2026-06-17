@@ -22,6 +22,7 @@ builder.Services.AddDbContextFactory<InnovaParfumDbContext>(options =>
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICreditoService, CreditoService>();
 builder.Services.AddScoped<IExportService, ExportService>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IShiftService, ShiftService>();

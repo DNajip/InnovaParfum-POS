@@ -101,6 +101,12 @@ public partial class InnovaParfumDbContext : DbContext
 
     public virtual DbSet<CondicionesPago> CondicionesPagos { get; set; }
 
+    public virtual DbSet<ClienteCredito> ClientesCredito { get; set; }
+
+    public virtual DbSet<Credito> Creditos { get; set; }
+
+    public virtual DbSet<CreditoAbono> CreditoAbonos { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -1162,6 +1168,8 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.TotalNio)
                 .HasColumnType("decimal(12, 2)")
                 .HasColumnName("TOTAL_NIO");
+            entity.Property(e => e.IdTipoVenta).HasColumnName("ID_TIPO_VENTA");
+            entity.Property(e => e.IdCondicionPago).HasColumnName("ID_CONDICION_PAGO");
 
             entity.HasOne(d => d.IdPersonaNavigation).WithMany(p => p.Venta)
                 .HasForeignKey(d => d.IdPersona)
