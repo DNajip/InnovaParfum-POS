@@ -83,7 +83,7 @@ public class CheckoutService : ICheckoutService
 
             // 2. Ejecutar el SP Maestro de Venta (ahora requiere idTipoVenta e idCondicionPago)
             var result = await context.Ventas
-                .FromSqlRaw("EXEC VEN.sp_ProcesarVenta @IdUsuario={0}, @IdPersona={1}, @IdTipoVenta={2}, @IdCondicionPago={3}, @DescuentoNio={4}, @TasaCambioUsd={5}, @ItemsJson={6}, @PaymentsJson={7}",
+                .FromSqlRaw("SET QUOTED_IDENTIFIER ON; EXEC VEN.sp_ProcesarVenta @IdUsuario={0}, @IdPersona={1}, @IdTipoVenta={2}, @IdCondicionPago={3}, @DescuentoNio={4}, @TasaCambioUsd={5}, @ItemsJson={6}, @PaymentsJson={7}",
                     userId,
                     idPersona ?? (object)DBNull.Value,
                     idTipoVenta,
