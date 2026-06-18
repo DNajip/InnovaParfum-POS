@@ -271,8 +271,11 @@
                                         </div>
                                         <div class="d-flex justify-content-end align-items-center">
                                             <span class="h4 fw-bold mb-0 text-success">
-                                                @(MonedaVuelto == "USD" ? "$" : AppState.CurrencySymbol) 
-                                                @((MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) / AppState.ExchangeRateSell : Math.Abs(SaldoRestante)).ToString("N2"))
+                                                @(MonedaVuelto == "USD" ? "$" : "C$") 
+                                                @((AppState.CurrencyCode == "USD" 
+                                                    ? (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell)
+                                                    : (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) / AppState.ExchangeRateSell : Math.Abs(SaldoRestante))
+                                                ).ToString("N2"))
                                             </span>
                                         </div>
                                     </div>
@@ -385,20 +388,20 @@
         if (baseCurrency == "NIO" && paymentCurrency == "USD")
         {
             tasaCambio = AppState.ExchangeRateBuy;
-            montoEnMonedaBase = Math.Round(currentPayment.Monto * tasaCambio, 2);
+            montoEnMonedaBase = Math.Round(currentPayment.Monto * tasaCambio, 6);
             montoEnNio = montoEnMonedaBase;
         }
         else if (baseCurrency == "USD" && paymentCurrency == "NIO")
         {
             tasaCambio = AppState.ExchangeRateSell;
-            montoEnMonedaBase = Math.Round(currentPayment.Monto / tasaCambio, 2);
+            montoEnMonedaBase = Math.Round(currentPayment.Monto / tasaCambio, 6);
             montoEnNio = currentPayment.Monto;
         }
         else if (baseCurrency == "USD" && paymentCurrency == "USD")
         {
             tasaCambio = AppState.ExchangeRateBuy; // Para guardado en BD siempre se necesita en NIO
             montoEnMonedaBase = currentPayment.Monto;
-            montoEnNio = Math.Round(currentPayment.Monto * tasaCambio, 2);
+            montoEnNio = Math.Round(currentPayment.Monto * tasaCambio, 6);
         }
 
         selectedPayments.Add(new PaymentInput
@@ -533,7 +536,7 @@
                 descuento = Discount,
                 total = Total,
                 vueltoText = hayVuelto ? (MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$") : "",
-                vueltoAmount = hayVuelto ? (MonedaVuelto == "USD" ? $"$ {(Math.Abs(SaldoRestante) / AppState.ExchangeRateSell).ToString("N2")}" : $"{AppState.CurrencySymbol} {Math.Abs(SaldoRestante).ToString("N2")}") : "",
+                vueltoAmount = hayVuelto ? (MonedaVuelto == "USD" ? $"$ {(AppState.CurrencyCode == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) / AppState.ExchangeRateSell).ToString("N2")}" : $"C$ {(AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell).ToString("N2")}") : "",
                 detalles = Items.SelectMany(i => {
                     var unitPrice = SaleService.IsMayorista ? i.PrecioMayorista : i.PrecioMinorista;
                     if (i.RequiresImei) {
