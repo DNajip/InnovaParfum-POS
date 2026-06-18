@@ -112,6 +112,12 @@ namespace InnovaParfumPOS.Backend.Services
             OnPropertyChanged(nameof(Total));
         }
 
+        public void ToggleRegalia(CartItem item)
+        {
+            item.IsRegalia = !item.IsRegalia;
+            NotifyAll();
+        }
+
         private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(CartItem.Quantity) || e.PropertyName == nameof(CartItem.SubTotalMayorista) || e.PropertyName == nameof(CartItem.SubTotalMinorista))
@@ -142,12 +148,28 @@ namespace InnovaParfumPOS.Backend.Services
         public string? Genero { get; set; }
         public string? Origen { get; set; }
         public string? Concentracion { get; set; }
-        public decimal? Ml { get; set; }
+        public int? Ml { get; set; }
         
         public int StockMax { get; set; } = int.MaxValue;
         
         // Properties for IMEI handling
         public bool RequiresImei { get; set; }
+        
+        private bool _isRegalia;
+        public bool IsRegalia
+        {
+            get => _isRegalia;
+            set
+            {
+                if (_isRegalia != value)
+                {
+                    _isRegalia = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(SubTotalMayorista));
+                    OnPropertyChanged(nameof(SubTotalMinorista));
+                }
+            }
+        }
         
         // Data for each unit during checkout
         public List<CheckoutDetailItem> Details { get; set; } = new();
@@ -177,8 +199,8 @@ namespace InnovaParfumPOS.Backend.Services
             }
         }
 
-        public decimal SubTotalMayorista => PrecioMayorista * Quantity;
-        public decimal SubTotalMinorista => PrecioMinorista * Quantity;
+        public decimal SubTotalMayorista => IsRegalia ? 0 : PrecioMayorista * Quantity;
+        public decimal SubTotalMinorista => IsRegalia ? 0 : PrecioMinorista * Quantity;
 
         private void UpdateDetails()
         {

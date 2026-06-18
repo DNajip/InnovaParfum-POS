@@ -1,4 +1,4 @@
-﻿@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.Models
 @using InnovaParfumPOS.Backend.Services
 @inject IProductService ProductService
 @inject ToastService Toast
@@ -66,7 +66,7 @@
                         </div> }
                         @if(SelectedCategory?.PedirMl == true) { <div class="col-lg-2">
                             <label class="form-label mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">ML</label>
-                            <input type="number" step="any" class="form-control bg-light border-0 py-1 px-3 rounded-3 shadow-none" placeholder="ML" @bind="newProduct.Ml">
+                            <input type="number" step="1" class="form-control bg-light border-0 py-1 px-3 rounded-3 shadow-none" placeholder="ML" @bind="newProduct.Ml">
                         </div> }
 
                         <!-- BLOQUE 1: COSTOS -->

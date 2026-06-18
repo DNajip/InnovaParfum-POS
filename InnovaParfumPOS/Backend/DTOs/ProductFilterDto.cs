@@ -21,6 +21,6 @@ public class ProductFilterDto
     public string? Marca { get; set; }
     public int? IdGenero { get; set; }
     public int? IdOrigen { get; set; }
-    public decimal? Ml { get; set; }
+    public int? Ml { get; set; }
 }
 

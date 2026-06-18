@@ -113,7 +113,10 @@
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="text-end fw-bold align-top py-3 pe-4 text-dark border-bottom" style="white-space: nowrap;">@AppState.CurrencySymbol @((SaleService.IsMayorista ? item.PrecioMayorista : item.PrecioMinorista).ToString("N2"))</td>
+                                                        <td class="text-end fw-bold align-top py-3 pe-4 text-dark border-bottom" style="white-space: nowrap;">
+                                                            @if(item.IsRegalia) { <span class="badge bg-success">GRATIS</span> }
+                                                            else { @($"{AppState.CurrencySymbol} {(SaleService.IsMayorista ? item.PrecioMayorista : item.PrecioMinorista).ToString("N2")}") }
+                                                        </td>
                                                     </tr>
                                                 }
                                             }
@@ -141,7 +144,10 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td class="text-end fw-bold align-top py-3 pe-4 text-dark border-bottom" style="white-space: nowrap;">@AppState.CurrencySymbol @(((SaleService.IsMayorista ? item.PrecioMayorista : item.PrecioMinorista) * item.Quantity).ToString("N2"))</td>
+                                                    <td class="text-end fw-bold align-top py-3 pe-4 text-dark border-bottom" style="white-space: nowrap;">
+                                                        @if(item.IsRegalia) { <span class="badge bg-success">GRATIS</span> }
+                                                        else { @($"{AppState.CurrencySymbol} {(SaleService.IsMayorista ? item.SubTotalMayorista : item.SubTotalMinorista).ToString("N2")}") }
+                                                    </td>
                                                 </tr>
                                             }
                                         }

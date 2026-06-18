@@ -68,18 +68,20 @@
             }
             @foreach (var item in SaleService.Items)
             {
-                <tr>
+                <tr style="@(item.IsRegalia ? "background-color: #f0fdf4;" : "")">
                     <td><i class="fas fa-chevron-right text-muted" style="font-size: 0.8rem;"></i></td>
                     <td><span class="item-code">@item.Code</span></td>
                     <td>
-                        <strong>@item.Description</strong><br/>
+                        <strong>@item.Description</strong>
+                        @if(item.IsRegalia) { <span class="badge bg-success ms-2 rounded-pill" style="font-size: 0.65rem;">Regalía</span> }
+                        <br/>
                         @{
                             var details = new List<string>();
                             if (!string.IsNullOrEmpty(item.Marca)) details.Add(item.Marca);
                             if (!string.IsNullOrEmpty(item.Genero)) details.Add(item.Genero);
                             if (!string.IsNullOrEmpty(item.Origen)) details.Add(item.Origen);
                             if (!string.IsNullOrEmpty(item.Concentracion)) details.Add(item.Concentracion);
-                            if (item.Ml.HasValue) details.Add($"{item.Ml:0.##} ML");
+                            if (item.Ml.HasValue) details.Add($"{item.Ml} ML");
                             
                             if (details.Any())
                             {
@@ -96,10 +98,15 @@
                              <button class="btn btn-sm btn-outline-secondary px-2 py-0" @onclick="() => IncrementQuantity(item)">+</button>
                         </div>
                     </td>
-                    <td class="text-end fw-bold text-primary">@AppState.CurrencySymbol @item.SubTotalMayorista.ToString("N2")</td>
-                    <td class="text-end fw-bold text-success">@AppState.CurrencySymbol @item.SubTotalMinorista.ToString("N2")</td>
+                    <td class="text-end fw-bold text-primary">
+                        @if(item.IsRegalia) { <span class="badge bg-success">GRATIS</span> } else { @($"{AppState.CurrencySymbol} {item.SubTotalMayorista:N2}") }
+                    </td>
+                    <td class="text-end fw-bold text-success">
+                        @if(item.IsRegalia) { <span class="badge bg-success">GRATIS</span> } else { @($"{AppState.CurrencySymbol} {item.SubTotalMinorista:N2}") }
+                    </td>
                     <td class="text-center">
-                        <button class="btn btn-sm text-danger" @onclick="() => SaleService.RemoveItem(item)"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-sm @(item.IsRegalia ? "text-success" : "text-secondary")" title="Alternar Regalía" @onclick="() => SaleService.ToggleRegalia(item)"><i class="fas fa-gift"></i></button>
+                        <button class="btn btn-sm text-danger" title="Eliminar" @onclick="() => SaleService.RemoveItem(item)"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             }

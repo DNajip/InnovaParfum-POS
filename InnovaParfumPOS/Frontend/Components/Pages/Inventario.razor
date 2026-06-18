@@ -1,4 +1,4 @@
-﻿@page "/inventario"
+@page "/inventario"
 @using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.DTOs
 @using InnovaParfumPOS.Backend.Models
@@ -183,7 +183,7 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold text-muted mb-1">ML</label>
-                            <input type="number" step="any" class="form-control form-control-sm" @bind="_filter.Ml" placeholder="Ej. 100">
+                            <input type="number" step="1" class="form-control form-control-sm" @bind="_filter.Ml" placeholder="Ej. 100">
                         </div>
                     </div>
 
@@ -251,9 +251,9 @@
                                     </div>
                                     <div style="min-width: 200px;">
                                         <span class="d-block fw-bold">@prod.Nombre</span>
-                                        @if (prod.IdOrigenNavigation != null || prod.IdConcentracionNavigation != null)
+                                        @if (prod.IdOrigenNavigation != null || prod.IdConcentracionNavigation != null || prod.Ml.HasValue)
                                         {
-                                            <small class="text-muted">@(string.Join(" - ", new[] { prod.IdOrigenNavigation?.Nombre, prod.IdConcentracionNavigation?.Nombre }.Where(s => !string.IsNullOrEmpty(s))))</small>
+                                            <small class="text-muted">@(string.Join(" - ", new[] { prod.IdOrigenNavigation?.Nombre, prod.IdConcentracionNavigation?.Nombre, prod.Ml.HasValue ? $"{prod.Ml.Value} ML" : null }.Where(s => !string.IsNullOrEmpty(s))))</small>
                                         }
                                         @if(prod.FechaVencimiento.HasValue)
                                         {
@@ -763,7 +763,7 @@
             IdOrigen = p.IdOrigen,
             IdConcentracion = p.IdConcentracion,
             FechaVencimiento = p.FechaVencimiento,
-            Ml = p.Ml.HasValue && p.Ml.Value % 1 == 0 ? Math.Truncate(p.Ml.Value) : p.Ml,
+            Ml = p.Ml,
             CostoProducto = p.CostoProducto,
             CostoEnvio = p.CostoEnvio,
             PorcGananciaMayorista = p.PorcGananciaMayorista,

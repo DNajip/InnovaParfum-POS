@@ -47,8 +47,9 @@ public class CheckoutService : ICheckoutService
         var itemsMapped = items.Select(i => new {
             i.IdProducto,
             i.Description,
-            UnitPrice = idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista,
-            SubTotal = (idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista) * i.Quantity,
+            UnitPrice = i.IsRegalia ? 0 : (idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista),
+            SubTotal = i.IsRegalia ? 0 : ((idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista) * i.Quantity),
+            IsRegalia = i.IsRegalia,
             i.Details
         });
         var itemsJson = System.Text.Json.JsonSerializer.Serialize(itemsMapped);
