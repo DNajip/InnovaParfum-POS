@@ -6,7 +6,8 @@ ALTER PROCEDURE [VEN].[sp_ProcesarVenta]
     @DescuentoNio DECIMAL(12,2),
     @TasaCambioUsd DECIMAL(18,6),
     @ItemsJson NVARCHAR(MAX),
-    @PaymentsJson NVARCHAR(MAX)
+    @PaymentsJson NVARCHAR(MAX),
+    @MonedaVuelto CHAR(3) = 'NIO'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -42,8 +43,8 @@ BEGIN
     END
 
     -- 4. Insertar Venta
-    INSERT INTO VEN.VENTAS (ID_TURNO, ID_USUARIO, ID_PERSONA, FECHA_VENTA, TASA_CAMBIO_USD, SUBTOTAL_NIO, DESCUENTO_NIO, TOTAL_NIO, ANULADA, ID_TIPO_VENTA, ID_CONDICION_PAGO)
-    VALUES (@IdTurno, @IdUsuario, @IdPersona, @FechaActual, @TasaCambioUsd, @SubtotalNio, @DescuentoNio, @TotalVentaNio, 0, @IdTipoVenta, @IdCondicionPago);
+    INSERT INTO VEN.VENTAS (ID_TURNO, ID_USUARIO, ID_PERSONA, FECHA_VENTA, TASA_CAMBIO_USD, SUBTOTAL_NIO, DESCUENTO_NIO, TOTAL_NIO, ANULADA, ID_TIPO_VENTA, ID_CONDICION_PAGO, MONEDA_VUELTO)
+    VALUES (@IdTurno, @IdUsuario, @IdPersona, @FechaActual, @TasaCambioUsd, @SubtotalNio, @DescuentoNio, @TotalVentaNio, 0, @IdTipoVenta, @IdCondicionPago, @MonedaVuelto);
     SET @IdVenta = SCOPE_IDENTITY();
 
     -- Insertar Credito si aplica
@@ -107,9 +108,12 @@ BEGIN
     END
 
     -- 6. Actualizar Saldos de Caja (Turno)
+    DECLARE @VueltoParaNio DECIMAL(12,2) = CASE WHEN @MonedaVuelto = 'NIO' THEN @VueltoTotalNio ELSE 0 END;
+    DECLARE @VueltoParaUsd DECIMAL(12,2) = CASE WHEN @MonedaVuelto = 'USD' THEN (@VueltoTotalNio / NULLIF(@TasaCambioUsd, 0)) ELSE 0 END;
+
     UPDATE T SET 
-        T.TOTAL_EFECTIVO_NIO += (ISNULL((SELECT SUM(CAST(JSON_VALUE(pj.[value], '$.MontoEnNio') AS DECIMAL(12,2))) FROM OPENJSON(@PaymentsJson) pj JOIN CAT.METODOS_PAGO mp ON mp.ID_METODO = CAST(JSON_VALUE(pj.[value], '$.IdMetodoPago') AS INT) JOIN CAT.MONEDAS m ON m.ID_MONEDA = mp.ID_MONEDA WHERE mp.NOMBRE LIKE '%EFECTIVO%' AND m.CODIGO = 'NIO'), 0) - @VueltoTotalNio),
-        T.TOTAL_EFECTIVO_USD += ISNULL((SELECT SUM(CAST(JSON_VALUE(pj.[value], '$.Monto') AS DECIMAL(12,2))) FROM OPENJSON(@PaymentsJson) pj JOIN CAT.METODOS_PAGO mp ON mp.ID_METODO = CAST(JSON_VALUE(pj.[value], '$.IdMetodoPago') AS INT) JOIN CAT.MONEDAS m ON m.ID_MONEDA = mp.ID_MONEDA WHERE mp.NOMBRE LIKE '%EFECTIVO%' AND m.CODIGO = 'USD'), 0),
+        T.TOTAL_EFECTIVO_NIO += (ISNULL((SELECT SUM(CAST(JSON_VALUE(pj.[value], '$.MontoEnNio') AS DECIMAL(12,2))) FROM OPENJSON(@PaymentsJson) pj JOIN CAT.METODOS_PAGO mp ON mp.ID_METODO = CAST(JSON_VALUE(pj.[value], '$.IdMetodoPago') AS INT) JOIN CAT.MONEDAS m ON m.ID_MONEDA = mp.ID_MONEDA WHERE mp.NOMBRE LIKE '%EFECTIVO%' AND m.CODIGO = 'NIO'), 0) - @VueltoParaNio),
+        T.TOTAL_EFECTIVO_USD += (ISNULL((SELECT SUM(CAST(JSON_VALUE(pj.[value], '$.Monto') AS DECIMAL(12,2))) FROM OPENJSON(@PaymentsJson) pj JOIN CAT.METODOS_PAGO mp ON mp.ID_METODO = CAST(JSON_VALUE(pj.[value], '$.IdMetodoPago') AS INT) JOIN CAT.MONEDAS m ON m.ID_MONEDA = mp.ID_MONEDA WHERE mp.NOMBRE LIKE '%EFECTIVO%' AND m.CODIGO = 'USD'), 0) - @VueltoParaUsd),
         T.TOTAL_TARJETA += ISNULL((SELECT SUM(CAST(JSON_VALUE(pj.[value], '$.MontoEnNio') AS DECIMAL(12,2))) FROM OPENJSON(@PaymentsJson) pj JOIN CAT.METODOS_PAGO mp ON mp.ID_METODO = CAST(JSON_VALUE(pj.[value], '$.IdMetodoPago') AS INT) WHERE mp.NOMBRE LIKE '%TARJETA%'), 0),
         T.TOTAL_TRANSFERENCIA += ISNULL((SELECT SUM(CAST(JSON_VALUE(pj.[value], '$.MontoEnNio') AS DECIMAL(12,2))) FROM OPENJSON(@PaymentsJson) pj JOIN CAT.METODOS_PAGO mp ON mp.ID_METODO = CAST(JSON_VALUE(pj.[value], '$.IdMetodoPago') AS INT) WHERE mp.NOMBRE LIKE '%TRANSFERENCIA%'), 0),
         T.TOTAL_VENTAS_NIO += ISNULL(@TotalPagadoNio, 0), -- En POS solo sumamos lo realmente cobrado para cuadre

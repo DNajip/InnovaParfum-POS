@@ -210,6 +210,10 @@ window.qzPrintInvoice = async (invoice, printerName) => {
         data.push(`TOTAL:      ${invoice.simboloMoneda || "C$"} ${invoice.total.toFixed(2)}\n`);
         data.push(boldOff);
         
+        if (invoice.vueltoText && invoice.vueltoAmount) {
+            data.push(`\n${invoice.vueltoText}: ${invoice.vueltoAmount}\n`);
+        }
+        
         data.push(center);
         data.push("\n" + (invoice.mensajeTicket || "Gracias por su compra!") + "\n\n\n\n");
         data.push(cut);

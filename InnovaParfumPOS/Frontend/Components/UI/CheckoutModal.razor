@@ -258,9 +258,23 @@
                                 }
                                 else
                                 {
-                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
-                                        <span class="text-success fw-bold small"><i class="fas fa-check-circle me-1"></i>VUELTO / CAMBIO</span>
-                                        <span class="h4 fw-bold mb-0 text-success">@AppState.CurrencySymbol @Math.Abs(SaldoRestante).ToString("N2")</span>
+                                    <div class="mb-2 p-2 rounded-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-success fw-bold small"><i class="fas fa-check-circle me-1"></i>VUELTO / CAMBIO</span>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <input type="radio" class="btn-check" name="monedaVuelto" id="vueltoUSD" value="USD" checked="@(MonedaVuelto == "USD")" @onchange='() => MonedaVuelto = "USD"'>
+                                                <label class="btn btn-outline-success px-2 py-0" for="vueltoUSD">USD</label>
+
+                                                <input type="radio" class="btn-check" name="monedaVuelto" id="vueltoNIO" value="NIO" checked="@(MonedaVuelto == "NIO")" @onchange='() => MonedaVuelto = "NIO"'>
+                                                <label class="btn btn-outline-success px-2 py-0" for="vueltoNIO">C$</label>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end align-items-center">
+                                            <span class="h4 fw-bold mb-0 text-success">
+                                                @(MonedaVuelto == "USD" ? "$" : AppState.CurrencySymbol) 
+                                                @((MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) / AppState.ExchangeRateSell : Math.Abs(SaldoRestante)).ToString("N2"))
+                                            </span>
+                                        </div>
                                     </div>
                                 }
                             }
@@ -308,7 +322,8 @@
     private List<MetodosPago> metodosPago = new();
     private List<PaymentInput> selectedPayments = new();
     private PaymentInput currentPayment = new PaymentInput { TasaCambio = 36.60m };
-    private List<Persona>? foundClients;
+    private string MonedaVuelto = "NIO";
+    private List<Persona> foundClients = new();
     private Persona? selectedClient;
     private string clientSearchTerm = "";
     private bool isProcessing = false;
@@ -469,7 +484,8 @@
                 SaleService.IdCondicionPago,
                 Discount, 
                 Items,
-                selectedPayments
+                selectedPayments,
+                MonedaVuelto
             );
 
             ToastService.ShowSuccess("Venta procesada con éxito.");
@@ -516,6 +532,8 @@
                 subtotal = SubTotal,
                 descuento = Discount,
                 total = Total,
+                vueltoText = hayVuelto ? (MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$") : "",
+                vueltoAmount = hayVuelto ? (MonedaVuelto == "USD" ? $"$ {(Math.Abs(SaldoRestante) / AppState.ExchangeRateSell).ToString("N2")}" : $"{AppState.CurrencySymbol} {Math.Abs(SaldoRestante).ToString("N2")}") : "",
                 detalles = Items.SelectMany(i => {
                     var unitPrice = SaleService.IsMayorista ? i.PrecioMayorista : i.PrecioMinorista;
                     if (i.RequiresImei) {

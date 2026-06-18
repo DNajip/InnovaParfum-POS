@@ -5,7 +5,7 @@ namespace InnovaParfumPOS.Backend.Services;
 
 public interface ICheckoutService
 {
-    Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments);
+    Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO");
     Task<List<PeriodosGarantium>> GetPeriodosGarantiaAsync();
     Task<List<MetodosPago>> GetMetodosPagoAsync();
 }
@@ -39,7 +39,7 @@ public class CheckoutService : ICheckoutService
             .ToListAsync();
     }
 
-    public async Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments)
+    public async Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO")
     {
         using var context = await _factory.CreateDbContextAsync();
         
@@ -84,7 +84,7 @@ public class CheckoutService : ICheckoutService
 
             // 2. Ejecutar el SP Maestro de Venta (ahora requiere idTipoVenta e idCondicionPago)
             var result = await context.Ventas
-                .FromSqlRaw("SET QUOTED_IDENTIFIER ON; EXEC VEN.sp_ProcesarVenta @IdUsuario={0}, @IdPersona={1}, @IdTipoVenta={2}, @IdCondicionPago={3}, @DescuentoNio={4}, @TasaCambioUsd={5}, @ItemsJson={6}, @PaymentsJson={7}",
+                .FromSqlRaw("SET QUOTED_IDENTIFIER ON; EXEC VEN.sp_ProcesarVenta @IdUsuario={0}, @IdPersona={1}, @IdTipoVenta={2}, @IdCondicionPago={3}, @DescuentoNio={4}, @TasaCambioUsd={5}, @ItemsJson={6}, @PaymentsJson={7}, @MonedaVuelto={8}",
                     userId,
                     idPersona ?? (object)DBNull.Value,
                     idTipoVenta,
@@ -92,7 +92,8 @@ public class CheckoutService : ICheckoutService
                     discount,
                     36.60m, // Podría venir de configuración
                     itemsJson,
-                    paymentsJson)
+                    paymentsJson,
+                    monedaVuelto)
                 .AsNoTracking()
                 .ToListAsync();
 

@@ -41,6 +41,8 @@ public partial class Venta
 
 
 
+    public string? MonedaVuelto { get; set; }
+
     public virtual Persona? IdPersonaNavigation { get; set; }
 
     public virtual Turno IdTurnoNavigation { get; set; } = null!;
