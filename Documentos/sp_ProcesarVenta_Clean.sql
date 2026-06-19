@@ -1,3 +1,6 @@
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
 ALTER PROCEDURE [VEN].[sp_ProcesarVenta]
     @IdUsuario INT,
     @IdPersona INT = NULL,
@@ -182,6 +185,7 @@ BEGIN
     COMMIT TRANSACTION;
     SELECT * FROM VEN.VENTAS WHERE ID_VENTA = @IdVenta;
 END;
+
 
 
 

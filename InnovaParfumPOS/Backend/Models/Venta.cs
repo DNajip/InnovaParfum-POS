@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InnovaParfumPOS.Backend.Models;
 
@@ -41,6 +42,7 @@ public partial class Venta
 
 
 
+    [Column("MONEDA_VUELTO")]
     public string? MonedaVuelto { get; set; }
 
     public virtual Persona? IdPersonaNavigation { get; set; }
