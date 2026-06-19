@@ -500,7 +500,14 @@
         }
         catch (Exception ex)
         {
-            ToastService.ShowError("Error al procesar venta: " + ex.Message);
+            if (ex.Message.Contains("perfil de crédito activo"))
+            {
+                ToastService.ShowWarning("Procedimiento Operativo: El cliente seleccionado aún no tiene una línea de crédito asignada. Por favor, asigne una línea de crédito antes de continuar con la venta al crédito.");
+            }
+            else
+            {
+                ToastService.ShowError("Error al procesar venta: " + ex.Message);
+            }
         }
         finally
         {

@@ -8,6 +8,7 @@ public interface ICheckoutService
     Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO");
     Task<List<PeriodosGarantium>> GetPeriodosGarantiaAsync();
     Task<List<MetodosPago>> GetMetodosPagoAsync();
+    Task ReversarTransaccionAsync(int idVenta, int idUsuario, string motivo, string? detalleJson);
 }
 
 public class CheckoutService : ICheckoutService
@@ -105,6 +106,21 @@ public class CheckoutService : ICheckoutService
         catch (Exception ex)
         {
             throw new Exception($"Error en Checkout (DB): {ex.Message}");
+        }
+    }
+
+    public async Task ReversarTransaccionAsync(int idVenta, int idUsuario, string motivo, string? detalleJson)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                "SET QUOTED_IDENTIFIER ON; EXEC VEN.sp_ReversoTransaccion @IdVenta={0}, @IdUsuario={1}, @Motivo={2}, @DetalleJson={3}",
+                idVenta, idUsuario, motivo, detalleJson ?? "[]");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error al reversar la transacción: {ex.Message}");
         }
     }
 }

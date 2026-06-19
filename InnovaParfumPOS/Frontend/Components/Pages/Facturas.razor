@@ -5,6 +5,7 @@
 @inject IJSRuntime JSRuntime
 @inject UserSession UserSession
 @inject AppState AppState
+@inject InnovaParfumPOS.Backend.Services.ICheckoutService CheckoutService
 
 <PageTitle>Facturas - InnovaTec</PageTitle>
 
@@ -27,6 +28,30 @@
             <div class="d-flex align-items-center gap-2">
                 <label class="fw-bold small text-muted mb-0">Hasta:</label>
                 <input type="date" class="form-control form-control-sm rounded-pill" @bind="endDate" />
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm rounded-pill" @bind="filterTipoVenta">
+                    <option value="">Tipo Venta (Todos)</option>
+                    @if(tiposVenta != null)
+                    {
+                        foreach(var t in tiposVenta)
+                        {
+                            <option value="@t.IdTipoVenta">@t.Descripcion</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm rounded-pill" @bind="filterCondicion">
+                    <option value="">Condición (Todas)</option>
+                    @if(condicionesPago != null)
+                    {
+                        foreach(var c in condicionesPago)
+                        {
+                            <option value="@c.IdCondicion">@c.Descripcion</option>
+                        }
+                    }
+                </select>
             </div>
             <button class="btn btn-primary btn-sm rounded-pill px-3" @onclick="LoadData">
                 <i class="fas fa-filter me-1"></i> Filtrar
@@ -55,6 +80,8 @@
                     <th>Fecha / Hora</th>
                     <th>Cliente</th>
                     <th>Vendedor</th>
+                    <th>Tipo Venta</th>
+                    <th>Condición</th>
                     <th>Total</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -62,23 +89,58 @@
             <tbody>
                 @if (ventas == null)
                 {
-                    <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                    <tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
                 }
                 else if (!ventas.Any())
                 {
-                    <tr><td colspan="6" class="text-center py-5 text-muted">No se encontraron ventas en este rango de fechas.</td></tr>
+                    <tr><td colspan="8" class="text-center py-5 text-muted">No se encontraron ventas en este rango de fechas.</td></tr>
                 }
                 else
                 {
                     @foreach (var v in ventas.Skip((currentPage - 1) * pageSize).Take(pageSize))
                     {
-                        <tr>
-                            <td><span class="fw-bold text-primary">@v.NumeroFactura</span></td>
-                            <td>@v.FechaVenta.ToString("dd/MM/yyyy hh:mm tt")</td>
-                            <td>@(v.IdPersonaNavigation != null ? v.IdPersonaNavigation.NombreCompleto : "Cliente General")</td>
-                            <td>@(v.IdUsuarioNavigation != null ? v.IdUsuarioNavigation.Username : "N/A")</td>
-                            <td class="fw-bold">@AppState.CurrencySymbol @v.TotalNio.ToString("N2")</td>
+                        <tr class="@(v.Anulada ? "table-danger text-muted" : "")" style="@(v.Anulada ? "opacity: 0.8;" : "")">
+                            <td>
+                                <span class="fw-bold @(v.Anulada ? "text-danger text-decoration-line-through" : "text-primary")">
+                                    @v.NumeroFactura
+                                </span>
+                            </td>
+                            <td class="@(v.Anulada ? "text-decoration-line-through" : "")">@v.FechaVenta.ToString("dd/MM/yyyy hh:mm tt")</td>
+                            <td class="@(v.Anulada ? "text-decoration-line-through" : "")">@(v.IdPersonaNavigation != null ? v.IdPersonaNavigation.NombreCompleto : "Cliente General")</td>
+                            <td class="@(v.Anulada ? "text-decoration-line-through" : "")">@(v.IdUsuarioNavigation != null ? v.IdUsuarioNavigation.Username : "N/A")</td>
+                            <td>
+                                @if (v.IdTipoVentaNavigation != null)
+                                {
+                                    <span class="badge rounded-pill @(v.IdTipoVentaNavigation.Descripcion.ToUpper() == "MAYORISTA" ? "bg-primary text-white" : "bg-success text-white") px-3">
+                                        <i class="fas @(v.IdTipoVentaNavigation.Descripcion.ToUpper() == "MAYORISTA" ? "fa-boxes" : "fa-box") me-1"></i> @v.IdTipoVentaNavigation.Descripcion
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (v.IdCondicionPagoNavigation != null)
+                                {
+                                    <span class="badge rounded-pill @(v.IdCondicionPagoNavigation.Descripcion.ToUpper() == "CONTADO" ? "bg-success" : "bg-warning text-dark") px-3">
+                                        <i class="fas @(v.IdCondicionPagoNavigation.Descripcion.ToUpper() == "CONTADO" ? "fa-money-bill-wave" : "fa-hand-holding-usd") me-1"></i> @v.IdCondicionPagoNavigation.Descripcion
+                                    </span>
+                                }
+                            </td>
+                            <td class="fw-bold">
+                                @if (v.Anulada)
+                                {
+                                    <span class="badge bg-danger px-3"><i class="fas fa-ban me-1"></i> ANULADA</span>
+                                }
+                                else
+                                {
+                                    @AppState.CurrencySymbol @v.TotalNio.ToString("N2")
+                                }
+                            </td>
                             <td class="text-end">
+                                @if (v.FechaVenta.Date == DateTime.Today && !v.Anulada)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 me-2" @onclick="() => StartReverso(v)" title="Reverso / Anulación">
+                                        <i class="fas fa-undo-alt me-1"></i> Reverso
+                                    </button>
+                                }
                                 <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @onclick="() => ShowInvoiceDetails(v)">
                                     <i class="fas fa-print me-1"></i> Reimprimir Factura
                                 </button>
@@ -177,6 +239,14 @@
                             <div><strong>Fecha:</strong> @selectedVenta.FechaVenta.ToString("dd/MM/yyyy HH:mm")</div>
                             <div><strong>Cliente:</strong> @(selectedVenta.IdPersonaNavigation != null ? selectedVenta.IdPersonaNavigation.NombreCompleto : "Cliente General")</div>
                             <div><strong>Vendedor:</strong> @(selectedVenta.IdUsuarioNavigation != null ? selectedVenta.IdUsuarioNavigation.Username : "N/A")</div>
+                            @if(selectedVenta.IdTipoVentaNavigation != null)
+                            {
+                                <div><strong>Tipo Venta:</strong> @selectedVenta.IdTipoVentaNavigation.Descripcion</div>
+                            }
+                            @if(selectedVenta.IdCondicionPagoNavigation != null)
+                            {
+                                <div><strong>Condición:</strong> @selectedVenta.IdCondicionPagoNavigation.Descripcion</div>
+                            }
                         </div>
 
                         <hr style="border-top: 1px dashed #000; margin: 10px 0;" />
@@ -246,6 +316,85 @@
     </div>
 }
 
+<!-- Modal: Reverso de Transacción -->
+@if (showReversoModal && reversoVenta != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold m-0 text-danger"><i class="fas fa-undo-alt me-2"></i>Reverso de Transacción (FAC-@reversoVenta.NumeroFactura)</h5>
+                    <button type="button" class="btn-close" @onclick="() => showReversoModal = false"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p class="text-muted small mb-4">Seleccione el tipo de reverso e ingrese la justificación. Esta acción afectará el inventario y el cuadre de caja de su turno actual.</p>
+                    
+                    <div class="mb-4 d-flex gap-3">
+                        <div class="form-check form-check-inline p-3 border rounded @(!isReversoParcial ? "border-danger bg-danger bg-opacity-10" : "")" style="cursor:pointer;" @onclick="() => isReversoParcial = false">
+                            <input class="form-check-input" type="radio" name="reversoType" id="totalRev" checked="@(!isReversoParcial)" />
+                            <label class="form-check-label fw-bold ms-2" for="totalRev">Reverso Total (Anular toda la factura)</label>
+                        </div>
+                        <div class="form-check form-check-inline p-3 border rounded @(isReversoParcial ? "border-primary bg-primary bg-opacity-10" : "")" style="cursor:pointer;" @onclick="() => isReversoParcial = true">
+                            <input class="form-check-input" type="radio" name="reversoType" id="parcialRev" checked="@(isReversoParcial)" />
+                            <label class="form-check-label fw-bold ms-2" for="parcialRev">Devolución Parcial (Seleccionar Productos)</label>
+                        </div>
+                    </div>
+
+                    @if (isReversoParcial)
+                    {
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Seleccione los productos a devolver:</h6>
+                            <div class="table-responsive" style="max-height: 250px;">
+                                <table class="table table-sm table-hover align-middle">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th style="width: 40px;"></th>
+                                            <th>Producto</th>
+                                            <th>Cant.</th>
+                                            <th>Subtotal</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach(var det in reversoDetalles)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (!det.Devuelto)
+                                                    {
+                                                        <input class="form-check-input" type="checkbox" checked="@selectedDetallesParaReverso.Contains(det.IdDetalle)" @onchange="(e) => ToggleDetalleReverso(det.IdDetalle, e.Value)" />
+                                                    }
+                                                </td>
+                                                <td>@det.DescripcionSnap</td>
+                                                <td>@det.Cantidad</td>
+                                                <td>@AppState.CurrencySymbol @det.SubtotalNio.ToString("N2")</td>
+                                                <td>
+                                                    @if(det.Devuelto) { <span class="badge bg-secondary">Ya devuelto</span> }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motivo / Justificación:</label>
+                        <textarea class="form-control rounded" rows="3" @bind="reversoMotivo" placeholder="Escriba la razón de la devolución o anulación..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" @onclick="() => showReversoModal = false">Cancelar</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" @onclick="ExecuteReverso">
+                        <i class="fas fa-check-circle me-1"></i> Confirmar Reverso
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <style>
     /* Estilos para impresión */
     @@media print {
@@ -273,16 +422,30 @@
 @code {
     private DateTime startDate = DateTime.Today;
     private DateTime endDate = DateTime.Today;
+    private int? filterTipoVenta = null;
+    private int? filterCondicion = null;
     private string searchQuery = "";
     private List<Venta>? ventas;
+    private List<TiposVentum>? tiposVenta;
+    private List<CondicionesPago>? condicionesPago;
     private Venta? selectedVenta;
     private bool showPreviewModal = false;
+
+    // Variables Reverso
+    private Venta? reversoVenta;
+    private bool showReversoModal = false;
+    private string reversoMotivo = "";
+    private bool isReversoParcial = false;
+    private List<VentaDetalle> reversoDetalles = new();
+    private List<int> selectedDetallesParaReverso = new();
 
     private int currentPage = 1;
     private int pageSize = 10;
 
     protected override async Task OnInitializedAsync()
     {
+        tiposVenta = await DbContext.TiposVenta.Where(t => t.Activo).ToListAsync();
+        condicionesPago = await DbContext.CondicionesPagos.Where(c => c.Activo).ToListAsync();
         await LoadData();
     }
 
@@ -298,11 +461,22 @@
             var start = startDate.Date;
             var end = endDate.Date.AddDays(1).AddTicks(-1);
 
-            var query = DbContext.Ventas
+            var query = DbContext.Ventas.AsNoTracking()
                 .Include(v => v.IdPersonaNavigation)
                 .Include(v => v.IdUsuarioNavigation)
                 .Include(v => v.VentaDetalles)
+                .Include(v => v.IdTipoVentaNavigation)
+                .Include(v => v.IdCondicionPagoNavigation)
                 .Where(v => v.FechaVenta >= start && v.FechaVenta <= end);
+
+            if (filterTipoVenta.HasValue)
+            {
+                query = query.Where(v => v.IdTipoVenta == filterTipoVenta.Value);
+            }
+            if (filterCondicion.HasValue)
+            {
+                query = query.Where(v => v.IdCondicionPago == filterCondicion.Value);
+            }
 
             if (!string.IsNullOrWhiteSpace(searchQuery))
             {
@@ -345,6 +519,65 @@
         if (e.Key == "Enter")
         {
             await LoadData();
+        }
+    }
+    
+    private void StartReverso(Venta v)
+    {
+        reversoVenta = v;
+        reversoMotivo = "";
+        isReversoParcial = false;
+        reversoDetalles = v.VentaDetalles.ToList();
+        selectedDetallesParaReverso.Clear();
+        showReversoModal = true;
+    }
+
+    private void ToggleDetalleReverso(int idDetalle, object? isCheckedObj)
+    {
+        bool isChecked = false;
+        if (isCheckedObj is bool b) isChecked = b;
+        else if (isCheckedObj is string s && bool.TryParse(s, out var sb)) isChecked = sb;
+
+        if (isChecked && !selectedDetallesParaReverso.Contains(idDetalle))
+        {
+            selectedDetallesParaReverso.Add(idDetalle);
+        }
+        else if (!isChecked && selectedDetallesParaReverso.Contains(idDetalle))
+        {
+            selectedDetallesParaReverso.Remove(idDetalle);
+        }
+    }
+
+    private async Task ExecuteReverso()
+    {
+        if (string.IsNullOrWhiteSpace(reversoMotivo))
+        {
+            ToastService.ShowError("Debe ingresar un motivo para el reverso.");
+            return;
+        }
+
+        if (isReversoParcial && !selectedDetallesParaReverso.Any())
+        {
+            ToastService.ShowError("Debe seleccionar al menos un producto para devolver.");
+            return;
+        }
+
+        try
+        {
+            string? jsonDetalles = null;
+            if (isReversoParcial)
+            {
+                jsonDetalles = System.Text.Json.JsonSerializer.Serialize(selectedDetallesParaReverso);
+            }
+
+            await CheckoutService.ReversarTransaccionAsync(reversoVenta!.IdVenta, UserSession.UserId ?? 0, reversoMotivo, jsonDetalles);
+            ToastService.ShowSuccess("Transacción reversada con éxito.");
+            showReversoModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
         }
     }
 
