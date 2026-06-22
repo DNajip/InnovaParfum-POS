@@ -72,7 +72,7 @@
     {
         try
         {
-            if (!string.IsNullOrEmpty(AppState.BusinessLogo))
+            if (!string.IsNullOrEmpty(AppState.BusinessLogo) && !AppState.BusinessLogo.StartsWith("data:image"))
             {
                 await JS.InvokeVoidAsync("updateFavicon", AppState.BusinessLogo);
             }

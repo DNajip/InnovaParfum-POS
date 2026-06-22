@@ -61,6 +61,7 @@ public class CheckoutService : ICheckoutService
             p.Monto,
             p.TasaCambio,
             MontoEnNio = p.MontoEnNio, // El monto bruto recibido en moneda nacional, calculado por el cliente
+            MontoEnMonedaBase = p.MontoEnMonedaBase,
             p.Referencia
         });
         var paymentsJson = System.Text.Json.JsonSerializer.Serialize(paymentsMapped);

@@ -238,7 +238,7 @@
                             <div><strong>Factura:</strong> @selectedVenta.NumeroFactura</div>
                             <div><strong>Fecha:</strong> @selectedVenta.FechaVenta.ToString("dd/MM/yyyy HH:mm")</div>
                             <div><strong>Cliente:</strong> @(selectedVenta.IdPersonaNavigation != null ? selectedVenta.IdPersonaNavigation.NombreCompleto : "Cliente General")</div>
-                            <div><strong>Vendedor:</strong> @(selectedVenta.IdUsuarioNavigation != null ? selectedVenta.IdUsuarioNavigation.Username : "N/A")</div>
+                            <div><strong>Cajero:</strong> @(selectedVenta.IdUsuarioNavigation != null ? selectedVenta.IdUsuarioNavigation.Username : "N/A")</div>
                             @if(selectedVenta.IdTipoVentaNavigation != null)
                             {
                                 <div><strong>Tipo Venta:</strong> @selectedVenta.IdTipoVentaNavigation.Descripcion</div>
@@ -298,6 +298,38 @@
                             <span>TOTAL:</span>
                             <span>@AppState.CurrencySymbol @selectedVenta.TotalNio.ToString("N2")</span>
                         </div>
+
+                        @if (selectedVenta.Pagos != null && selectedVenta.Pagos.Any())
+                        {
+                            <div class="mt-2 pt-2" style="border-top: 1px dashed #000;">
+                                <div class="fw-bold mb-1">Pagos:</div>
+                                @foreach (var p in selectedVenta.Pagos)
+                                {
+                                    <div class="d-flex justify-content-between">
+                                        <span>@(p.IdMetodoPagoNavigation?.Nombre ?? "Efectivo")</span>
+                                        <span>@((p.IdMetodoPagoNavigation?.Nombre ?? "").Contains("USD") ? "$" : "C$") @p.MontoPagado.ToString("N2")</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @{
+                            var totalVueltoNio = selectedVenta.Pagos?.Sum(p => p.VueltoNio ?? 0) ?? 0;
+                            if (totalVueltoNio > 0 && selectedVenta.MonedaVuelto != null)
+                            {
+                                var vueltoText = selectedVenta.MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$";
+                                var vueltoAmount = selectedVenta.MonedaVuelto == "USD" ? 
+                                    $"$ {(AppState.CurrencyCode == "USD" ? totalVueltoNio : totalVueltoNio / (selectedVenta.TasaCambioUsd > 0 ? selectedVenta.TasaCambioUsd : 1)).ToString("N2")}" : 
+                                    $"C$ {(AppState.CurrencyCode == "NIO" ? totalVueltoNio : totalVueltoNio * selectedVenta.TasaCambioUsd).ToString("N2")}";
+
+                                <div class="mt-2 pt-2" style="border-top: 1px dashed #000;">
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>@vueltoText:</span>
+                                        <span>@vueltoAmount</span>
+                                    </div>
+                                </div>
+                            }
+                        }
 
                         <hr style="border-top: 1px dashed #000; margin: 15px 0 5px 0;" />
                         <div class="text-center small mt-2">
@@ -467,6 +499,8 @@
                 .Include(v => v.VentaDetalles)
                 .Include(v => v.IdTipoVentaNavigation)
                 .Include(v => v.IdCondicionPagoNavigation)
+                .Include(v => v.Pagos)
+                    .ThenInclude(p => p.IdMetodoPagoNavigation)
                 .Where(v => v.FechaVenta >= start && v.FechaVenta <= end);
 
             if (filterTipoVenta.HasValue)
@@ -585,23 +619,41 @@
     {
         if (selectedVenta == null) return;
 
-        var invoiceData = new
-        {
-            numeroFactura = selectedVenta.NumeroFactura,
-            fecha = selectedVenta.FechaVenta.ToString("dd/MM/yyyy HH:mm"),
-            nombreNegocio = AppState.BusinessName,
-            ruc = AppState.BusinessRuc,
-            direccion = AppState.BusinessAddress,
-            telefono = AppState.BusinessPhone,
-            logoPath = AppState.BusinessLogo,
-            mensajeTicket = AppState.TicketMessage,
-            abrirCajon = false, // Nunca abrir caja al reimprimir
-            simboloMoneda = "@AppState.CurrencySymbol ",
-            cliente = selectedVenta.IdPersonaNavigation?.NombreCompleto ?? "Cliente General",
-            vendedor = selectedVenta.IdUsuarioNavigation?.Username ?? "N/A",
-            subtotal = selectedVenta.SubtotalNio,
-            descuento = selectedVenta.DescuentoNio,
-            total = selectedVenta.TotalNio,
+            var totalVueltoNio = selectedVenta.Pagos?.Sum(p => p.VueltoNio ?? 0) ?? 0;
+            var hayVuelto = totalVueltoNio > 0;
+            var vueltoText = hayVuelto ? (selectedVenta.MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$") : "";
+            var vueltoAmount = hayVuelto ? 
+                (selectedVenta.MonedaVuelto == "USD" ? 
+                    $"$ {(AppState.CurrencyCode == "USD" ? totalVueltoNio : totalVueltoNio / (selectedVenta.TasaCambioUsd > 0 ? selectedVenta.TasaCambioUsd : 1)).ToString("N2")}" : 
+                    $"C$ {(AppState.CurrencyCode == "NIO" ? totalVueltoNio : totalVueltoNio * selectedVenta.TasaCambioUsd).ToString("N2")}"
+                ) : "";
+
+            var invoiceData = new
+            {
+                numeroFactura = selectedVenta.NumeroFactura,
+                fecha = selectedVenta.FechaVenta.ToString("dd/MM/yyyy HH:mm"),
+                nombreNegocio = AppState.BusinessName,
+                ruc = AppState.BusinessRuc,
+                direccion = AppState.BusinessAddress,
+                telefono = AppState.BusinessPhone,
+                logoPath = AppState.BusinessLogo,
+                mensajeTicket = AppState.TicketMessage,
+                abrirCajon = false, // Nunca abrir caja al reimprimir
+                simboloMoneda = AppState.CurrencySymbol + " ",
+                tipoVenta = selectedVenta.IdTipoVentaNavigation?.Descripcion ?? "NORMAL",
+                condicionPago = selectedVenta.IdCondicionPagoNavigation?.Descripcion ?? "CONTADO",
+                cliente = selectedVenta.IdPersonaNavigation?.NombreCompleto ?? "Cliente General",
+                vendedor = selectedVenta.IdUsuarioNavigation?.Username ?? "N/A",
+                subtotal = selectedVenta.SubtotalNio,
+                descuento = selectedVenta.DescuentoNio,
+                total = selectedVenta.TotalNio,
+                vueltoText = vueltoText,
+                vueltoAmount = vueltoAmount,
+                metodosPago = selectedVenta.Pagos.Select(p => new {
+                metodo = p.IdMetodoPagoNavigation?.Nombre ?? "Efectivo",
+                monto = p.MontoPagado,
+                simbolo = (p.IdMetodoPagoNavigation?.Nombre ?? "").Contains("USD") ? "$" : "C$" // Simplificación, mejor sería leer la moneda
+            }).ToList(),
             detalles = selectedVenta.VentaDetalles
                 .GroupBy(d => new { d.DescripcionSnap, d.PrecioUnitarioNio })
                 .Select(g => new {

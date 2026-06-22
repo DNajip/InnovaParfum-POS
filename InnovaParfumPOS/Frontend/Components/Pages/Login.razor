@@ -22,7 +22,7 @@
         <!-- Logo -->
         <div class="login-logo-container">
             <div class="login-brand-logo">
-                <img src="@(string.IsNullOrEmpty(empresaLogo) ? "images/logo.png" : empresaLogo)" alt="@empresaNombre" class="w-100 h-100 object-fit-contain" />
+                <img src="@(string.IsNullOrEmpty(empresaLogo) ? "images/logo.png" : empresaLogo.Trim().Replace("\n", "").Replace("\r", "").Replace(" ", ""))" alt="@empresaNombre" class="w-100 h-100 object-fit-contain" />
             </div>
         </div>
 

@@ -102,16 +102,10 @@ window.qzPrintInvoice = async (invoice, printerName) => {
         let printer = printerName;
         
         if (!printer) {
-            // Fallback si no viene nombre específico
             try {
-                const printers = await qz.printers.find("EPSON");
-                if (printers && printers.length > 0) printer = printers[0];
-            } catch (e) {}
-
-            if (!printer) {
-                try {
-                    printer = await qz.printers.getDefault();
-                } catch (e) {}
+                printer = await qz.printers.getDefault();
+            } catch (e) {
+                console.error("No se encontró impresora por defecto");
             }
         }
 
@@ -122,14 +116,17 @@ window.qzPrintInvoice = async (invoice, printerName) => {
         // Redimensionar el logo a 150px de ancho máximo antes de imprimir
         let base64Logo = null;
         try {
-            const logoPath = invoice.logoPath || (window.location.origin + '/images/logo.png');
+            let logoPath = invoice.logoPath || (window.location.origin + '/images/logo.png');
+            if (logoPath && !logoPath.startsWith('http') && !logoPath.startsWith('data:')) {
+                logoPath = 'data:image/png;base64,' + logoPath;
+            }
             const dataUrl = await resizeImage(logoPath, 150, 150);
             base64Logo = dataUrl.split(',')[1];
         } catch (e) {
             console.error("No se pudo procesar el logo:", e);
         }
 
-        const config = qz.configs.create(printer, { encoding: 'ISO-8859-1' });
+        const config = qz.configs.create(printer);
 
         const ESC = '\x1B';
         const GS = '\x1D';
@@ -166,7 +163,7 @@ window.qzPrintInvoice = async (invoice, printerName) => {
             data.push("\n");
         }
 
-        data = data.concat([
+        let headerLines = [
             boldOn + (invoice.nombreNegocio || "INNOVATEC POS") + "\n" + boldOff,
             (invoice.ruc ? "RUC: " + invoice.ruc + "\n" : ""),
             (invoice.direccion ? invoice.direccion + "\n" : ""),
@@ -176,13 +173,23 @@ window.qzPrintInvoice = async (invoice, printerName) => {
             `Factura: ${invoice.numeroFactura}\n`,
             `Fecha:   ${invoice.fecha}\n`,
             `Cliente: ${invoice.cliente}\n`,
-            `Cajero:  ${invoice.vendedor}\n`,
-            "------------------------------------------------\n",
-            boldOn,
-            "Cant Descripcion                 Total\n",
-            boldOff,
-            "------------------------------------------------\n"
-        ]);
+            `Cajero:  ${invoice.vendedor}\n`
+        ];
+
+        if (invoice.tipoVenta) {
+            headerLines.push(`T.Venta: ${invoice.tipoVenta}\n`);
+        }
+        if (invoice.condicionPago) {
+            headerLines.push(`Condic.: ${invoice.condicionPago}\n`);
+        }
+
+        headerLines.push("------------------------------------------------\n");
+        headerLines.push(boldOn);
+        headerLines.push("Cant Descripcion                 Total\n");
+        headerLines.push(boldOff);
+        headerLines.push("------------------------------------------------\n");
+
+        data = data.concat(headerLines);
 
         invoice.detalles.forEach(d => {
             // Asegurar que la cantidad sea entera y tenga un ancho de 4
@@ -209,6 +216,16 @@ window.qzPrintInvoice = async (invoice, printerName) => {
         data.push(boldOn);
         data.push(`TOTAL:      ${invoice.simboloMoneda || "C$"} ${invoice.total.toFixed(2)}\n`);
         data.push(boldOff);
+
+        if (invoice.metodosPago && invoice.metodosPago.length > 0) {
+            data.push("\n");
+            data.push("PAGOS:\n");
+            invoice.metodosPago.forEach(p => {
+                let mName = (p.metodo || "").substring(0, 20).padEnd(20);
+                let mTotal = `${p.simbolo || "$"} ${p.monto.toFixed(2)}`.padStart(15);
+                data.push(`  ${mName} ${mTotal}\n`);
+            });
+        }
         
         if (invoice.vueltoText && invoice.vueltoAmount) {
             data.push(`\n${invoice.vueltoText}: ${invoice.vueltoAmount}\n`);

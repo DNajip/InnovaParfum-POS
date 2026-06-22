@@ -36,16 +36,23 @@
         string normalizedFavicon = "";
         try
         {
-            var path = logoSetting.TrimStart('/');
-            var physicalPath = System.IO.Path.Combine(Env.WebRootPath, path);
-            if (System.IO.File.Exists(physicalPath))
+            if (logoSetting.StartsWith("data:image"))
             {
-                var bytes = System.IO.File.ReadAllBytes(physicalPath);
-                normalizedFavicon = $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+                normalizedFavicon = logoSetting;
             }
             else
             {
-                normalizedFavicon = "/" + path + "?v=" + DateTime.Now.Ticks;
+                var path = logoSetting.TrimStart('/');
+                var physicalPath = System.IO.Path.Combine(Env.WebRootPath, path);
+                if (System.IO.File.Exists(physicalPath))
+                {
+                    var bytes = System.IO.File.ReadAllBytes(physicalPath);
+                    normalizedFavicon = $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+                }
+                else
+                {
+                    normalizedFavicon = "/" + path + "?v=" + DateTime.Now.Ticks;
+                }
             }
         }
         catch 

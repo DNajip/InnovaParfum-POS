@@ -536,7 +536,9 @@
                 logoPath = AppState.BusinessLogo,
                 mensajeTicket = AppState.TicketMessage,
                 abrirCajon = debeAbrirCajon,
-                simboloMoneda = "@AppState.CurrencySymbol ",
+                simboloMoneda = AppState.CurrencySymbol + " ",
+                tipoVenta = SaleService.IsMayorista ? "MAYORISTA" : "MINORISTA",
+                condicionPago = SaleService.IsCredito ? "CRÉDITO" : "CONTADO",
                 cliente = selectedClient?.NombreCompleto ?? "Cliente General",
                 vendedor = UserSession.Username ?? "N/A",
                 subtotal = SubTotal,
@@ -544,6 +546,11 @@
                 total = Total,
                 vueltoText = hayVuelto ? (MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$") : "",
                 vueltoAmount = hayVuelto ? (MonedaVuelto == "USD" ? $"$ {(AppState.CurrencyCode == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) / AppState.ExchangeRateSell).ToString("N2")}" : $"C$ {(AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell).ToString("N2")}") : "",
+                metodosPago = selectedPayments.Select(p => new {
+                    metodo = p.MetodoNombre,
+                    monto = p.Monto,
+                    simbolo = p.MetodoNombre.Contains("USD") ? "$" : "C$"
+                }).ToList(),
                 detalles = Items.SelectMany(i => {
                     var unitPrice = SaleService.IsMayorista ? i.PrecioMayorista : i.PrecioMinorista;
                     if (i.RequiresImei) {
