@@ -1,0 +1,113 @@
+@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.Services
+@inject IClienteService ClienteService
+
+<div class="offcanvas offcanvas-end @(IsOpen ? "show" : "")" tabindex="-1" style="@(IsOpen ? "visibility: visible;" : "visibility: hidden;")" id="offcanvasGarantias">
+    <div class="offcanvas-header bg-light border-bottom">
+        <h5 class="offcanvas-title d-flex align-items-center gap-2 text-success">
+            <i class="fas fa-shield-alt"></i> Garantías Activas
+        </h5>
+        <button type="button" class="btn-close" @onclick="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        @if (isLoading)
+        {
+            <div class="d-flex justify-content-center p-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        }
+        else if (garantias == null || !garantias.Any())
+        {
+            <div class="text-center p-5 text-muted">
+                <i class="fas fa-box-open fs-1 mb-3"></i>
+                <p>No hay garantías activas en este momento.</p>
+            </div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var g in garantias)
+                {
+                    var daysLeft = (g.FechaVencimiento.ToDateTime(TimeOnly.MinValue) - DateTime.Now).TotalDays;
+                    var isNear = daysLeft <= 10;
+                    var badgeClass = isNear ? "bg-warning text-dark" : "bg-success";
+                    
+                    <div class="list-group-item list-group-item-action p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-0 fw-bold">@g.IdPersonaNavigation.NombreCompleto</h6>
+                                <small class="text-muted"><i class="fas fa-phone-alt"></i> @g.IdPersonaNavigation.Telefono</small>
+                            </div>
+                            <span class="badge @badgeClass rounded-pill">
+                                @if(daysLeft < 0) {
+                                    @:Vencida
+                                } else if (daysLeft < 1) {
+                                    @:Vence hoy
+                                } else {
+                                    @($"Vence en {Math.Ceiling(daysLeft)} días")
+                                }
+                            </span>
+                        </div>
+                        <div class="small mb-1">
+                            <span class="text-muted">Factura:</span> 
+                            <span class="fw-semibold">@(g.IdDetalleVentaNavigation?.IdVentaNavigation?.NumeroFactura ?? "N/A")</span>
+                        </div>
+                        <div class="small text-truncate" title="@g.IdProductoNavigation.Nombre">
+                            <i class="fas fa-cube text-muted me-1"></i> @g.IdProductoNavigation.Nombre
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (IsOpen)
+{
+    <div class="offcanvas-backdrop fade show" @onclick="Close"></div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    private List<Garantia>? garantias;
+    private bool isLoading = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsOpen && garantias == null)
+        {
+            await LoadData();
+        }
+    }
+
+    public async Task Refresh()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            garantias = await ClienteService.GetAllActiveGarantiasAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

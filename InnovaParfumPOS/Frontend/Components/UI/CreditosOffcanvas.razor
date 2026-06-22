@@ -1,0 +1,117 @@
+@using InnovaParfumPOS.Backend.Models
+@using InnovaParfumPOS.Backend.Services
+@inject ICreditoService CreditoService
+
+<div class="offcanvas offcanvas-end @(IsOpen ? "show" : "")" tabindex="-1" style="@(IsOpen ? "visibility: visible;" : "visibility: hidden;")" id="offcanvasCreditos">
+    <div class="offcanvas-header bg-light border-bottom">
+        <h5 class="offcanvas-title d-flex align-items-center gap-2" style="color: #6f42c1;">
+            <i class="fas fa-credit-card"></i> Créditos Activos
+        </h5>
+        <button type="button" class="btn-close" @onclick="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        @if (isLoading)
+        {
+            <div class="d-flex justify-content-center p-5">
+                <div class="spinner-border" style="color: #6f42c1 !important;" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        }
+        else if (creditos == null || !creditos.Any())
+        {
+            <div class="text-center p-5 text-muted">
+                <i class="fas fa-wallet fs-1 mb-3"></i>
+                <p>No hay créditos activos en este momento.</p>
+            </div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var c in creditos)
+                {
+                    var isLate = c.FechaVencimiento < DateTime.Now.Date;
+                    
+                    <div class="list-group-item list-group-item-action p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-0 fw-bold">@c.Persona.NombreCompleto</h6>
+                                <small class="text-muted"><i class="fas fa-phone-alt"></i> @c.Persona.Telefono</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="d-block fw-bold fs-5 text-danger">
+                                    C$ @c.SaldoPendiente.ToString("N2")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 small">
+                            <div>
+                                <span class="text-muted">Factura:</span> 
+                                <span class="fw-semibold">@(c.Venta?.NumeroFactura ?? "N/A")</span>
+                            </div>
+                            <div>
+                                @if (isLate)
+                                {
+                                    var daysLate = Math.Floor((DateTime.Now.Date - c.FechaVencimiento).TotalDays);
+                                    <span class="badge bg-danger rounded-pill"><i class="fas fa-exclamation-circle"></i> Mora: @daysLate días</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted"><i class="far fa-calendar-alt"></i> Vence: @c.FechaVencimiento.ToString("dd/MM/yyyy")</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (IsOpen)
+{
+    <div class="offcanvas-backdrop fade show" @onclick="Close"></div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    private List<Credito>? creditos;
+    private bool isLoading = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsOpen && creditos == null)
+        {
+            await LoadData();
+        }
+    }
+
+    public async Task Refresh()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            creditos = await CreditoService.GetAllActiveCreditosAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

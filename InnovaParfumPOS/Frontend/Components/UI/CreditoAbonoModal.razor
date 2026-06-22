@@ -6,144 +6,209 @@
 @inject ToastService ToastService
 @inject IJSRuntime JS
 
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0 bg-dark text-white" style="border: 1px solid #444;">
-            <div class="modal-header border-bottom border-secondary pb-3">
-                <div class="d-flex flex-column">
-                    <h5 class="modal-title fw-bold m-0 text-info">Crédito #@Credito.IdCredito</h5>
-                    <span class="small text-muted">Factura: @(Credito.Venta?.NumeroFactura ?? "N/A")</span>
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); z-index: 1060; overflow-x: hidden;">
+    <div class="modal-dialog modal-lg" style="margin-top: 2rem;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+            <div class="modal-header border-0 bg-light px-4 pt-3 pb-2">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div class="kpi-icon kpi-purple" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(111, 66, 193, 0.1); color: #6f42c1; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold m-0 text-dark">Crédito #@Credito.IdCredito</h5>
+                        <span class="small text-muted">Factura: @(Credito.Venta?.NumeroFactura ?? "N/A")</span>
+                    </div>
+                    <button type="button" class="btn-close ms-auto" @onclick="OnClose"></button>
                 </div>
-                <button type="button" class="btn-close btn-close-white" @onclick="OnClose"></button>
             </div>
-            <div class="modal-body py-4">
-                <div class="row g-2 mb-4">
-                    <div class="col-6">
-                        <span class="text-muted small">Monto Original:</span>
-                        <div class="fw-bold">@AppState.CurrencySymbol @Credito.MontoOriginal.ToString("N2")</div>
-                    </div>
-                    <div class="col-6">
-                        <span class="text-muted small">Saldo Actual:</span>
-                        <div class="fw-bold text-warning">@AppState.CurrencySymbol @Credito.SaldoPendiente.ToString("N2")</div>
-                    </div>
-                    <div class="col-6 mt-2">
-                        <span class="text-muted small">Fecha Venta:</span>
-                        <div>@Credito.FechaCredito.ToString("dd/MM/yyyy")</div>
-                    </div>
-                    <div class="col-6 mt-2">
-                        <span class="text-muted small">Vencimiento:</span>
-                        <div class="@(DateTime.Now.Date > Credito.FechaVencimiento.Date && Credito.Estado != "PAGADO" ? "text-danger" : "")">
-                            @Credito.FechaVencimiento.ToString("dd/MM/yyyy")
-                        </div>
-                    </div>
-                </div>
 
-                <div class="border-top border-secondary pt-3 mb-3">
-                    <h6 class="text-info fw-bold mb-3">HISTORIAL DE ABONOS</h6>
-                    
-                    @if (abonos == null)
-                    {
-                        <div class="text-center py-2"><div class="spinner-border spinner-border-sm text-info"></div></div>
-                    }
-                    else if (!abonos.Any())
-                    {
-                        <div class="text-center py-2 text-muted small">No hay abonos registrados</div>
-                    }
-                    else
-                    {
-                        <div style="max-height: 150px; overflow-y: auto;">
-                            @foreach (var abono in abonos)
-                            {
-                                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary py-2 small">
-                                    <div class="text-muted">@abono.Fecha.ToString("dd/MM/yy")</div>
-                                    <div>@(abono.MetodoPago?.Nombre ?? "Efectivo")</div>
-                                    <div class="fw-bold text-success">@AppState.CurrencySymbol @abono.Monto.ToString("N2")</div>
-                                </div>
-                            }
+            <div class="modal-body p-4 bg-white">
+                <!-- RESUMEN DEL CRÉDITO -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-4 border">
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.75rem;">Monto Original</span>
+                            <div class="fw-bold text-dark fs-5">@AppState.CurrencySymbol @Credito.MontoOriginal.ToString("N2")</div>
                         </div>
-                    }
+                    </div>
+                    <div class="col-md-5">
+                        <div class="p-3 bg-danger bg-opacity-10 rounded-4 border border-danger border-opacity-25">
+                            <span class="text-danger small fw-bold text-uppercase d-block mb-1" style="font-size: 0.75rem;">Saldo Pendiente</span>
+                            <div class="fw-bold text-danger fs-4 lh-1">@AppState.CurrencySymbol @Credito.SaldoPendiente.ToString("N2")</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-4 border h-100">
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.75rem;">Vencimiento</span>
+                            <div class="fw-bold @(DateTime.Now.Date > Credito.FechaVencimiento.Date && Credito.Estado != "PAGADO" ? "text-danger" : "text-dark") fs-5">
+                                @Credito.FechaVencimiento.ToString("dd/MM/yyyy")
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 @if (Credito.SaldoPendiente > 0)
                 {
-                    <div class="border-top border-secondary pt-3">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-6">
-                                <label class="small text-muted mb-1">Monto a Abonar (NIO)</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" @bind="montoAbono" @bind:event="oninput" min="1" max="@Credito.SaldoPendiente" />
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small text-muted mb-1">Método de Pago</label>
-                                <select class="form-select bg-dark text-white border-secondary" @bind="IdMetodoPago">
-                                    <option value="0">Seleccionar...</option>
-                                    @if (metodosPago != null)
-                                    {
-                                        foreach (var mp in metodosPago)
-                                        {
-                                            <option value="@mp.IdMetodo">@mp.Nombre</option>
-                                        }
-                                    }
-                                </select>
+                    <div class="row g-4">
+                        <!-- FORMULARIO DE ABONO (IZQUIERDA) -->
+                        <div class="col-md-7">
+                            <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-hand-holding-usd me-2 text-primary"></i> REGISTRAR ABONO</h6>
+                            
+                            <div class="card border-0 shadow-sm p-3 bg-light mb-3" style="border-radius: 16px;">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted">1. ¿Cuánto desea abonar a la deuda? (@AppState.CurrencySymbol)</label>
+                                    <input type="number" class="form-control form-control-lg fw-bold text-primary shadow-sm" @bind="MontoAbonarDeuda" @bind:after="UpdateSuggestedAmount" min="0.01" step="0.01" max="@Credito.SaldoPendiente" style="border-radius: 12px; border: 1px solid #dee2e6;" />
+                                    <small class="text-muted mt-1 d-block">Monto exacto a reducir de la deuda.</small>
+                                </div>
+                                
+                                <div class="row g-2 mb-2 mt-3 pt-3 border-top border-secondary border-opacity-25">
+                                    <div class="col-7">
+                                        <label class="small text-muted mb-0 fw-semibold" style="font-size: 0.75rem;">2. Método de Pago</label>
+                                        <select class="form-select bg-white shadow-sm p-2" style="border-radius: 10px;" @bind="currentPayment.IdMetodoPago" @bind:after="UpdateSuggestedAmount">
+                                            @if(metodosPago != null) {
+                                                foreach (var m in metodosPago)
+                                                {
+                                                    <option value="@m.IdMetodo">@m.Nombre</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="small text-muted mb-0 fw-semibold" style="font-size: 0.75rem;">3. Monto Recibido</label>
+                                        <div class="input-group shadow-sm" style="border-radius: 10px;">
+                                            <span class="input-group-text bg-white fw-bold text-primary" style="border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-right: none;">
+                                                @(metodosPago?.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago)?.IdMonedaNavigation?.Simbolo ?? AppState.CurrencySymbol)
+                                            </span>
+                                            <input type="number" step="0.01" class="form-control bg-white fw-bold text-dark border-left-0" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px;" @bind="currentPayment.Monto" />
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <input type="text" class="form-control bg-white shadow-sm form-control-sm p-2" style="border-radius: 10px;" @bind="currentPayment.Referencia" placeholder="Referencia / Autorización (Opcional)" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        @if (isUsdMethod)
-                        {
-                            <div class="row g-2 align-items-end mt-2">
-                                <div class="col-md-4">
-                                    <label class="small text-muted mb-1">Recibido (USD)</label>
-                                    <input type="number" class="form-control bg-dark text-white border-secondary" @bind="montoRecibidoUsd" @bind:event="oninput" min="0" step="1" />
+
+                        <!-- RESUMEN DEL ABONO Y VUELTO (DERECHA) -->
+                        <div class="col-md-5 d-flex flex-column">
+                            <div class="card border-0 p-3 flex-grow-1 shadow-sm" style="border-radius: 16px; background: linear-gradient(145deg, #ffffff, #f8fafc); border: 1px solid #dee2e6 !important;">
+                                
+                                <div class="d-flex justify-content-between mb-2 align-items-center">
+                                    <span class="text-muted small fw-semibold">Abono a la Deuda</span>
+                                    <span class="fw-bold text-dark fs-5">@AppState.CurrencySymbol @MontoAbonarDeuda.ToString("N2")</span>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="small text-muted mb-1">Tasa Cambio</label>
-                                    <input type="number" class="form-control bg-dark text-white border-secondary" value="@AppState.ExchangeRateSell" readonly />
+                                
+                                <div class="d-flex justify-content-between mb-2 border-bottom pb-2 align-items-center">
+                                    <span class="text-muted small fw-semibold">Dinero Recibido</span>
+                                    <span class="fw-bold text-success fs-5">@AppState.CurrencySymbol @TotalPagado.ToString("N2")</span>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="small text-muted mb-1">Equiv. NIO</label>
-                                    <input type="number" class="form-control bg-dark text-white border-secondary" value="@(montoRecibidoUsd * AppState.ExchangeRateSell)" readonly />
-                                </div>
-                            </div>
-                            
-                            var equivBase = montoRecibidoUsd * AppState.ExchangeRateSell;
-                            if (equivBase > montoAbono)
-                            {
-                                <div class="mt-2 text-end text-warning small">
-                                    Vuelto a entregar: @AppState.CurrencySymbol @((equivBase - montoAbono).ToString("N2"))
-                                </div>
-                            }
-                        }
-                        else if (idMetodoPago > 0)
-                        {
-                            <div class="row g-2 align-items-end mt-2">
-                                <div class="col-md-6 offset-md-6">
-                                    <label class="small text-muted mb-1">Monto Recibido (NIO)</label>
-                                    <input type="number" class="form-control bg-dark text-white border-secondary" @bind="montoRecibidoBase" @bind:event="oninput" min="0" step="10" />
-                                </div>
-                            </div>
-                            if (montoRecibidoBase > montoAbono)
-                            {
-                                <div class="mt-2 text-end text-warning small">
-                                    Vuelto a entregar: @AppState.CurrencySymbol @((montoRecibidoBase - montoAbono).ToString("N2"))
-                                </div>
-                            }
-                        }
-                        
-                        <div class="mt-3 text-end">
-                            <button class="btn btn-outline-info w-100" @onclick="RegistrarAbono" disabled="@isProcessing">
-                                @if (isProcessing)
+
+                                @if (SaldoRestante > 0)
                                 {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <div class="d-flex justify-content-between align-items-center mb-1 p-2 rounded-3 mt-auto" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+                                        <span class="text-danger fw-bold small"><i class="fas fa-exclamation-circle me-1"></i>FALTA RECIBIR</span>
+                                        <span class="h5 fw-bold mb-0 text-danger">@AppState.CurrencySymbol @SaldoRestante.ToString("N2")</span>
+                                    </div>
                                 }
-                                Registrar Abono
-                            </button>
+                                else if (SaldoRestante <= 0 && currentPayment.Monto > 0)
+                                {
+                                    <div class="mt-auto p-2 px-3 rounded-4 shadow-sm" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="text-success fw-bold small"><i class="fas fa-check-circle me-1"></i>VUELTO / CAMBIO</span>
+                                            <div class="btn-group btn-group-sm bg-white rounded shadow-sm" role="group">
+                                                <input type="radio" class="btn-check" name="monedaVuelto" id="vueltoUSD" value="USD" checked="@(MonedaVuelto == "USD")" @onchange='() => MonedaVuelto = "USD"'>
+                                                <label class="btn btn-outline-success px-2 py-0 border-0" for="vueltoUSD">USD</label>
+
+                                                <input type="radio" class="btn-check" name="monedaVuelto" id="vueltoNIO" value="NIO" checked="@(MonedaVuelto == "NIO")" @onchange='() => MonedaVuelto = "NIO"'>
+                                                <label class="btn btn-outline-success px-2 py-0 border-0" for="vueltoNIO">C$</label>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end align-items-center mt-1">
+                                            <span class="h3 fw-bold mb-0 text-success">
+                                                @(MonedaVuelto == "USD" ? "$" : "C$") 
+                                                @((AppState.CurrencyCode == "USD" 
+                                                    ? (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell)
+                                                    : (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) / AppState.ExchangeRateSell : Math.Abs(SaldoRestante))
+                                                ).ToString("N2"))
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+
+                                <button type="button" class="btn btn-primary w-100 d-inline-flex justify-content-center align-items-center gap-2 fw-bold shadow-sm mt-3" 
+                                        disabled="@(isProcessing || SaldoRestante > 0 || MontoAbonarDeuda <= 0)" @onclick="RegistrarAbono" style="border-radius: 12px; padding: 12px; font-size: 1rem; background: linear-gradient(135deg, #0ea5e9, #0284c7); border: none;">
+                                    @if (isProcessing)
+                                    {
+                                        <span class="spinner-border spinner-border-sm"></span>
+                                        <span>Procesando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>REGISTRAR ABONO</span>
+                                    }
+                                </button>
+                            </div>
                         </div>
                     </div>
                 }
                 else
                 {
-                    <div class="alert alert-success text-center mt-3 mb-0 py-2">
-                        <i class="fas fa-check-circle me-2"></i> Crédito Cancelado
+                    <div class="alert alert-success text-center py-4 mb-0 rounded-4 border-0 shadow-sm" style="background: rgba(16, 185, 129, 0.1);">
+                        <i class="fas fa-check-circle fs-1 text-success mb-2"></i>
+                        <h5 class="fw-bold text-success m-0">Crédito Cancelado Totalmente</h5>
                     </div>
                 }
+
+                <!-- HISTORIAL DE ABONOS (ACORDEÓN COMPACTO) -->
+                <div class="accordion mt-4 border-0 shadow-sm" id="accordionHistorial" style="border-radius: 16px; overflow: hidden;">
+                    <div class="accordion-item border-0">
+                        <h2 class="accordion-header" id="headingHistorial">
+                            <button class="accordion-button collapsed bg-light fw-bold text-secondary py-3 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHistorial" style="box-shadow: none;">
+                                <i class="fas fa-history me-2 text-primary"></i> Ver Historial de Abonos (@(abonos?.Count ?? 0))
+                            </button>
+                        </h2>
+                        <div id="collapseHistorial" class="accordion-collapse collapse" data-bs-parent="#accordionHistorial">
+                            <div class="accordion-body p-0 border-top">
+                                @if (abonos == null)
+                                {
+                                    <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+                                }
+                                else if (!abonos.Any())
+                                {
+                                    <div class="text-center py-4 text-muted bg-white">No hay abonos registrados en este crédito.</div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive bg-white" style="max-height: 200px; overflow-y: auto;">
+                                        <table class="table table-hover align-middle mb-0 text-sm">
+                                            <thead class="bg-light sticky-top">
+                                                <tr>
+                                                    <th class="ps-4 small text-muted text-uppercase border-0">Fecha</th>
+                                                    <th class="small text-muted text-uppercase border-0">Método</th>
+                                                    <th class="text-end pe-4 small text-muted text-uppercase border-0">Abono (C$)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var a in abonos)
+                                                {
+                                                    <tr>
+                                                        <td class="ps-4 py-3 border-bottom-0">@a.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                                        <td class="py-3 border-bottom-0">
+                                                            <span class="badge bg-secondary">@(metodosPago?.FirstOrDefault(m => m.IdMetodo == a.IdMetodoPago)?.Nombre ?? "Pago")</span>
+                                                        </td>
+                                                        <td class="text-end pe-4 py-3 fw-bold text-success border-bottom-0">@AppState.CurrencySymbol @a.Monto.ToString("N2")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -157,33 +222,67 @@
     private List<CreditoAbono>? abonos;
     private List<MetodosPago>? metodosPago;
     
-    private decimal montoAbono;
-    private int idMetodoPago;
-    private bool isProcessing = false;
-    
-    private decimal montoRecibidoUsd;
-    private decimal montoRecibidoBase;
-    private bool isUsdMethod => metodosPago?.FirstOrDefault(m => m.IdMetodo == idMetodoPago)?.IdMoneda == 2;
-
-    private int IdMetodoPago 
+    // El monto exacto que se va a restar a la deuda.
+    private decimal montoAbonarDeuda;
+    public decimal MontoAbonarDeuda 
     {
-        get => idMetodoPago;
+        get => montoAbonarDeuda;
         set 
         {
-            idMetodoPago = value;
-            montoRecibidoUsd = 0;
-            montoRecibidoBase = montoAbono; // Default para NIO
-            if (isUsdMethod && AppState.ExchangeRateSell > 0)
-            {
-                montoRecibidoUsd = montoAbono / AppState.ExchangeRateSell;
-            }
+            montoAbonarDeuda = value;
+            UpdateSuggestedAmount();
         }
     }
 
+    private PaymentInput currentPayment = new PaymentInput { TasaCambio = 36.60m };
+    private string MonedaVuelto = "NIO";
+    private bool isProcessing = false;
+
+    private decimal TotalPagado 
+    {
+        get 
+        {
+            if (currentPayment.Monto <= 0) return 0;
+            var metodo = metodosPago?.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago);
+            if (metodo == null) return 0;
+
+            string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? (metodo.Nombre.Contains("USD") ? "USD" : "NIO");
+            string baseCurrency = AppState.CurrencyCode;
+            
+            decimal tasaCambio = 1m;
+            decimal montoEnMonedaBase = currentPayment.Monto;
+
+            if (baseCurrency == "NIO" && paymentCurrency == "USD")
+            {
+                // Usamos ExchangeRateSell porque estamos convirtiendo USD ingresados a NIO para cobrar
+                tasaCambio = AppState.ExchangeRateSell; 
+                montoEnMonedaBase = currentPayment.Monto * tasaCambio;
+            }
+            else if (baseCurrency == "USD" && paymentCurrency == "NIO")
+            {
+                tasaCambio = AppState.ExchangeRateSell;
+                montoEnMonedaBase = currentPayment.Monto / tasaCambio;
+            }
+
+            return montoEnMonedaBase;
+        }
+    }
+
+    private decimal SaldoRestante => MontoAbonarDeuda - TotalPagado;
+
     protected override async Task OnInitializedAsync()
     {
-        montoAbono = Credito.SaldoPendiente;
+        MontoAbonarDeuda = Credito.SaldoPendiente;
         metodosPago = await CheckoutService.GetMetodosPagoAsync();
+        
+        if (metodosPago.Any())
+        {
+            var defaultMethod = metodosPago.FirstOrDefault(m => m.IdMonedaNavigation?.Codigo == AppState.CurrencyCode)
+                                ?? metodosPago.FirstOrDefault(m => m.Nombre.Contains(AppState.CurrencyCode, StringComparison.OrdinalIgnoreCase));
+            currentPayment.IdMetodoPago = defaultMethod != null ? defaultMethod.IdMetodo : metodosPago.First().IdMetodo;
+        }
+
+        UpdateSuggestedAmount();
         await LoadAbonos();
     }
 
@@ -192,43 +291,72 @@
         abonos = await CreditoService.GetHistorialAbonosAsync(Credito.IdCredito);
     }
 
-    private async Task RegistrarAbono()
+    private void UpdateSuggestedAmount()
     {
-        if (montoAbono <= 0 || montoAbono > Credito.SaldoPendiente)
+        if (MontoAbonarDeuda <= 0) 
         {
-            ToastService.ShowWarning("Monto inválido. Debe ser mayor a 0 y no exceder el saldo.");
+            currentPayment.Monto = 0;
             return;
         }
-        if (idMetodoPago == 0)
+
+        var metodo = metodosPago?.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago);
+        if (metodo == null) return;
+
+        string paymentCurrency = metodo.IdMonedaNavigation?.Codigo ?? (metodo.Nombre.Contains("USD") ? "USD" : "NIO");
+        string baseCurrency = AppState.CurrencyCode;
+
+        if (baseCurrency == "NIO" && paymentCurrency == "USD")
+            currentPayment.Monto = Math.Round(MontoAbonarDeuda / AppState.ExchangeRateSell, 2);
+        else if (baseCurrency == "USD" && paymentCurrency == "NIO")
+            currentPayment.Monto = Math.Round(MontoAbonarDeuda * AppState.ExchangeRateSell, 2);
+        else
+            currentPayment.Monto = Math.Round(MontoAbonarDeuda, 2);
+    }
+
+    private async Task RegistrarAbono()
+    {
+        if (MontoAbonarDeuda <= 0 || MontoAbonarDeuda > Credito.SaldoPendiente)
+        {
+            ToastService.ShowWarning("Monto a abonar es inválido. Debe ser mayor a 0 y no exceder el saldo pendiente.");
+            return;
+        }
+        if (currentPayment.IdMetodoPago == 0)
         {
             ToastService.ShowWarning("Seleccione un método de pago.");
             return;
         }
+        if (SaldoRestante > 0)
+        {
+            ToastService.ShowWarning("El dinero recibido no es suficiente para cubrir el monto que desea abonar.");
+            return;
+        }
 
-            var metodoSelec = metodosPago?.FirstOrDefault(m => m.IdMetodo == idMetodoPago);
-            decimal montoRecibidoMoneda = isUsdMethod ? montoRecibidoUsd : montoRecibidoBase;
-            decimal equivalenteBase = isUsdMethod ? (montoRecibidoUsd * AppState.ExchangeRateSell) : montoRecibidoBase;
+        var metodoSelec = metodosPago?.FirstOrDefault(m => m.IdMetodo == currentPayment.IdMetodoPago);
+        string paymentCurrency = metodoSelec?.IdMonedaNavigation?.Codigo ?? (metodoSelec?.Nombre.Contains("USD") == true ? "USD" : "NIO");
+        bool isUsdMethod = paymentCurrency == "USD";
+
+        decimal vueltoBase = SaldoRestante < 0 ? Math.Abs(SaldoRestante) : 0;
+
+        isProcessing = true;
+        try
+        {
+            // OJO: IdUsuario = 1 (temporal)
+            var abono = await CreditoService.RegistrarAbonoAsync(
+                Credito.IdCredito, 
+                1, 
+                currentPayment.IdMetodoPago, 
+                MontoAbonarDeuda, 
+                currentPayment.Monto, 
+                isUsdMethod ? AppState.ExchangeRateSell : 1m, 
+                vueltoBase, 
+                currentPayment.Referencia ?? "Abono");
             
-            if (equivalenteBase < montoAbono)
+            ToastService.ShowSuccess("Abono registrado correctamente");
+            
+            // Imprimir Ticket
+            if (!string.IsNullOrEmpty(AppState.PrinterName))
             {
-                ToastService.ShowWarning("El monto recibido no puede ser menor al monto a abonar.");
-                return;
-            }
-
-            decimal vueltoBase = equivalenteBase - montoAbono;
-
-            isProcessing = true;
-            try
-            {
-                // OJO: IdUsuario = 1 (temporal, hasta integrar AuthState)
-                var abono = await CreditoService.RegistrarAbonoAsync(Credito.IdCredito, 1, idMetodoPago, montoAbono, montoRecibidoMoneda, isUsdMethod ? AppState.ExchangeRateSell : 1m, vueltoBase, "Abono");
-                
-                ToastService.ShowSuccess("Abono registrado correctamente");
-                
-                // Imprimir Ticket
-                if (!string.IsNullOrEmpty(AppState.PrinterName))
-                {
-                    var ticketInfo = new {
+                var ticketInfo = new {
                     nombreNegocio = AppState.BusinessName,
                     ruc = AppState.BusinessRuc,
                     direccion = AppState.BusinessAddress,
@@ -236,23 +364,28 @@
                     abrirCajon = (metodoSelec?.Nombre.Contains("Efectivo", StringComparison.OrdinalIgnoreCase) == true) && AppState.OpenCashDrawer,
                     numeroCredito = Credito.IdCredito.ToString(),
                     facturaReferencia = Credito.Venta?.NumeroFactura ?? "N/A",
-                    cliente = Credito.Venta?.IdPersonaNavigation?.NombreCompleto ?? "Cliente",
+                    cliente = Credito.Venta?.IdPersonaNavigation?.NombreCompleto ?? Credito.Persona?.NombreCompleto ?? "Cliente",
                     fecha = abono.Fecha.ToString("dd/MM/yyyy HH:mm"),
                     saldoAnterior = Credito.SaldoPendiente,
-                    montoAbonado = montoAbono,
-                    nuevoSaldo = Credito.SaldoPendiente - montoAbono
+                    montoAbonado = MontoAbonarDeuda,
+                    nuevoSaldo = Credito.SaldoPendiente - MontoAbonarDeuda
                 };
                 
                 await JS.InvokeVoidAsync("qzPrintAbono", ticketInfo, AppState.PrinterName);
             }
 
-            // Actualizar localmente el saldo para la vista inmediata
-            Credito.SaldoPendiente -= montoAbono;
-            montoAbono = Credito.SaldoPendiente;
-            IdMetodoPago = 0; // Reset
+            // Actualizar localmente el saldo
+            Credito.SaldoPendiente -= MontoAbonarDeuda;
+            MontoAbonarDeuda = Credito.SaldoPendiente;
+            UpdateSuggestedAmount();
             
             await LoadAbonos();
             await OnAbonoRegistered.InvokeAsync();
+            
+            if (Credito.SaldoPendiente <= 0)
+            {
+                await OnClose.InvokeAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -264,4 +397,3 @@
         }
     }
 }
-

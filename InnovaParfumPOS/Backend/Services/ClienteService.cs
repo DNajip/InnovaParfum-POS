@@ -12,6 +12,7 @@ public interface IClienteService
     Task UpdateClienteAsync(Persona persona);
     Task<List<Venta>> GetComprasClienteAsync(int idPersona);
     Task<List<Garantia>> GetGarantiasClienteAsync(int idPersona);
+    Task<List<Garantia>> GetAllActiveGarantiasAsync();
     Task<ClienteStatsDto> GetClienteStatsAsync();
     Task<List<TipoIdentificacion>> GetTiposIdentificacionAsync();
 }
@@ -141,6 +142,20 @@ public class ClienteService : IClienteService
             .Include(g => g.IdDetalleVentaNavigation)
             .Where(g => g.IdPersona == idPersona)
             .OrderByDescending(g => g.FechaInicio)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<List<Garantia>> GetAllActiveGarantiasAsync()
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Garantias
+            .Include(g => g.IdPersonaNavigation)
+            .Include(g => g.IdProductoNavigation)
+            .Include(g => g.IdDetalleVentaNavigation)
+                .ThenInclude(d => d.IdVentaNavigation)
+            .Where(g => g.EstadoGarantia == "ACTIVA")
+            .OrderBy(g => g.FechaVencimiento)
             .AsNoTracking()
             .ToListAsync();
     }

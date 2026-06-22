@@ -13,6 +13,7 @@ public interface ICreditoService
     Task<ClienteCredito> AsignarLimiteCreditoAsync(int idPersona, decimal limite, int dias);
     Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion);
     Task<List<Credito>> GetCreditosActivosAsync(int idPersona);
+    Task<List<Credito>> GetAllActiveCreditosAsync();
     Task<List<CreditoAbono>> GetHistorialAbonosAsync(int idCredito);
 }
 
@@ -91,6 +92,19 @@ public class CreditoService : ICreditoService
         }
 
         return creditos.OrderBy(c => c.FechaVencimiento).ToList();
+    }
+
+    public async Task<List<Credito>> GetAllActiveCreditosAsync()
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        
+        return await context.Creditos
+            .Include(c => c.Persona)
+            .Include(c => c.Venta)
+            .Include(c => c.Abonos)
+            .Where(c => c.Estado == "ACTIVO")
+            .OrderBy(c => c.FechaVencimiento)
+            .ToListAsync();
     }
 
     public async Task<List<CreditoAbono>> GetHistorialAbonosAsync(int idCredito)
