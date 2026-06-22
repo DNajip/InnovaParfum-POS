@@ -488,9 +488,9 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasColumnName("FECHA_PAGO");
             entity.Property(e => e.IdMetodoPago).HasColumnName("ID_METODO_PAGO");
             entity.Property(e => e.IdVenta).HasColumnName("ID_VENTA");
-            entity.Property(e => e.MontoEnNio)
+            entity.Property(e => e.MontoEnBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("MONTO_EN_NIO");
+                .HasColumnName("MONTO_EN_Base");
             entity.Property(e => e.MontoPagado)
                 .HasColumnType("decimal(12, 2)")
                 .HasColumnName("MONTO_PAGADO");
@@ -500,10 +500,15 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.TasaAplicada)
                 .HasColumnType("decimal(18, 6)")
                 .HasColumnName("TASA_APLICADA");
-            entity.Property(e => e.VueltoNio)
+            entity.Property(e => e.VueltoBase)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("VUELTO_NIO");
+                .HasColumnName("VUELTO_Base");
+
+            entity.Property(e => e.VueltoMostrado)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(12, 2)")
+                .HasColumnName("VUELTO_MOSTRADO");
 
             entity.HasOne(d => d.IdMetodoPagoNavigation).WithMany(p => p.Pagos)
                 .HasForeignKey(d => d.IdMetodoPago)
@@ -847,9 +852,9 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasFilter("([ID_ESTADO]=(1))");
 
             entity.Property(e => e.IdTurno).HasColumnName("ID_TURNO");
-            entity.Property(e => e.DiferenciaNio)
+            entity.Property(e => e.DiferenciaBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("DIFERENCIA_NIO");
+                .HasColumnName("DIFERENCIA_Base");
             entity.Property(e => e.DiferenciaUsd)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("DIFERENCIA_USD");
@@ -865,24 +870,24 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasDefaultValue(1)
                 .HasColumnName("ID_ESTADO");
             entity.Property(e => e.IdUsuario).HasColumnName("ID_USUARIO");
-            entity.Property(e => e.MontoContadoNio)
+            entity.Property(e => e.MontoContadoBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("MONTO_CONTADO_NIO");
+                .HasColumnName("MONTO_CONTADO_Base");
             entity.Property(e => e.MontoContadoUsd)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("MONTO_CONTADO_USD");
-            entity.Property(e => e.MontoInicialNio)
+            entity.Property(e => e.MontoInicialBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("MONTO_INICIAL_NIO");
+                .HasColumnName("MONTO_INICIAL_Base");
             entity.Property(e => e.MontoInicialUsd)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("MONTO_INICIAL_USD");
             entity.Property(e => e.Observaciones)
                 .HasMaxLength(500)
                 .HasColumnName("OBSERVACIONES");
-            entity.Property(e => e.TotalEfectivoNio)
+            entity.Property(e => e.TotalEfectivoBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("TOTAL_EFECTIVO_NIO");
+                .HasColumnName("TOTAL_EFECTIVO_Base");
             entity.Property(e => e.TotalEfectivoUsd)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("TOTAL_EFECTIVO_USD");
@@ -892,9 +897,9 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.TotalTransferencia)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("TOTAL_TRANSFERENCIA");
-            entity.Property(e => e.TotalVentasNio)
+            entity.Property(e => e.TotalVentasBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("TOTAL_VENTAS_NIO");
+                .HasColumnName("TOTAL_VENTAS_Base");
             entity.Property(e => e.TotalVentasUsd)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("TOTAL_VENTAS_USD");
@@ -1016,9 +1021,9 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasMaxLength(163)
                 .IsUnicode(false)
                 .HasColumnName("CAJERO");
-            entity.Property(e => e.DiferenciaNio)
+            entity.Property(e => e.DiferenciaBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("DIFERENCIA_NIO");
+                .HasColumnName("DIFERENCIA_Base");
             entity.Property(e => e.Estado)
                 .HasMaxLength(30)
                 .IsUnicode(false)
@@ -1030,21 +1035,21 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.FechaApertura).HasColumnName("FECHA_APERTURA");
             entity.Property(e => e.FechaCierre).HasColumnName("FECHA_CIERRE");
             entity.Property(e => e.IdTurno).HasColumnName("ID_TURNO");
-            entity.Property(e => e.MontoContadoNio)
+            entity.Property(e => e.MontoContadoBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("MONTO_CONTADO_NIO");
-            entity.Property(e => e.MontoInicialNio)
+                .HasColumnName("MONTO_CONTADO_Base");
+            entity.Property(e => e.MontoInicialBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("MONTO_INICIAL_NIO");
-            entity.Property(e => e.TotalEfectivoNio)
+                .HasColumnName("MONTO_INICIAL_Base");
+            entity.Property(e => e.TotalEfectivoBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("TOTAL_EFECTIVO_NIO");
+                .HasColumnName("TOTAL_EFECTIVO_Base");
             entity.Property(e => e.TotalEfectivoUsd)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("TOTAL_EFECTIVO_USD");
-            entity.Property(e => e.TotalVentasNio)
+            entity.Property(e => e.TotalVentasBase)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("TOTAL_VENTAS_NIO");
+                .HasColumnName("TOTAL_VENTAS_Base");
         });
 
         modelBuilder.Entity<VResumenVenta>(entity =>
@@ -1063,21 +1068,21 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasMaxLength(163)
                 .IsUnicode(false)
                 .HasColumnName("CLIENTE");
-            entity.Property(e => e.DescuentoNio)
+            entity.Property(e => e.DescuentoBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("DESCUENTO_NIO");
+                .HasColumnName("DESCUENTO_Base");
             entity.Property(e => e.FechaVenta).HasColumnName("FECHA_VENTA");
             entity.Property(e => e.IdVenta).HasColumnName("ID_VENTA");
             entity.Property(e => e.NumeroFactura)
                 .HasMaxLength(10)
                 .IsUnicode(false)
                 .HasColumnName("NUMERO_FACTURA");
-            entity.Property(e => e.SubtotalNio)
+            entity.Property(e => e.SubtotalBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("SUBTOTAL_NIO");
-            entity.Property(e => e.TotalNio)
+                .HasColumnName("SUBTOTAL_Base");
+            entity.Property(e => e.TotalBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("TOTAL_NIO");
+                .HasColumnName("TOTAL_Base");
         });
 
         modelBuilder.Entity<VStockCritico>(entity =>
@@ -1135,9 +1140,9 @@ public partial class InnovaParfumDbContext : DbContext
 
             entity.Property(e => e.IdVenta).HasColumnName("ID_VENTA");
             entity.Property(e => e.Anulada).HasColumnName("ANULADA");
-            entity.Property(e => e.DescuentoNio)
+            entity.Property(e => e.DescuentoBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("DESCUENTO_NIO");
+                .HasColumnName("DESCUENTO_Base");
             entity.Property(e => e.FechaAnulacion).HasColumnName("FECHA_ANULACION");
             entity.Property(e => e.FechaVenta)
                 .HasDefaultValueSql("(sysdatetime())")
@@ -1159,15 +1164,15 @@ public partial class InnovaParfumDbContext : DbContext
                 .HasMaxLength(300)
                 .IsUnicode(false)
                 .HasColumnName("OBSERVACION");
-            entity.Property(e => e.SubtotalNio)
+            entity.Property(e => e.SubtotalBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("SUBTOTAL_NIO");
+                .HasColumnName("SUBTOTAL_Base");
             entity.Property(e => e.TasaCambioUsd)
                 .HasColumnType("decimal(18, 6)")
                 .HasColumnName("TASA_CAMBIO_USD");
-            entity.Property(e => e.TotalNio)
+            entity.Property(e => e.TotalBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("TOTAL_NIO");
+                .HasColumnName("TOTAL_Base");
             entity.Property(e => e.IdTipoVenta).HasColumnName("ID_TIPO_VENTA");
             entity.Property(e => e.IdCondicionPago).HasColumnName("ID_CONDICION_PAGO");
 
@@ -1213,19 +1218,19 @@ public partial class InnovaParfumDbContext : DbContext
             entity.Property(e => e.DescripcionSnap)
                 .HasMaxLength(200)
                 .HasColumnName("DESCRIPCION_SNAP");
-            entity.Property(e => e.DescuentoLineaNio)
+            entity.Property(e => e.DescuentoLineaBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("DESCUENTO_LINEA_NIO");
+                .HasColumnName("DESCUENTO_LINEA_Base");
             entity.Property(e => e.FechaVenceGarantia).HasColumnName("FECHA_VENCE_GARANTIA");
             entity.Property(e => e.IdPeriodoGarantia).HasColumnName("ID_PERIODO_GARANTIA");
             entity.Property(e => e.IdProducto).HasColumnName("ID_PRODUCTO");
             entity.Property(e => e.IdVenta).HasColumnName("ID_VENTA");
-            entity.Property(e => e.PrecioUnitarioNio)
+            entity.Property(e => e.PrecioUnitarioBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("PRECIO_UNITARIO_NIO");
-            entity.Property(e => e.SubtotalNio)
+                .HasColumnName("PRECIO_UNITARIO_Base");
+            entity.Property(e => e.SubtotalBase)
                 .HasColumnType("decimal(12, 2)")
-                .HasColumnName("SUBTOTAL_NIO");
+                .HasColumnName("SUBTOTAL_Base");
 
             entity.HasOne(d => d.IdPeriodoGarantiaNavigation).WithMany(p => p.VentaDetalles)
                 .HasForeignKey(d => d.IdPeriodoGarantia)

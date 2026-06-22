@@ -13,15 +13,15 @@ public partial class Turno
 
     public DateTime? FechaCierre { get; set; }
 
-    public decimal MontoInicialNio { get; set; }
+    public decimal MontoInicialBase { get; set; }
 
     public decimal MontoInicialUsd { get; set; }
 
-    public decimal TotalVentasNio { get; set; }
+    public decimal TotalVentasBase { get; set; }
 
     public decimal TotalVentasUsd { get; set; }
 
-    public decimal TotalEfectivoNio { get; set; }
+    public decimal TotalEfectivoBase { get; set; }
 
     public decimal TotalEfectivoUsd { get; set; }
 
@@ -29,11 +29,11 @@ public partial class Turno
 
     public decimal TotalTransferencia { get; set; }
 
-    public decimal? MontoContadoNio { get; set; }
+    public decimal? MontoContadoBase { get; set; }
 
     public decimal? MontoContadoUsd { get; set; }
 
-    public decimal? DiferenciaNio { get; set; }
+    public decimal? DiferenciaBase { get; set; }
 
     public decimal? DiferenciaUsd { get; set; }
 

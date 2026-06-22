@@ -131,7 +131,7 @@
                                 }
                                 else
                                 {
-                                    @AppState.CurrencySymbol @v.TotalNio.ToString("N2")
+                                    @AppState.CurrencySymbol @v.TotalBase.ToString("N2")
                                 }
                             </td>
                             <td class="text-end">
@@ -262,11 +262,11 @@
                             <tbody>
                                 @{
                                     var groupedDetails = selectedVenta.VentaDetalles
-                                        .GroupBy(d => new { d.DescripcionSnap, d.PrecioUnitarioNio })
+                                        .GroupBy(d => new { d.DescripcionSnap, d.PrecioUnitarioBase })
                                         .Select(g => new {
                                             Cantidad = g.Sum(x => x.Cantidad),
                                             Descripcion = g.Key.DescripcionSnap,
-                                            Total = g.Sum(x => x.SubtotalNio)
+                                            Total = g.Sum(x => x.SubtotalBase)
                                         });
 
                                     foreach (var d in groupedDetails)
@@ -285,18 +285,18 @@
 
                         <div class="d-flex justify-content-between fw-bold mb-1">
                             <span>Subtotal:</span>
-                            <span>@AppState.CurrencySymbol @selectedVenta.SubtotalNio.ToString("N2")</span>
+                            <span>@AppState.CurrencySymbol @selectedVenta.SubtotalBase.ToString("N2")</span>
                         </div>
-                        @if (selectedVenta.DescuentoNio > 0)
+                        @if (selectedVenta.DescuentoBase > 0)
                         {
                             <div class="d-flex justify-content-between mb-1">
                                 <span>Descuento:</span>
-                                <span>-@AppState.CurrencySymbol @selectedVenta.DescuentoNio.ToString("N2")</span>
+                                <span>-@AppState.CurrencySymbol @selectedVenta.DescuentoBase.ToString("N2")</span>
                             </div>
                         }
                         <div class="d-flex justify-content-between fw-bold fs-6">
                             <span>TOTAL:</span>
-                            <span>@AppState.CurrencySymbol @selectedVenta.TotalNio.ToString("N2")</span>
+                            <span>@AppState.CurrencySymbol @selectedVenta.TotalBase.ToString("N2")</span>
                         </div>
 
                         @if (selectedVenta.Pagos != null && selectedVenta.Pagos.Any())
@@ -314,13 +314,11 @@
                         }
 
                         @{
-                            var totalVueltoNio = selectedVenta.Pagos?.Sum(p => p.VueltoNio ?? 0) ?? 0;
-                            if (totalVueltoNio > 0 && selectedVenta.MonedaVuelto != null)
+                            var totalVueltoMostrado = selectedVenta.Pagos?.Sum(p => p.VueltoMostrado) ?? 0;
+                            if (totalVueltoMostrado > 0 && selectedVenta.MonedaVuelto != null)
                             {
                                 var vueltoText = selectedVenta.MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$";
-                                var vueltoAmount = selectedVenta.MonedaVuelto == "USD" ? 
-                                    $"$ {(AppState.CurrencyCode == "USD" ? totalVueltoNio : totalVueltoNio / (selectedVenta.TasaCambioUsd > 0 ? selectedVenta.TasaCambioUsd : 1)).ToString("N2")}" : 
-                                    $"C$ {(AppState.CurrencyCode == "NIO" ? totalVueltoNio : totalVueltoNio * selectedVenta.TasaCambioUsd).ToString("N2")}";
+                                var vueltoAmount = selectedVenta.MonedaVuelto == "USD" ? $"$ {totalVueltoMostrado.ToString("N2")}" : $"C$ {totalVueltoMostrado.ToString("N2")}";
 
                                 <div class="mt-2 pt-2" style="border-top: 1px dashed #000;">
                                     <div class="d-flex justify-content-between fw-bold">
@@ -399,7 +397,7 @@
                                                 </td>
                                                 <td>@det.DescripcionSnap</td>
                                                 <td>@det.Cantidad</td>
-                                                <td>@AppState.CurrencySymbol @det.SubtotalNio.ToString("N2")</td>
+                                                <td>@AppState.CurrencySymbol @det.SubtotalBase.ToString("N2")</td>
                                                 <td>
                                                     @if(det.Devuelto) { <span class="badge bg-secondary">Ya devuelto</span> }
                                                 </td>
@@ -619,14 +617,11 @@
     {
         if (selectedVenta == null) return;
 
-            var totalVueltoNio = selectedVenta.Pagos?.Sum(p => p.VueltoNio ?? 0) ?? 0;
-            var hayVuelto = totalVueltoNio > 0;
+            var totalVueltoMostrado = selectedVenta.Pagos?.Sum(p => p.VueltoMostrado) ?? 0;
+            var hayVuelto = totalVueltoMostrado > 0;
             var vueltoText = hayVuelto ? (selectedVenta.MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$") : "";
             var vueltoAmount = hayVuelto ? 
-                (selectedVenta.MonedaVuelto == "USD" ? 
-                    $"$ {(AppState.CurrencyCode == "USD" ? totalVueltoNio : totalVueltoNio / (selectedVenta.TasaCambioUsd > 0 ? selectedVenta.TasaCambioUsd : 1)).ToString("N2")}" : 
-                    $"C$ {(AppState.CurrencyCode == "NIO" ? totalVueltoNio : totalVueltoNio * selectedVenta.TasaCambioUsd).ToString("N2")}"
-                ) : "";
+                (selectedVenta.MonedaVuelto == "USD" ? $"$ {totalVueltoMostrado.ToString("N2")}" : $"C$ {totalVueltoMostrado.ToString("N2")}") : "";
 
             var invoiceData = new
             {
@@ -644,9 +639,9 @@
                 condicionPago = selectedVenta.IdCondicionPagoNavigation?.Descripcion ?? "CONTADO",
                 cliente = selectedVenta.IdPersonaNavigation?.NombreCompleto ?? "Cliente General",
                 vendedor = selectedVenta.IdUsuarioNavigation?.Username ?? "N/A",
-                subtotal = selectedVenta.SubtotalNio,
-                descuento = selectedVenta.DescuentoNio,
-                total = selectedVenta.TotalNio,
+                subtotal = selectedVenta.SubtotalBase,
+                descuento = selectedVenta.DescuentoBase,
+                total = selectedVenta.TotalBase,
                 vueltoText = vueltoText,
                 vueltoAmount = vueltoAmount,
                 metodosPago = selectedVenta.Pagos.Select(p => new {
@@ -655,11 +650,11 @@
                 simbolo = (p.IdMetodoPagoNavigation?.Nombre ?? "").Contains("USD") ? "$" : "C$" // Simplificación, mejor sería leer la moneda
             }).ToList(),
             detalles = selectedVenta.VentaDetalles
-                .GroupBy(d => new { d.DescripcionSnap, d.PrecioUnitarioNio })
+                .GroupBy(d => new { d.DescripcionSnap, d.PrecioUnitarioBase })
                 .Select(g => new {
                     cantidad = g.Sum(x => x.Cantidad),
                     descripcion = g.Key.DescripcionSnap,
-                    total = g.Sum(x => x.SubtotalNio)
+                    total = g.Sum(x => x.SubtotalBase)
                 }).ToList()
         };
 
@@ -675,4 +670,5 @@
         }
     }
 }
+
 

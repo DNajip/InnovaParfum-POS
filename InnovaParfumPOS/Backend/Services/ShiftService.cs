@@ -6,8 +6,8 @@ namespace InnovaParfumPOS.Backend.Services;
 public interface IShiftService
 {
     Task<Turno?> GetActiveShiftAsync(int userId);
-    Task<Turno> OpenShiftAsync(int userId, decimal initialNio, decimal initialUsd, List<ConteoDenominacione> counts);
-    Task<Turno> CloseShiftAsync(int turnoId, decimal finalNio, decimal finalUsd, List<ConteoDenominacione> counts, string? observations);
+    Task<Turno> OpenShiftAsync(int userId, decimal initialBase, decimal initialUsd, List<ConteoDenominacione> counts);
+    Task<Turno> CloseShiftAsync(int turnoId, decimal finalBase, decimal finalUsd, List<ConteoDenominacione> counts, string? observations);
     Task<List<Denominacione>> GetDenominationsAsync();
     Task<MovimientoVario> AddCashEntryAsync(int turnoId, int userId, int monedaId, decimal monto, string concepto);
     Task<decimal> GetTotalCashEntriesAsync(int turnoId, int monedaId);
@@ -34,14 +34,14 @@ public class ShiftService : IShiftService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Turno> OpenShiftAsync(int userId, decimal initialNio, decimal initialUsd, List<ConteoDenominacione> counts)
+    public async Task<Turno> OpenShiftAsync(int userId, decimal initialBase, decimal initialUsd, List<ConteoDenominacione> counts)
     {
         using var context = await _factory.CreateDbContextAsync();
         var countsJson = System.Text.Json.JsonSerializer.Serialize(counts);
 
         var result = await context.Turnos
-            .FromSqlRaw("EXEC CAJA.sp_GestionarTurno @Accion='ABRIR', @IdUsuario={0}, @MontoInicialNio={1}, @MontoInicialUsd={2}, @ConteosJson={3}",
-                userId, initialNio, initialUsd, countsJson)
+            .FromSqlRaw("EXEC CAJA.sp_GestionarTurno @Accion='ABRIR', @IdUsuario={0}, @MontoInicialBase={1}, @MontoInicialUsd={2}, @ConteosJson={3}",
+                userId, initialBase, initialUsd, countsJson)
             .AsNoTracking()
             .ToListAsync();
 
@@ -61,14 +61,14 @@ public class ShiftService : IShiftService
             .ToListAsync();
     }
 
-    public async Task<Turno> CloseShiftAsync(int turnoId, decimal finalNio, decimal finalUsd, List<ConteoDenominacione> counts, string? observations)
+    public async Task<Turno> CloseShiftAsync(int turnoId, decimal finalBase, decimal finalUsd, List<ConteoDenominacione> counts, string? observations)
     {
         using var context = await _factory.CreateDbContextAsync();
         var countsJson = System.Text.Json.JsonSerializer.Serialize(counts);
 
         var result = await context.Turnos
-            .FromSqlRaw("EXEC CAJA.sp_GestionarTurno @Accion='CERRAR', @IdUsuario=0, @IdTurno={0}, @MontoFinalNio={1}, @MontoFinalUsd={2}, @Observaciones={3}, @ConteosJson={4}",
-                turnoId, finalNio, finalUsd, observations ?? (object)DBNull.Value, countsJson)
+            .FromSqlRaw("EXEC CAJA.sp_GestionarTurno @Accion='CERRAR', @IdUsuario=0, @IdTurno={0}, @MontoFinalBase={1}, @MontoFinalUsd={2}, @Observaciones={3}, @ConteosJson={4}",
+                turnoId, finalBase, finalUsd, observations ?? (object)DBNull.Value, countsJson)
             .AsNoTracking()
             .ToListAsync();
 
@@ -115,4 +115,5 @@ public class ShiftService : IShiftService
             .FirstOrDefaultAsync();
     }
 }
+
 

@@ -15,11 +15,11 @@ public partial class VentaDetalle
 
     public int Cantidad { get; set; }
 
-    public decimal PrecioUnitarioNio { get; set; }
+    public decimal PrecioUnitarioBase { get; set; }
 
-    public decimal DescuentoLineaNio { get; set; }
+    public decimal DescuentoLineaBase { get; set; }
 
-    public decimal SubtotalNio { get; set; }
+    public decimal SubtotalBase { get; set; }
 
     public int? IdPeriodoGarantia { get; set; }
 

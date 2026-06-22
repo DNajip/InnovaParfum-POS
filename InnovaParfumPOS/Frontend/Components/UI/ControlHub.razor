@@ -210,18 +210,18 @@
                 cajero = UserSession.Username,
                 fechaApertura = lastShift.FechaApertura,
                 fechaCierre = lastShift.FechaCierre ?? DateTime.Now,
-                totalVentasNio = lastShift.TotalVentasNio,
-                totalEfectivoNio = lastShift.TotalEfectivoNio,
+                totalVentasBase = lastShift.TotalVentasBase,
+                totalEfectivoBase = lastShift.TotalEfectivoBase,
                 totalEfectivoUsd = lastShift.TotalEfectivoUsd,
                 totalTarjeta = lastShift.TotalTarjeta,
                 totalTransferencia = lastShift.TotalTransferencia,
-                montoInicialNio = lastShift.MontoInicialNio,
+                montoInicialBase = lastShift.MontoInicialBase,
                 montoInicialUsd = lastShift.MontoInicialUsd,
-                montoContadoNio = lastShift.MontoContadoNio,
+                montoContadoBase = lastShift.MontoContadoBase,
                 montoContadoUsd = lastShift.MontoContadoUsd,
-                montoManualNio = await ShiftService.GetTotalCashEntriesAsync(lastShift.IdTurno, 1),
+                montoManualBase = await ShiftService.GetTotalCashEntriesAsync(lastShift.IdTurno, 1),
                 montoManualUsd = await ShiftService.GetTotalCashEntriesAsync(lastShift.IdTurno, 2),
-                diferenciaNio = lastShift.DiferenciaNio,
+                diferenciaBase = lastShift.DiferenciaBase,
                 diferenciaUsd = lastShift.DiferenciaUsd,
                 observaciones = lastShift.Observaciones
             };
@@ -258,4 +258,5 @@
 
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 }
+
 

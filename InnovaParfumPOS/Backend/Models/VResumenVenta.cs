@@ -15,11 +15,11 @@ public partial class VResumenVenta
 
     public string? Cajero { get; set; }
 
-    public decimal SubtotalNio { get; set; }
+    public decimal SubtotalBase { get; set; }
 
-    public decimal DescuentoNio { get; set; }
+    public decimal DescuentoBase { get; set; }
 
-    public decimal TotalNio { get; set; }
+    public decimal TotalBase { get; set; }
 
     public bool Anulada { get; set; }
 

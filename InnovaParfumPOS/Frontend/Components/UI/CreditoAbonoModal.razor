@@ -103,11 +103,11 @@
                                 </div>
                             </div>
                             
-                            var equivNio = montoRecibidoUsd * AppState.ExchangeRateSell;
-                            if (equivNio > montoAbono)
+                            var equivBase = montoRecibidoUsd * AppState.ExchangeRateSell;
+                            if (equivBase > montoAbono)
                             {
                                 <div class="mt-2 text-end text-warning small">
-                                    Vuelto a entregar: @AppState.CurrencySymbol @((equivNio - montoAbono).ToString("N2"))
+                                    Vuelto a entregar: @AppState.CurrencySymbol @((equivBase - montoAbono).ToString("N2"))
                                 </div>
                             }
                         }
@@ -116,13 +116,13 @@
                             <div class="row g-2 align-items-end mt-2">
                                 <div class="col-md-6 offset-md-6">
                                     <label class="small text-muted mb-1">Monto Recibido (NIO)</label>
-                                    <input type="number" class="form-control bg-dark text-white border-secondary" @bind="montoRecibidoNio" @bind:event="oninput" min="0" step="10" />
+                                    <input type="number" class="form-control bg-dark text-white border-secondary" @bind="montoRecibidoBase" @bind:event="oninput" min="0" step="10" />
                                 </div>
                             </div>
-                            if (montoRecibidoNio > montoAbono)
+                            if (montoRecibidoBase > montoAbono)
                             {
                                 <div class="mt-2 text-end text-warning small">
-                                    Vuelto a entregar: @AppState.CurrencySymbol @((montoRecibidoNio - montoAbono).ToString("N2"))
+                                    Vuelto a entregar: @AppState.CurrencySymbol @((montoRecibidoBase - montoAbono).ToString("N2"))
                                 </div>
                             }
                         }
@@ -162,7 +162,7 @@
     private bool isProcessing = false;
     
     private decimal montoRecibidoUsd;
-    private decimal montoRecibidoNio;
+    private decimal montoRecibidoBase;
     private bool isUsdMethod => metodosPago?.FirstOrDefault(m => m.IdMetodo == idMetodoPago)?.IdMoneda == 2;
 
     private int IdMetodoPago 
@@ -172,7 +172,7 @@
         {
             idMetodoPago = value;
             montoRecibidoUsd = 0;
-            montoRecibidoNio = montoAbono; // Default para NIO
+            montoRecibidoBase = montoAbono; // Default para NIO
             if (isUsdMethod && AppState.ExchangeRateSell > 0)
             {
                 montoRecibidoUsd = montoAbono / AppState.ExchangeRateSell;
@@ -206,22 +206,22 @@
         }
 
             var metodoSelec = metodosPago?.FirstOrDefault(m => m.IdMetodo == idMetodoPago);
-            decimal montoRecibidoMoneda = isUsdMethod ? montoRecibidoUsd : montoRecibidoNio;
-            decimal equivalenteNio = isUsdMethod ? (montoRecibidoUsd * AppState.ExchangeRateSell) : montoRecibidoNio;
+            decimal montoRecibidoMoneda = isUsdMethod ? montoRecibidoUsd : montoRecibidoBase;
+            decimal equivalenteBase = isUsdMethod ? (montoRecibidoUsd * AppState.ExchangeRateSell) : montoRecibidoBase;
             
-            if (equivalenteNio < montoAbono)
+            if (equivalenteBase < montoAbono)
             {
                 ToastService.ShowWarning("El monto recibido no puede ser menor al monto a abonar.");
                 return;
             }
 
-            decimal vueltoNio = equivalenteNio - montoAbono;
+            decimal vueltoBase = equivalenteBase - montoAbono;
 
             isProcessing = true;
             try
             {
                 // OJO: IdUsuario = 1 (temporal, hasta integrar AuthState)
-                var abono = await CreditoService.RegistrarAbonoAsync(Credito.IdCredito, 1, idMetodoPago, montoAbono, montoRecibidoMoneda, isUsdMethod ? AppState.ExchangeRateSell : 1m, vueltoNio, "Abono");
+                var abono = await CreditoService.RegistrarAbonoAsync(Credito.IdCredito, 1, idMetodoPago, montoAbono, montoRecibidoMoneda, isUsdMethod ? AppState.ExchangeRateSell : 1m, vueltoBase, "Abono");
                 
                 ToastService.ShowSuccess("Abono registrado correctamente");
                 
@@ -264,3 +264,4 @@
         }
     }
 }
+

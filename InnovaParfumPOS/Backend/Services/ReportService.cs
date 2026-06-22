@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -58,26 +58,26 @@ public class ReportService : IReportService
 
         var stats = new DashboardStatsDTO
         {
-            VentasBrutas = currentVentas.Sum(v => v.TotalNio),
+            VentasBrutas = currentVentas.Sum(v => v.TotalBase),
             TotalFacturas = currentVentas.Count,
             ProductosVendidos = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => d.Cantidad),
-            TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => v.TotalNio) : 0,
+            TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => v.TotalBase) : 0,
             UtilidadNeta = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => 
-                d.SubtotalNio - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad)),
+                d.SubtotalBase - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad)),
             ClientesNuevos = await _context.Personas.CountAsync(p => p.FechaCreacion >= start && p.FechaCreacion <= end && p.EsCliente),
             Anulaciones = await _context.Ventas.CountAsync(v => v.FechaVenta >= start && v.FechaVenta <= end && v.Anulada)
         };
 
         // Calcular porcentajes
-        decimal prevVentasTotal = prevVentas.Sum(v => v.TotalNio);
+        decimal prevVentasTotal = prevVentas.Sum(v => v.TotalBase);
         stats.PorcentajeVentas = CalcularVariacion(stats.VentasBrutas, prevVentasTotal);
         stats.PorcentajeFacturas = CalcularVariacion(stats.TotalFacturas, prevVentas.Count);
         
         decimal prevUtilidad = prevVentas.SelectMany(v => v.VentaDetalles).Sum(d => 
-            d.SubtotalNio - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad));
+            d.SubtotalBase - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad));
         stats.PorcentajeUtilidad = CalcularVariacion(stats.UtilidadNeta, prevUtilidad);
         
-        decimal prevTicket = prevVentas.Any() ? prevVentas.Average(v => v.TotalNio) : 0;
+        decimal prevTicket = prevVentas.Any() ? prevVentas.Average(v => v.TotalBase) : 0;
         stats.PorcentajeTicket = CalcularVariacion(stats.TicketPromedio, prevTicket);
 
         var prevClientes = await _context.Personas.CountAsync(p => p.FechaCreacion >= prevStart && p.FechaCreacion <= prevEnd && p.EsCliente);
@@ -98,8 +98,8 @@ public class ReportService : IReportService
             .Select(g => new TrendPointDTO
             {
                 Label = g.Key.ToString("dd MMM"),
-                ValorNio = g.Sum(v => v.TotalNio),
-                ValorUsd = g.Sum(v => v.TotalNio / 36.5m) // Asumiendo tasa fija por ahora para el grÃ¡fico
+                ValorBase = g.Sum(v => v.TotalBase),
+                ValorUsd = g.Sum(v => v.TotalBase / 36.5m) // Asumiendo tasa fija por ahora para el gráfico
             })
             .ToList();
     }
@@ -113,14 +113,14 @@ public class ReportService : IReportService
             .Where(p => p.FechaPago >= start && p.FechaPago <= end && !p.IdVentaNavigation.Anulada)
             .ToListAsync();
 
-        decimal total = pagos.Sum(p => p.MontoEnNio);
+        decimal total = pagos.Sum(p => p.MontoEnBase);
 
         return pagos.GroupBy(p => p.IdMetodoPagoNavigation.Nombre)
             .Select(g => new PaymentMethodStatDTO
             {
                 Metodo = g.Key,
-                Total = g.Sum(p => p.MontoEnNio - (p.VueltoNio ?? 0)),
-                Porcentaje = (double)(g.Sum(p => p.MontoEnNio - (p.VueltoNio ?? 0)) / (total > 0 ? total : 1) * 100)
+                Total = g.Sum(p => p.MontoEnBase - (p.VueltoBase ?? 0)),
+                Porcentaje = (double)(g.Sum(p => p.MontoEnBase - (p.VueltoBase ?? 0)) / (total > 0 ? total : 1) * 100)
             })
             .ToList();
     }
@@ -136,7 +136,7 @@ public class ReportService : IReportService
             {
                 Nombre = g.Key,
                 Unidades = g.Sum(d => d.Cantidad),
-                TotalVentas = g.Sum(d => d.SubtotalNio)
+                TotalVentas = g.Sum(d => d.SubtotalBase)
             })
             .OrderByDescending(x => x.TotalVentas)
             .Take(count)
@@ -154,11 +154,11 @@ public class ReportService : IReportService
             .Select(g => new ResumenDiarioDTO
             {
                 Fecha = g.Key,
-                VentasBrutas = g.Sum(v => v.TotalNio),
-                Devoluciones = 0, // Por implementar lÃ³gica de devoluciones real si existe
-                VentasNetas = g.Sum(v => v.TotalNio),
+                VentasBrutas = g.Sum(v => v.TotalBase),
+                Devoluciones = 0, // Por implementar lógica de devoluciones real si existe
+                VentasNetas = g.Sum(v => v.TotalBase),
                 Facturas = g.Count(),
-                TicketPromedio = g.Average(v => v.TotalNio)
+                TicketPromedio = g.Average(v => v.TotalBase)
             })
             .OrderByDescending(x => x.Fecha)
             .ToList();
@@ -176,7 +176,7 @@ public class ReportService : IReportService
         {
             for (int h = 7; h <= 21; h++)
             {
-                var total = ventas.Where(v => (int)v.FechaVenta.DayOfWeek == d && v.FechaVenta.Hour == h).Sum(v => v.TotalNio);
+                var total = ventas.Where(v => (int)v.FechaVenta.DayOfWeek == d && v.FechaVenta.Hour == h).Sum(v => v.TotalBase);
                 result.Add(new HourlySalesDTO
                 {
                     DayOfWeek = d,
@@ -187,7 +187,7 @@ public class ReportService : IReportService
             }
         }
 
-        // Calcular intensidad relativa al mÃ¡ximo del dataset
+        // Calcular intensidad relativa al máximo del dataset
         var maxTotal = result.Any() ? result.Max(r => r.Total) : 0;
         if (maxTotal > 0)
         {
@@ -195,7 +195,7 @@ public class ReportService : IReportService
             {
                 if (item.Total > 0)
                 {
-                    // Escala de 1-10 proporcional al mÃ¡ximo
+                    // Escala de 1-10 proporcional al máximo
                     item.Intensity = Math.Max(1, (int)Math.Ceiling((double)(item.Total / maxTotal * 10)));
                 }
             }
@@ -213,7 +213,7 @@ public class ReportService : IReportService
             {
                 IdProducto = p.IdProducto,
                 Nombre = p.Nombre,
-                Categoria = p.IdCategoriaNavigation != null ? p.IdCategoriaNavigation.Nombre : "Sin categorÃ­a",
+                Categoria = p.IdCategoriaNavigation != null ? p.IdCategoriaNavigation.Nombre : "Sin categoría",
                 Marca = p.Marca ?? "",
                 OrigenTipo = p.IdOrigenNavigation!.Nombre ?? "",
                 Concentracion = p.IdConcentracionNavigation!.Nombre ?? "",
@@ -271,7 +271,7 @@ public class ReportService : IReportService
             {
                 Nombre = g.Key ?? "Cliente General",
                 TotalCompras = g.Count(),
-                MontoTotal = g.Sum(v => v.TotalNio)
+                MontoTotal = g.Sum(v => v.TotalBase)
             })
             .OrderByDescending(x => x.MontoTotal)
             .Take(10)
@@ -289,8 +289,8 @@ public class ReportService : IReportService
             {
                 Username = g.Key ?? "N/A",
                 FacturasGeneradas = g.Count(),
-                TotalVentas = g.Sum(v => v.TotalNio),
-                DescuentosAplicados = g.Sum(v => v.DescuentoNio)
+                TotalVentas = g.Sum(v => v.TotalBase),
+                DescuentosAplicados = g.Sum(v => v.DescuentoBase)
             })
             .OrderByDescending(x => x.TotalVentas)
             .ToListAsync();
@@ -327,7 +327,7 @@ public class ReportService : IReportService
                 .Select(g => new PaymentMethodStatDTO
                 {
                     Metodo = g.Key,
-                    Total = g.Sum(p => p.MontoEnNio - (p.VueltoNio ?? 0))
+                    Total = g.Sum(p => p.MontoEnBase - (p.VueltoBase ?? 0))
                 }).ToList();
 
             return new ArqueoInsightDTO
@@ -336,12 +336,12 @@ public class ReportService : IReportService
                 Usuario = t.IdUsuarioNavigation?.Username ?? "Sistema",
                 Apertura = t.FechaApertura,
                 Cierre = t.FechaCierre,
-                MontoInicial = t.MontoInicialNio,
-                VentasEfectivo = t.TotalEfectivoNio,
+                MontoInicial = t.MontoInicialBase,
+                VentasEfectivo = t.TotalEfectivoBase,
                 VentasTransferencia = t.TotalTransferencia,
                 VentasTarjeta = t.TotalTarjeta,
-                SaldoTeorico = t.MontoInicialNio + t.TotalEfectivoNio + ingresosVarios - salidasVarias,
-                SaldoReal = t.MontoContadoNio ?? 0,
+                SaldoTeorico = t.MontoInicialBase + t.TotalEfectivoBase + ingresosVarios - salidasVarias,
+                SaldoReal = t.MontoContadoBase ?? 0,
                 DesglosePagos = desglose
             };
         }).ToList();
@@ -364,7 +364,7 @@ public class ReportService : IReportService
 
         foreach (var v in ventas)
         {
-            var pagoPrincipal = v.Pagos.OrderByDescending(p => p.MontoEnNio).FirstOrDefault();
+            var pagoPrincipal = v.Pagos.OrderByDescending(p => p.MontoEnBase).FirstOrDefault();
             var metodoPago = pagoPrincipal?.IdMetodoPagoNavigation?.Nombre ?? "N/A";
             if (v.Pagos.Count > 1)
             {
@@ -372,7 +372,7 @@ public class ReportService : IReportService
                 metodoPago = string.Join(", ", metodos);
             }
 
-            var totalVuelto = v.Pagos.Sum(p => p.VueltoNio ?? 0);
+            var totalVuelto = v.Pagos.Sum(p => p.VueltoBase ?? 0);
 
             result.Add(new MovimientoTurnoDTO
             {
@@ -380,7 +380,7 @@ public class ReportService : IReportService
                 Referencia = v.NumeroFactura ?? $"FAC-{v.IdVenta}",
                 Fecha = v.FechaVenta,
                 Cliente = v.IdPersonaNavigation?.NombreCompleto ?? "Cliente de Contado",
-                Monto = v.TotalNio,
+                Monto = v.TotalBase,
                 Vuelto = totalVuelto,
                 MetodoPago = metodoPago,
                 Estado = v.Anulada ? "ANULADA" : "EFECTUADA"
@@ -441,11 +441,11 @@ public class ReportService : IReportService
             .Include(d => d.IdProductoNavigation)
                 .ThenInclude(p => p.IdCategoriaNavigation)
             .Where(d => d.IdVentaNavigation.FechaVenta >= start && d.IdVentaNavigation.FechaVenta <= end && !d.IdVentaNavigation.Anulada)
-            .GroupBy(d => d.IdProductoNavigation.IdCategoriaNavigation != null ? d.IdProductoNavigation.IdCategoriaNavigation.Nombre : "Sin categorÃ­a")
+            .GroupBy(d => d.IdProductoNavigation.IdCategoriaNavigation != null ? d.IdProductoNavigation.IdCategoriaNavigation.Nombre : "Sin categoría")
             .Select(g => new CategoryStatDTO
             {
                 Categoria = g.Key ?? "Otros",
-                Total = g.Sum(d => d.SubtotalNio)
+                Total = g.Sum(d => d.SubtotalBase)
             })
             .OrderByDescending(x => x.Total)
             .ToListAsync();
@@ -459,8 +459,8 @@ public class ReportService : IReportService
         if (stockCritico > 0)
         {
             alerts.Add(new SystemAlertDTO {
-                Titulo = "Stock CrÃ­tico Detectado",
-                Mensaje = $"Hay {stockCritico} productos por debajo del mÃ­nimo.",
+                Titulo = "Stock Crítico Detectado",
+                Mensaje = $"Hay {stockCritico} productos por debajo del mínimo.",
                 Tipo = "danger",
                 Fecha = DateTime.Now
             });
@@ -492,6 +492,7 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 }
+
 
 
 

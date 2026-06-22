@@ -26,7 +26,7 @@ public class DashboardStatsDTO
 public class TrendPointDTO
 {
     public string Label { get; set; } = string.Empty;
-    public decimal ValorNio { get; set; }
+    public decimal ValorBase { get; set; }
     public decimal ValorUsd { get; set; }
 }
 
@@ -156,7 +156,7 @@ public class VentaTurnoDTO
     public string NumeroFactura { get; set; } = "";
     public DateTime FechaVenta { get; set; }
     public string Cliente { get; set; } = "";
-    public decimal TotalNio { get; set; }
+    public decimal TotalBase { get; set; }
     public string MetodoPago { get; set; } = "";
     public bool Anulada { get; set; }
 }

@@ -65,9 +65,9 @@ public class DailyReportPdfService
         var ventasActivas = ventasDia.Where(v => !v.Anulada).ToList();
         var ventasAnuladas = ventasDia.Where(v => v.Anulada).ToList();
 
-        decimal ventasBrutas = ventasActivas.Sum(v => v.TotalNio + v.DescuentoNio); // Venta antes de descuento
-        decimal descuentos = ventasActivas.Sum(v => v.DescuentoNio);
-        decimal ventasNetas = ventasActivas.Sum(v => v.TotalNio); // Neto con descuento aplicado
+        decimal ventasBrutas = ventasActivas.Sum(v => v.TotalBase + v.DescuentoBase); // Venta antes de descuento
+        decimal descuentos = ventasActivas.Sum(v => v.DescuentoBase);
+        decimal ventasNetas = ventasActivas.Sum(v => v.TotalBase); // Neto con descuento aplicado
 
         var desglosePagos = ventasActivas
             .SelectMany(v => v.Pagos)
@@ -75,7 +75,7 @@ public class DailyReportPdfService
             .Select(g => new
             {
                 Metodo = g.Key,
-                Total = g.Sum(p => p.MontoEnNio - (p.VueltoNio ?? 0))
+                Total = g.Sum(p => p.MontoEnBase - (p.VueltoBase ?? 0))
             })
             .ToList();
 
@@ -185,16 +185,16 @@ public class DailyReportPdfService
                     var bg = rowIdx % 2 == 0 ? ColorConstants.WHITE : lightGray;
                     decimal ingresosVarios = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO").Sum(m => m.Monto);
                     decimal egresosVarios = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO").Sum(m => m.Monto);
-                    decimal saldoTeorico = t.MontoInicialNio + t.TotalEfectivoNio + ingresosVarios - egresosVarios;
-                    decimal saldoReal = t.MontoContadoNio ?? 0;
+                    decimal saldoTeorico = t.MontoInicialBase + t.TotalEfectivoBase + ingresosVarios - egresosVarios;
+                    decimal saldoReal = t.MontoContadoBase ?? 0;
                     decimal diferencia = saldoReal - saldoTeorico;
 
                     turnosTable.AddCell(new Cell().Add(new Paragraph($"#{t.IdTurno}").SetFontSize(8.5f).SetFont(boldFont)).SetBackgroundColor(bg).SetPadding(4));
                     turnosTable.AddCell(new Cell().Add(new Paragraph(t.IdUsuarioNavigation?.Username ?? "N/A").SetFontSize(8.5f)).SetBackgroundColor(bg).SetPadding(4));
                     turnosTable.AddCell(new Cell().Add(new Paragraph(t.FechaApertura.ToString("dd/MM HH:mm")).SetFontSize(8f)).SetBackgroundColor(bg).SetPadding(4));
                     turnosTable.AddCell(new Cell().Add(new Paragraph(t.FechaCierre?.ToString("dd/MM HH:mm") ?? "EN CURSO").SetFontSize(8f).SetFont(t.FechaCierre == null ? boldFont : regularFont).SetFontColor(t.FechaCierre == null ? secondaryColor : textDark)).SetBackgroundColor(bg).SetPadding(4));
-                    turnosTable.AddCell(new Cell().Add(new Paragraph($"C$ {t.MontoInicialNio:N2}").SetFontSize(8.5f)).SetBackgroundColor(bg).SetPadding(4).SetTextAlignment(TextAlignment.RIGHT));
-                    turnosTable.AddCell(new Cell().Add(new Paragraph($"C$ {t.TotalEfectivoNio:N2}").SetFontSize(8.5f)).SetBackgroundColor(bg).SetPadding(4).SetTextAlignment(TextAlignment.RIGHT));
+                    turnosTable.AddCell(new Cell().Add(new Paragraph($"C$ {t.MontoInicialBase:N2}").SetFontSize(8.5f)).SetBackgroundColor(bg).SetPadding(4).SetTextAlignment(TextAlignment.RIGHT));
+                    turnosTable.AddCell(new Cell().Add(new Paragraph($"C$ {t.TotalEfectivoBase:N2}").SetFontSize(8.5f)).SetBackgroundColor(bg).SetPadding(4).SetTextAlignment(TextAlignment.RIGHT));
                     turnosTable.AddCell(new Cell().Add(new Paragraph(t.FechaCierre != null ? $"C$ {saldoReal:N2}" : "--").SetFontSize(8.5f)).SetBackgroundColor(bg).SetPadding(4).SetTextAlignment(TextAlignment.RIGHT));
 
                     var diffColor = diferencia < 0 ? new DeviceRgb(220, 38, 38) : (diferencia > 0 ? new DeviceRgb(217, 119, 6) : new DeviceRgb(22, 163, 74));
@@ -346,7 +346,7 @@ public class DailyReportPdfService
                         foreach (var v in ventasCaja)
                         {
                             var listDetalles = await context.VentaDetalles.Include(d => d.IdProductoNavigation).Where(d => d.IdVenta == v.IdVenta).ToListAsync();
-                            var pagoPrincipal = v.Pagos.OrderByDescending(p => p.MontoEnNio).FirstOrDefault();
+                            var pagoPrincipal = v.Pagos.OrderByDescending(p => p.MontoEnBase).FirstOrDefault();
                             
                             string metodoStr = pagoPrincipal?.IdMetodoPagoNavigation?.Nombre ?? "N/A";
                             if (v.Pagos.Count > 1)
@@ -354,8 +354,8 @@ public class DailyReportPdfService
                                 metodoStr = string.Join("+", v.Pagos.Select(p => p.IdMetodoPagoNavigation.Nombre).Distinct());
                             }
 
-                            decimal totalPagoCon = v.Pagos.Sum(p => p.MontoRecibido == null || p.MontoRecibido == 0 ? p.MontoEnNio : p.MontoRecibido.Value);
-                            decimal totalVuelto = v.Pagos.Sum(p => p.VueltoNio ?? 0);
+                            decimal totalPagoCon = v.Pagos.Sum(p => p.MontoRecibido == null || p.MontoRecibido == 0 ? p.MontoEnBase : p.MontoRecibido.Value);
+                            decimal totalVuelto = v.Pagos.Sum(p => p.VueltoBase ?? 0);
 
                             // Si la venta tiene múltiples detalles, agrupamos la información para que sea legible
                             bool firstLineOfSale = true;
@@ -383,14 +383,14 @@ public class DailyReportPdfService
                                     itemsTable.AddCell(new Cell(listDetalles.Count, 1).Add(new Paragraph($"C$ {totalPagoCon:N2}").SetFontSize(8f)).SetBackgroundColor(bg).SetPadding(3).SetTextAlignment(TextAlignment.RIGHT).SetVerticalAlignment(VerticalAlignment.MIDDLE));
                                     itemsTable.AddCell(new Cell(listDetalles.Count, 1).Add(new Paragraph(totalVuelto > 0 ? $"C$ {totalVuelto:N2}" : "--").SetFontSize(8f)).SetBackgroundColor(bg).SetPadding(3).SetTextAlignment(TextAlignment.RIGHT).SetVerticalAlignment(VerticalAlignment.MIDDLE));
 
-                                    var descText = v.DescuentoNio > 0 ? $"C$ {v.DescuentoNio:N2}" : "--";
-                                    var descColor = v.DescuentoNio > 0 ? new DeviceRgb(220, 38, 38) : textDark;
-                                    var descFont = v.DescuentoNio > 0 ? boldFont : regularFont;
+                                    var descText = v.DescuentoBase > 0 ? $"C$ {v.DescuentoBase:N2}" : "--";
+                                    var descColor = v.DescuentoBase > 0 ? new DeviceRgb(220, 38, 38) : textDark;
+                                    var descFont = v.DescuentoBase > 0 ? boldFont : regularFont;
                                     itemsTable.AddCell(new Cell(listDetalles.Count, 1).Add(new Paragraph(descText).SetFontSize(8f).SetFont(descFont).SetFontColor(descColor)).SetBackgroundColor(bg).SetPadding(3).SetTextAlignment(TextAlignment.RIGHT).SetVerticalAlignment(VerticalAlignment.MIDDLE));
                                 }
 
                                 // Subtotal del artículo
-                                itemsTable.AddCell(new Cell().Add(new Paragraph($"C$ {det.SubtotalNio:N2}").SetFontSize(8f)).SetBackgroundColor(bg).SetPadding(3).SetTextAlignment(TextAlignment.RIGHT));
+                                itemsTable.AddCell(new Cell().Add(new Paragraph($"C$ {det.SubtotalBase:N2}").SetFontSize(8f)).SetBackgroundColor(bg).SetPadding(3).SetTextAlignment(TextAlignment.RIGHT));
 
                                 firstLineOfSale = false;
                                 row++;
@@ -428,4 +428,5 @@ public class DailyReportPdfService
         return new Cell().Add(new Paragraph(text).SetFont(font).SetFontSize(9).SetTextAlignment(TextAlignment.RIGHT)).SetBorder(iText.Layout.Borders.Border.NO_BORDER).SetPadding(3);
     }
 }
+
 

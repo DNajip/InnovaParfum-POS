@@ -23,8 +23,8 @@ public class CreditoAbono
     [Column("MONTO_RECIBIDO_MONEDA", TypeName = "decimal(18, 2)")]
     public decimal MontoRecibidoMoneda { get; set; }
 
-    [Column("VUELTO_NIO", TypeName = "decimal(18, 2)")]
-    public decimal VueltoNio { get; set; }
+    [Column("VUELTO_Base", TypeName = "decimal(18, 2)")]
+    public decimal VueltoBase { get; set; }
 
     [Column("FECHA")]
     public DateTime Fecha { get; set; }

@@ -11,7 +11,7 @@ public interface ICreditoService
 {
     Task<ClienteCredito?> GetPerfilCreditoAsync(int idPersona);
     Task<ClienteCredito> AsignarLimiteCreditoAsync(int idPersona, decimal limite, int dias);
-    Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoNio, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoNio, string observacion);
+    Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion);
     Task<List<Credito>> GetCreditosActivosAsync(int idPersona);
     Task<List<CreditoAbono>> GetHistorialAbonosAsync(int idCredito);
 }
@@ -104,7 +104,7 @@ public class CreditoService : ICreditoService
             .ToListAsync();
     }
 
-    public async Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoNio, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoNio, string observacion)
+    public async Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion)
     {
         using var context = await _factory.CreateDbContextAsync();
         using var transaction = await context.Database.BeginTransactionAsync();
@@ -118,8 +118,8 @@ public class CreditoService : ICreditoService
             var credito = await context.Creditos.FirstOrDefaultAsync(c => c.IdCredito == idCredito);
             if (credito == null) throw new Exception("Crédito no encontrado.");
             if (credito.Estado == "PAGADO") throw new Exception("El crédito ya se encuentra pagado.");
-            if (montoAbonoNio <= 0) throw new Exception("El monto a abonar debe ser mayor a 0.");
-            if (montoAbonoNio > credito.SaldoPendiente) throw new Exception("El abono no puede superar el saldo pendiente del crédito.");
+            if (montoAbonoBase <= 0) throw new Exception("El monto a abonar debe ser mayor a 0.");
+            if (montoAbonoBase > credito.SaldoPendiente) throw new Exception("El abono no puede superar el saldo pendiente del crédito.");
 
             var metodoPago = await context.MetodosPagos.FirstOrDefaultAsync(m => m.IdMetodo == idMetodoPago);
             if (metodoPago == null) throw new Exception("Método de pago no válido.");
@@ -127,10 +127,10 @@ public class CreditoService : ICreditoService
             var abono = new CreditoAbono
             {
                 IdCredito = idCredito,
-                Monto = montoAbonoNio,
+                Monto = montoAbonoBase,
                 MontoRecibidoMoneda = montoRecibidoMoneda,
                 TasaCambio = tasaCambio,
-                VueltoNio = vueltoNio,
+                VueltoBase = vueltoBase,
                 IdMetodoPago = idMetodoPago,
                 IdUsuario = idUsuario,
                 Observacion = observacion,
@@ -139,7 +139,7 @@ public class CreditoService : ICreditoService
 
             context.CreditoAbonos.Add(abono);
             
-            credito.SaldoPendiente -= montoAbonoNio;
+            credito.SaldoPendiente -= montoAbonoBase;
             if (credito.SaldoPendiente == 0)
             {
                 credito.Estado = "PAGADO";
@@ -149,7 +149,7 @@ public class CreditoService : ICreditoService
             var perfil = await context.ClientesCredito.FirstOrDefaultAsync(c => c.IdPersona == credito.IdPersona);
             if (perfil != null)
             {
-                perfil.SaldoActual -= montoAbonoNio;
+                perfil.SaldoActual -= montoAbonoBase;
                 if (perfil.SaldoActual < 0) perfil.SaldoActual = 0;
             }
 
@@ -166,7 +166,7 @@ public class CreditoService : ICreditoService
                     IdTurno = turnoAbierto.IdTurno,
                     Tipo = "INGRESO",
                     IdMoneda = metodoPago.IdMoneda ?? 1,
-                    Monto = metodoPago.IdMoneda == 2 ? montoRecibidoMoneda : montoAbonoNio, // Si paga dolares, guardamos los dolares que entraron
+                    Monto = metodoPago.IdMoneda == 2 ? montoRecibidoMoneda : montoAbonoBase, // Si paga dolares, guardamos los dolares que entraron
                     Concepto = $"Abono a Crédito #{idCredito}",
                     Fecha = DateTime.Now,
                     IdUsuario = idUsuario
@@ -174,14 +174,14 @@ public class CreditoService : ICreditoService
                 context.MovimientosVarios.Add(ingreso);
 
                 // Si paga con dólares pero damos vuelto en córdobas, agregamos salida de vuelto
-                if (vueltoNio > 0 && metodoPago.IdMoneda == 2)
+                if (vueltoBase > 0 && metodoPago.IdMoneda == 2)
                 {
                     var salidaVuelto = new MovimientoVario
                     {
                         IdTurno = turnoAbierto.IdTurno,
                         Tipo = "EGRESO",
                         IdMoneda = 1, // Vuelto en NIO
-                        Monto = vueltoNio,
+                        Monto = vueltoBase,
                         Concepto = $"Vuelto de Abono a Crédito #{idCredito}",
                         Fecha = DateTime.Now,
                         IdUsuario = idUsuario
@@ -193,18 +193,18 @@ public class CreditoService : ICreditoService
                 if (metodoPago.IdMoneda == 1) // NIO
                 {
                     if (metodoPago.Nombre.Contains("Efectivo", StringComparison.OrdinalIgnoreCase))
-                        turnoAbierto.TotalEfectivoNio += montoAbonoNio;
+                        turnoAbierto.TotalEfectivoBase += montoAbonoBase;
                     else if (metodoPago.Nombre.Contains("Tarjeta", StringComparison.OrdinalIgnoreCase))
-                        turnoAbierto.TotalTarjeta += montoAbonoNio;
+                        turnoAbierto.TotalTarjeta += montoAbonoBase;
                     else if (metodoPago.Nombre.Contains("Transferencia", StringComparison.OrdinalIgnoreCase))
-                        turnoAbierto.TotalTransferencia += montoAbonoNio;
+                        turnoAbierto.TotalTransferencia += montoAbonoBase;
                 }
                 else if (metodoPago.IdMoneda == 2) // USD
                 {
                     turnoAbierto.TotalEfectivoUsd += montoRecibidoMoneda; // sumamos lo que entro en USD
-                    if (vueltoNio > 0)
+                    if (vueltoBase > 0)
                     {
-                        turnoAbierto.TotalEfectivoNio -= vueltoNio; // Restamos el vuelto de los córdobas
+                        turnoAbierto.TotalEfectivoBase -= vueltoBase; // Restamos el vuelto de los córdobas
                     }
                 }
             }
@@ -221,3 +221,4 @@ public class CreditoService : ICreditoService
         }
     }
 }
+

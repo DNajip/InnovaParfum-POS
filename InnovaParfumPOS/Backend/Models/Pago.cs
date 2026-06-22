@@ -15,11 +15,13 @@ public partial class Pago
 
     public decimal? TasaAplicada { get; set; }
 
-    public decimal MontoEnNio { get; set; }
+    public decimal MontoEnBase { get; set; }
 
     public decimal? MontoRecibido { get; set; }
 
-    public decimal? VueltoNio { get; set; }
+    public decimal? VueltoBase { get; set; }
+
+    public decimal? VueltoMostrado { get; set; }
 
     public string? CodReferencia { get; set; }
 

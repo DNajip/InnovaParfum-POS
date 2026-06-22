@@ -41,17 +41,17 @@ else
                         </defs>
                         
                         @{
-                            var max = trends.Max(t => t.ValorNio);
+                            var max = trends.Max(t => t.ValorBase);
                             if (max == 0) max = 1;
                             
                             int count = trends.Count;
                             var points = count > 1 
-                                ? string.Join(" ", trends.Select((t, i) => $"{i * (1000 / (count - 1))},{300 - (t.ValorNio / max * 250 + 20)}"))
-                                : $"500,{300 - (trends[0].ValorNio / max * 250 + 20)}";
+                                ? string.Join(" ", trends.Select((t, i) => $"{i * (1000 / (count - 1))},{300 - (t.ValorBase / max * 250 + 20)}"))
+                                : $"500,{300 - (trends[0].ValorBase / max * 250 + 20)}";
                                 
                             var areaPoints = count > 1 
                                 ? points + $" {1000},300 0,300"
-                                : $"500,{300 - (trends[0].ValorNio / max * 250 + 20)} 500,300";
+                                : $"500,{300 - (trends[0].ValorBase / max * 250 + 20)} 500,300";
                         }
                         
                         @if (count > 1)
@@ -63,9 +63,9 @@ else
                         @foreach (var (t, i) in trends.Select((v, i) => (v, i)))
                         {
                             var x = count > 1 ? i * (1000 / (count - 1)) : 500;
-                            var y = 300 - (t.ValorNio / max * 250 + 20);
+                            var y = 300 - (t.ValorBase / max * 250 + 20);
                             <circle cx="@x" cy="@y" r="6" fill="white" stroke="#3b82f6" stroke-width="2" class="chart-point">
-                                <title>@t.Label: @AppState.CurrencySymbol @t.ValorNio.ToString("N2")</title>
+                                <title>@t.Label: @AppState.CurrencySymbol @t.ValorBase.ToString("N2")</title>
                             </circle>
                             @((MarkupString)$"<text x='{x}' y='295' font-size='12' fill='#64748b' text-anchor='middle'>{t.Label}</text>")
                         }
@@ -79,7 +79,7 @@ else
             <div class="report-card-title">Ventas por Moneda</div>
             <div class="donut-chart-container d-flex flex-column align-items-center">
                 @{
-                    var nioTotal = trends?.Sum(t => t.ValorNio) ?? 0;
+                    var nioTotal = trends?.Sum(t => t.ValorBase) ?? 0;
                     var usdTotal = trends?.Sum(t => t.ValorUsd) ?? 0;
                     var totalGlobal = nioTotal + (usdTotal * 36.5m);
                     var nioPct = totalGlobal > 0 ? (double)(nioTotal / totalGlobal * 100) : 100;
@@ -201,4 +201,5 @@ else
         return $"{StartDate:dd/MM} - {EndDate:dd/MM}";
     }
 }
+
 

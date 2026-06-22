@@ -383,25 +383,25 @@
         
         decimal tasaCambio = 1m;
         decimal montoEnMonedaBase = currentPayment.Monto;
-        decimal montoEnNio = currentPayment.Monto;
+        decimal montoEnBase = currentPayment.Monto;
 
         if (baseCurrency == "NIO" && paymentCurrency == "USD")
         {
             tasaCambio = AppState.ExchangeRateBuy;
             montoEnMonedaBase = Math.Round(currentPayment.Monto * tasaCambio, 6);
-            montoEnNio = montoEnMonedaBase;
+            montoEnBase = montoEnMonedaBase;
         }
         else if (baseCurrency == "USD" && paymentCurrency == "NIO")
         {
             tasaCambio = AppState.ExchangeRateSell;
             montoEnMonedaBase = Math.Round(currentPayment.Monto / tasaCambio, 6);
-            montoEnNio = currentPayment.Monto;
+            montoEnBase = currentPayment.Monto;
         }
         else if (baseCurrency == "USD" && paymentCurrency == "USD")
         {
             tasaCambio = AppState.ExchangeRateBuy; // Para guardado en BD siempre se necesita en NIO
             montoEnMonedaBase = currentPayment.Monto;
-            montoEnNio = Math.Round(currentPayment.Monto * tasaCambio, 6);
+            montoEnBase = Math.Round(currentPayment.Monto * tasaCambio, 6);
         }
 
         selectedPayments.Add(new PaymentInput
@@ -411,7 +411,7 @@
             Monto = currentPayment.Monto,
             TasaCambio = tasaCambio,
             MontoEnMonedaBase = montoEnMonedaBase,
-            MontoEnNio = montoEnNio,
+            MontoEnBase = montoEnBase,
             Referencia = currentPayment.Referencia
         });
 
@@ -479,6 +479,15 @@
             }
 
             if (!UserSession.UserId.HasValue) throw new Exception("Sesión de usuario no válida.");
+
+            if (SaldoRestante < 0 && selectedPayments.Any())
+            {
+                decimal numericVuelto = MonedaVuelto == "USD" ? 
+                    (AppState.CurrencyCode == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) / AppState.ExchangeRateSell) : 
+                    (AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell);
+                
+                selectedPayments.Last().VueltoMostrado = Math.Round(numericVuelto, 2);
+            }
 
             var result = await CheckoutService.ProcessCheckoutAsync(
                 UserSession.UserId.Value, 
@@ -582,4 +591,5 @@
         }
     }
 }
+
 
