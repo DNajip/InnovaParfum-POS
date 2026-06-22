@@ -34,6 +34,13 @@
                 <span class="kpi-value">@stats.TotalClientes</span>
             </div>
         </div>
+        <div class="inv-kpi-card kpi-yellow">
+            <div class="kpi-icon"><i class="fas fa-shopping-bag"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Compras Recientes</span>
+                <span class="kpi-value">@stats.ConComprasRecientes</span>
+            </div>
+        </div>
         <div class="inv-kpi-card kpi-green">
             <div class="kpi-icon"><i class="fas fa-shield-alt"></i></div>
             <div class="kpi-info">
@@ -41,11 +48,11 @@
                 <span class="kpi-value">@stats.ConGarantiasActivas</span>
             </div>
         </div>
-        <div class="inv-kpi-card kpi-yellow">
-            <div class="kpi-icon"><i class="fas fa-shopping-bag"></i></div>
-            <div class="kpi-info">
-                <span class="kpi-label">Compras Recientes</span>
-                <span class="kpi-value">@stats.ConComprasRecientes</span>
+        <div class="inv-kpi-card kpi-purple" style="border-left: 4px solid #6f42c1; background: #fff;">
+            <div class="kpi-icon" style="color: #6f42c1; background: rgba(111, 66, 193, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;"><i class="fas fa-credit-card"></i></div>
+            <div class="kpi-info" style="display: flex; flex-direction: column;">
+                <span class="kpi-label" style="font-size: 0.75rem; color: #8f9fbc; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Créditos Activos</span>
+                <span class="kpi-value" style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-top: 4px;">@stats.ConCreditosActivos</span>
             </div>
         </div>
     </div>

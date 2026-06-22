@@ -10,5 +10,7 @@ public partial class VClienteDashboardStat
     public int TotalGarantiasActivas { get; set; }
 
     public int ClientesConComprasRecientes { get; set; }
+
+    public int TotalCreditosActivos { get; set; }
 }
 

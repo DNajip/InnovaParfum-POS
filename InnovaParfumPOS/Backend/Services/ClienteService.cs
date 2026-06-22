@@ -158,7 +158,8 @@ public class ClienteService : IClienteService
         {
             TotalClientes = stats.TotalClientes,
             ConGarantiasActivas = stats.TotalGarantiasActivas, // Ahora toma el total de garantías, no solo clientes distintos
-            ConComprasRecientes = stats.ClientesConComprasRecientes
+            ConComprasRecientes = stats.ClientesConComprasRecientes,
+            ConCreditosActivos = stats.TotalCreditosActivos
         };
     }
 
