@@ -145,8 +145,8 @@
         @if (clientes != null && clientes.Count > pageSize)
         {
             var totalPages = (int)Math.Ceiling((double)clientes.Count / pageSize);
-            <div class="pagination-container d-flex align-items-center p-3 border-top">
-                <div class="flex-grow-1">
+            <div class="pagination-container d-flex align-items-center justify-content-center p-3 border-top position-relative">
+                <div class="position-absolute start-0 ms-3">
                     <span class="small text-muted">Mostrando @(Math.Min(clientes.Count, (currentPage - 1) * pageSize + 1)) a @(Math.Min(clientes.Count, currentPage * pageSize)) de @clientes.Count clientes</span>
                 </div>
                 <div class="pagination-carousel-container">

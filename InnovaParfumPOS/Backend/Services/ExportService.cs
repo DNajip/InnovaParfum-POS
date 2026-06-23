@@ -1,4 +1,4 @@
-﻿using InnovaParfumPOS.Backend.Models;
+using InnovaParfumPOS.Backend.Models;
 using ClosedXML.Excel;
 using iText.Kernel.Pdf;
 using iText.Layout;
@@ -37,12 +37,13 @@ public class ExportService : IExportService
         using (var workbook = new XLWorkbook())
         {
             var worksheet = workbook.Worksheets.Add("AuditorÃ­a Inventario");
-            
-            // TITULOS DE CABECERA
+                        // TITULOS DE CABECERA
             string[] headers = { 
-                "CÃ“DIGO", "PRODUCTO", "MARCA", "GÃ‰NERO", "CONCENTRACIÃ“N", "ORIGEN/TIPO", 
-                "CATEGORÃA", "PRECIO VENTA", "STOCK ACT.", "STOCK MIN.", 
-                "ESTADO SALUD", "ÃšLTIMA MOV.", "VALORIZACIÃ“N" 
+                "CÓDIGO", "PRODUCTO", "TIPO", "MARCA", "CATEGORÍA", 
+                "GÉNERO", "CONCENTRACIÓN", "MILILITROS", "ORIGEN", "VENCIMIENTO",
+                "COSTO UNITARIO", "PRECIO MAYORISTA", "PRECIO MINORISTA", 
+                "STOCK ACT.", "STOCK MIN.", "ESTADO SALUD", "ESTADO SISTEMA", "ÚLTIMO MOV.", 
+                "VALORIZACIÓN COSTO", "VALORIZACIÓN VENTA" 
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -60,28 +61,38 @@ public class ExportService : IExportService
             {
                 worksheet.Cell(row, 1).Value = p.CodigoBarras ?? "S/N";
                 worksheet.Cell(row, 2).Value = p.Nombre;
-                worksheet.Cell(row, 3).Value = p.Marca ?? "N/A";
-                worksheet.Cell(row, 4).Value = p.IdGeneroNavigation?.DescGenero ?? "N/A";
-                worksheet.Cell(row, 5).Value = p.IdConcentracionNavigation?.Nombre ?? "N/A";
-                worksheet.Cell(row, 6).Value = p.IdOrigenNavigation?.Nombre ?? "N/A";
-                worksheet.Cell(row, 7).Value = p.IdCategoriaNavigation?.Nombre ?? "S/C";
+                worksheet.Cell(row, 3).Value = p.TipoProducto;
+                worksheet.Cell(row, 4).Value = p.Marca ?? "N/A";
+                worksheet.Cell(row, 5).Value = p.IdCategoriaNavigation?.Nombre ?? "S/C";
+                worksheet.Cell(row, 6).Value = p.IdGeneroNavigation?.DescGenero ?? "N/A";
+                worksheet.Cell(row, 7).Value = p.IdConcentracionNavigation?.Nombre ?? "N/A";
+                worksheet.Cell(row, 8).Value = p.Ml.HasValue ? $"{p.Ml} ml" : "N/A";
+                worksheet.Cell(row, 9).Value = p.IdOrigenNavigation?.Nombre ?? "N/A";
+                worksheet.Cell(row, 10).Value = p.FechaVencimiento.HasValue ? p.FechaVencimiento.Value.ToString("dd/MM/yyyy") : "N/A";
                 
                 // Financiero
-                worksheet.Cell(row, 8).Value = p.PrecioMinorista ?? 0;
-                worksheet.Cell(row, 8).Style.NumberFormat.Format = "$ #,##0.00";
+                decimal costoUnitario = (p.CostoProducto ?? 0) + (p.CostoEnvio ?? 0);
+                worksheet.Cell(row, 11).Value = costoUnitario;
+                worksheet.Cell(row, 11).Style.NumberFormat.Format = "$ #,##0.00";
+                
+                worksheet.Cell(row, 12).Value = p.PrecioMayorista ?? 0;
+                worksheet.Cell(row, 12).Style.NumberFormat.Format = "$ #,##0.00";
+
+                worksheet.Cell(row, 13).Value = p.PrecioMinorista ?? 0;
+                worksheet.Cell(row, 13).Style.NumberFormat.Format = "$ #,##0.00";
 
                 // Stock
-                worksheet.Cell(row, 9).Value = p.StockActual;
-                worksheet.Cell(row, 10).Value = p.StockMinimo;
+                worksheet.Cell(row, 14).Value = p.StockActual;
+                worksheet.Cell(row, 15).Value = p.StockMinimo;
 
-                // Estado Salud (LÃ³gica)
-                var statusCell = worksheet.Cell(row, 11);
+                // Estado Salud (Lógica)
+                var statusCell = worksheet.Cell(row, 16);
                 if (p.StockActual == 0) {
                     statusCell.Value = "AGOTADO";
                     statusCell.Style.Font.FontColor = XLColor.White;
                     statusCell.Style.Fill.BackgroundColor = XLColor.FromHtml("#dc2626"); // Red
                 } else if (p.StockActual <= p.StockMinimo) {
-                    statusCell.Value = "CRÃTICO";
+                    statusCell.Value = "CRÍTICO";
                     statusCell.Style.Fill.BackgroundColor = XLColor.FromHtml("#f59e0b"); // Amber
                 } else {
                     statusCell.Value = "ESTABLE";
@@ -90,16 +101,32 @@ public class ExportService : IExportService
                 }
                 statusCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                // Ãšltima Mov
-                var lastMov = p.Movimientos.OrderByDescending(m => m.FechaMov).FirstOrDefault();
-                worksheet.Cell(row, 12).Value = lastMov?.FechaMov.ToString("dd/MM/yyyy") ?? "S/R";
-                worksheet.Cell(row, 12).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                // Estado Sistema (Activo / Inactivo)
+                var sysStatusCell = worksheet.Cell(row, 17);
+                if (p.Activo) {
+                    sysStatusCell.Value = "ACTIVO";
+                } else {
+                    sysStatusCell.Value = "INACTIVO";
+                    sysStatusCell.Style.Font.FontColor = XLColor.White;
+                    sysStatusCell.Style.Fill.BackgroundColor = XLColor.FromHtml("#64748b"); // Slate 500
+                }
+                sysStatusCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                // ValorizaciÃ³n (FÃ“RMULA VIVA)
-                // Columna H(8) * I(9)
-                worksheet.Cell(row, 13).FormulaA1 = $"H{row}*I{row}";
-                worksheet.Cell(row, 13).Style.NumberFormat.Format = "$ #,##0.00";
-                worksheet.Cell(row, 13).Style.Font.Bold = true;
+                // Última Mov
+                var lastMov = p.Movimientos.OrderByDescending(m => m.FechaMov).FirstOrDefault();
+                worksheet.Cell(row, 18).Value = lastMov?.FechaMov.ToString("dd/MM/yyyy") ?? "S/R";
+                worksheet.Cell(row, 18).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // Valorización (FÓRMULA VIVA)
+                // Costo = StockActual(N/14) * CostoUnitario(K/11)
+                worksheet.Cell(row, 19).FormulaA1 = $"N{row}*K{row}";
+                worksheet.Cell(row, 19).Style.NumberFormat.Format = "$ #,##0.00";
+                worksheet.Cell(row, 19).Style.Font.Bold = true;
+
+                // Venta = StockActual(N/14) * PrecioMinorista(M/13)
+                worksheet.Cell(row, 20).FormulaA1 = $"N{row}*M{row}";
+                worksheet.Cell(row, 20).Style.NumberFormat.Format = "$ #,##0.00";
+                worksheet.Cell(row, 20).Style.Font.Bold = true;
 
                 row++;
             }
@@ -109,6 +136,9 @@ public class ExportService : IExportService
             range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             
+            // Filtros automáticos en cabecera
+            range.SetAutoFilter();
+
             worksheet.Columns().AdjustToContents();
             worksheet.SheetView.FreezeRows(1); // Congelar Cabecera
 
