@@ -353,7 +353,8 @@
                     fecha = abono.Fecha.ToString("dd/MM/yyyy HH:mm"),
                     saldoAnterior = Credito.SaldoPendiente,
                     montoAbonado = MontoAbonarDeuda,
-                    nuevoSaldo = Credito.SaldoPendiente - MontoAbonarDeuda
+                    nuevoSaldo = Credito.SaldoPendiente - MontoAbonarDeuda,
+                    simboloMoneda = AppState.CurrencySymbol
                 };
                 
                 await JS.InvokeVoidAsync("qzPrintAbono", ticketInfo, AppState.PrinterName);

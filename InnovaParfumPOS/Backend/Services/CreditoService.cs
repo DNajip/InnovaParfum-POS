@@ -68,6 +68,7 @@ public class CreditoService : ICreditoService
         
         // Cargar los créditos activos
         var creditos = await context.Creditos
+            .Include(c => c.Persona)
             .Include(c => c.Venta)
             .Include(c => c.Abonos)
             .Where(c => c.IdPersona == idPersona && c.Estado != "ANULADO")
