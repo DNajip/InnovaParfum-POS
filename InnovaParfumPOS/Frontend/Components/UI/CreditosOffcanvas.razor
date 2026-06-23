@@ -1,6 +1,7 @@
 @using InnovaParfumPOS.Backend.Models
 @using InnovaParfumPOS.Backend.Services
 @inject ICreditoService CreditoService
+@inject AppState AppState
 
 <div class="offcanvas offcanvas-end @(IsOpen ? "show" : "")" tabindex="-1" style="@(IsOpen ? "visibility: visible;" : "visibility: hidden;")" id="offcanvasCreditos">
     <div class="offcanvas-header bg-light border-bottom">
@@ -40,7 +41,7 @@
                             </div>
                             <div class="text-end">
                                 <span class="d-block fw-bold fs-5 text-danger">
-                                    C$ @c.SaldoPendiente.ToString("N2")
+                                    @AppState.CurrencySymbol @c.SaldoPendiente.ToString("N2")
                                 </span>
                             </div>
                         </div>
@@ -85,7 +86,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (IsOpen && creditos == null)
+        if (IsOpen)
         {
             await LoadData();
         }
