@@ -40,6 +40,7 @@ public partial class Persona
     public virtual Empleado? Empleado { get; set; }
 
     public virtual ICollection<Garantia> Garantia { get; set; } = new List<Garantia>();
+    public virtual ICollection<Credito> Creditos { get; set; } = new List<Credito>();
 
     public virtual Estado IdEstadoNavigation { get; set; } = null!;
 

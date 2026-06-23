@@ -32,6 +32,8 @@ public class ClienteService : IClienteService
         var query = context.Personas
             .Include(p => p.IdTipo)
             .Include(p => p.Venta)
+            .Include(p => p.Garantia)
+            .Include(p => p.Creditos)
             .Where(p => p.EsCliente == true && p.IdEstado == 1);
 
         if (!string.IsNullOrWhiteSpace(search))

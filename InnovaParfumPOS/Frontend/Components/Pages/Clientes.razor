@@ -75,17 +75,19 @@
                     <th>Identificación</th>
                     <th>Contacto</th>
                     <th class="text-center">Compras</th>
+                    <th class="text-center">Garantías</th>
+                    <th class="text-center">Créditos</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @if (clientes == null)
                 {
-                    <tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                    <tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
                 }
                 else if (!clientes.Any())
                 {
-                    <tr><td colspan="5" class="text-center py-5 text-muted">No se encontraron clientes</td></tr>
+                    <tr><td colspan="7" class="text-center py-5 text-muted">No se encontraron clientes</td></tr>
                 }
                 else
                 {
@@ -111,7 +113,19 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="cli-badge-count">@c.Venta.Count()</span>
+                                <span class="cli-badge-count" style="background-color: #f8f9fa; color: #495057; border: 1px solid #dee2e6;">
+                                    @c.Venta.Count(v => !v.Anulada)
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="cli-badge-count" style="background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
+                                    @c.Garantia.Count(g => g.EstadoGarantia != "VENCIDA")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="cli-badge-count" style="background-color: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;">
+                                    @c.Creditos.Count(cr => cr.Estado == "ACTIVO")
+                                </span>
                             </td>
                             <td class="text-end">
                                 <button class="btn-action" title="Ver Detalles" @onclick="() => OpenDetailsModal(c)">
@@ -312,7 +326,7 @@
                             }
                             else
                             {
-                                @foreach (var sale in clientSales)
+                                @foreach (var sale in clientSales.Skip((comprasPage - 1) * modalPageSize).Take(modalPageSize))
                                 {
                                     <div class="purchase-history-card p-3">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -337,6 +351,7 @@
                                         </div>
                                     </div>
                                 }
+
                             }
                         }
                         else if (activeTab == "garantias")
@@ -351,7 +366,7 @@
                             }
                             else
                             {
-                                @foreach (var g in clientWarranties)
+                                @foreach (var g in clientWarranties.Skip((garantiasPage - 1) * modalPageSize).Take(modalPageSize))
                                 {
                                     var percent = GetWarrantyProgress(g);
                                     var statusClass = GetWarrantyStatusClass(g);
@@ -373,6 +388,7 @@
                                         </div>
                                     </div>
                                 }
+
                             }
                         }
                         else if (activeTab == "creditos")
@@ -462,6 +478,74 @@
                             }
                         }
                     </div>
+
+                    @{
+                        int totalItems = 0;
+                        int currentTabPg = 1;
+                        Action<int> setTabPg = null;
+
+                        if (activeTab == "compras" && clientSales != null) {
+                            totalItems = clientSales.Count;
+                            currentTabPg = comprasPage;
+                            setTabPg = (p) => comprasPage = p;
+                        } else if (activeTab == "garantias" && clientWarranties != null) {
+                            totalItems = clientWarranties.Count;
+                            currentTabPg = garantiasPage;
+                            setTabPg = (p) => garantiasPage = p;
+                        }
+                    }
+
+                    @if (totalItems > modalPageSize)
+                    {
+                        var totalPagesTab = (int)Math.Ceiling((double)totalItems / modalPageSize);
+                        <div class="pagination-container d-flex align-items-center justify-content-center p-3 border-top mt-2 position-relative">
+                            <div class="position-absolute start-0 ms-3">
+                                <span class="small text-muted">Mostrando @(Math.Min(totalItems, (currentTabPg - 1) * modalPageSize + 1)) a @(Math.Min(totalItems, currentTabPg * modalPageSize)) de @totalItems @(activeTab == "compras" ? "compras" : "garantías")</span>
+                            </div>
+                            <div class="pagination-carousel-container">
+                                <ul class="pagination pagination-premium mb-0">
+                                    <li class="page-item @(currentTabPg == 1 ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => setTabPg(currentTabPg - 1)" title="Anterior">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                    </li>
+                                    
+                                    @{
+                                        int maxVisible = 6;
+                                        int startPage = Math.Max(1, Math.Min(currentTabPg - 2, totalPagesTab - maxVisible + 1));
+                                        int endPage = Math.Min(totalPagesTab, startPage + maxVisible - 1);
+                                        if (totalPagesTab > maxVisible && endPage == totalPagesTab) startPage = Math.Max(1, totalPagesTab - maxVisible + 1);
+
+                                        for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            var pageNum = i;
+                                            <li class="page-item @(currentTabPg == pageNum ? "active" : "") page-item-animated" @key="pageNum">
+                                                <button class="page-link" @onclick="() => setTabPg(pageNum)">@pageNum</button>
+                                            </li>
+                                        }
+
+                                        if (endPage < totalPagesTab)
+                                        {
+                                            if (endPage < totalPagesTab - 1)
+                                            {
+                                                <li class="pagination-ellipsis">...</li>
+                                            }
+                                            <li class="page-item @(currentTabPg == totalPagesTab ? "active" : "") page-item-animated">
+                                                <button class="page-link" @onclick="() => setTabPg(totalPagesTab)">@totalPagesTab</button>
+                                            </li>
+                                        }
+                                    }
+                                    
+                                    <li class="page-item @(currentTabPg == totalPagesTab ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => setTabPg(currentTabPg + 1)" title="Siguiente">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    }
+
                 </div>
             </div>
         </div>
@@ -527,6 +611,9 @@
 
     private string SearchTerm = "";
     private string activeTab = "compras";
+    private int comprasPage = 1;
+    private int garantiasPage = 1;
+    private int modalPageSize = 3;
     private int currentPage = 1;
     private int pageSize = 10;
     private int editingClientId = 0;
@@ -605,6 +692,8 @@
     {
         currentClient = p;
         activeTab = "compras";
+        comprasPage = 1;
+        garantiasPage = 1;
         clientSales = null;
         clientWarranties = null;
         showDetailsModal = true;
