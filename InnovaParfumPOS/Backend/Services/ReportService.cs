@@ -233,8 +233,10 @@ public class ReportService : IReportService
             })
             .ToListAsync();
         
-        var valorCosto = critico.Sum(p => p.ValorCostoTotal);
-        var valorVenta = critico.Sum(p => p.ValorVentaTotal);
+        var allProducts = await _context.Productos.Where(p => p.Activo).ToListAsync();
+        var valorCosto = allProducts.Sum(p => (p.CostoProducto ?? 0) * p.StockActual);
+        var valorVenta = allProducts.Sum(p => (p.PrecioMinorista ?? 0) * p.StockActual);
+        
         var fechaLimite = DateTime.Today.AddDays(-30);
         var productosSinVenta = await _context.Productos
             .Where(p => p.Activo && !_context.VentaDetalles.Any(d => d.IdProducto == p.IdProducto && d.IdVentaNavigation.FechaVenta >= fechaLimite))

@@ -1,6 +1,7 @@
 @using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.Models
 @inject IReportService ReportService
+@inject InnovaParfumPOS.Backend.Services.AppState AppState
 
 @if (insight == null)
 {
@@ -12,6 +13,24 @@
 else
 {
     <div class="report-row">
+        <!-- Valorización Financiera -->
+        <div class="report-card">
+            <div class="report-card-title">
+                <span><i class="fas fa-money-bill-wave text-success me-2"></i> Valorización Financiera</span>
+            </div>
+            <div class="d-flex justify-content-around mt-3 flex-wrap gap-3">
+                <div class="text-center p-3 rounded" style="background: #f8f9fa; border-left: 4px solid #6c757d; min-width: 200px;">
+                    <div class="text-muted small fw-bold text-uppercase mb-1" title="Suma del costo de todos los productos en stock">Capital Congelado (Costo)</div>
+                    <h3 class="mb-0 fw-bold text-dark">@AppState.CurrencySymbol @insight.ValorTotalCosto.ToString("N2")</h3>
+                </div>
+                <div class="text-center p-3 rounded" style="background: #f8f9fa; border-left: 4px solid #198754; min-width: 200px;">
+                    <div class="text-muted small fw-bold text-uppercase mb-1" title="Suma del precio de venta de todos los productos en stock">Rentabilidad Esperada (Venta)</div>
+                    <h3 class="mb-0 fw-bold text-success">@AppState.CurrencySymbol @insight.ValorTotalVenta.ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="report-row mt-4">
         <!-- Stock Crítico -->
         <div class="report-card">
             <div class="report-card-title">
