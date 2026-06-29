@@ -105,6 +105,9 @@ public class ClientInsightDTO
     public string Nombre { get; set; } = string.Empty;
     public int TotalCompras { get; set; }
     public decimal MontoTotal { get; set; }
+    public int ComprasContado { get; set; }
+    public int ComprasCredito { get; set; }
+    public decimal SaldoPendiente { get; set; }
 }
 
 public class CashierAuditDTO

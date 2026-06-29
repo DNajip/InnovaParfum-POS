@@ -18,7 +18,7 @@
         <div class="kpi-grid mb-4">
             <InnovaKpiCard Title="Total Clientes" Value="dashboardStats.TotalClientes" Format="N0" IconClass="fas fa-users" IconBg="#e0f2fe" IconColor="#0ea5e9" Loading="loading" />
             <InnovaKpiCard Title="Garantías Activas" Value="dashboardStats.TotalGarantiasActivas" Format="N0" IconClass="fas fa-shield-alt" IconBg="#fef9c3" IconColor="#ca8a04" Loading="loading" />
-            <InnovaKpiCard Title="Compras Recientes" Value="dashboardStats.ClientesConComprasRecientes" Format="N0" IconClass="fas fa-shopping-bag" IconBg="#dcfce7" IconColor="#16a34a" Loading="loading" />
+            <InnovaKpiCard Title="Cuentas por Cobrar" Value="clientes.Any() ? clientes.Sum(c => c.SaldoPendiente) : 0" Prefix="@($"{AppState.CurrencySymbol} ")" IconClass="fas fa-hand-holding-usd" IconBg="#fee2e2" IconColor="#ef4444" Loading="loading" />
             <InnovaKpiCard Title="Ticket Promedio" Value="clientes.Any() ? clientes.Average(c => c.MontoTotal / (c.TotalCompras > 0 ? c.TotalCompras : 1)) : 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-receipt" IconBg="#f3e8ff" IconColor="#9333ea" Loading="loading" />
         </div>
 
@@ -32,8 +32,11 @@
                     <thead class="bg-light border-0">
                         <tr>
                             <th class="ps-4 py-3 border-0 text-muted small fw-bold">CLIENTE</th>
-                            <th class="text-center py-3 border-0 text-muted small fw-bold">TRANSACCIONES</th>
+                            <th class="text-center py-3 border-0 text-muted small fw-bold" title="Total de transacciones">TRANS. TOTALES</th>
+                            <th class="text-center py-3 border-0 text-muted small fw-bold">CONTADO</th>
+                            <th class="text-center py-3 border-0 text-muted small fw-bold">CRÉDITO</th>
                             <th class="text-end py-3 border-0 text-muted small fw-bold">MONTO ACUMULADO</th>
+                            <th class="text-end py-3 border-0 text-muted small fw-bold">DEUDA (CXC)</th>
                             <th class="text-center py-3 border-0 text-muted small fw-bold pe-4">NIVEL FIDELIDAD</th>
                         </tr>
                     </thead>
@@ -50,8 +53,24 @@
                                 <td class="text-center py-3">
                                     <span class="badge bg-light text-dark border rounded-pill px-3">@c.TotalCompras</span>
                                 </td>
+                                <td class="text-center py-3">
+                                    <span class="text-success fw-bold">@c.ComprasContado</span>
+                                </td>
+                                <td class="text-center py-3">
+                                    <span class="text-primary fw-bold">@c.ComprasCredito</span>
+                                </td>
                                 <td class="text-end py-3">
                                     <span class="fw-extrabold text-primary" style="font-size: 1.05rem;">@AppState.CurrencySymbol @c.MontoTotal.ToString("N2")</span>
+                                </td>
+                                <td class="text-end py-3">
+                                    @if (c.SaldoPendiente > 0)
+                                    {
+                                        <span class="fw-bold text-danger">@AppState.CurrencySymbol @c.SaldoPendiente.ToString("N2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
                                 </td>
                                 <td class="text-center py-3 pe-4">
                                     @if (c.MontoTotal > 50000) 

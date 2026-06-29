@@ -274,18 +274,40 @@ public class ReportService : IReportService
     public async Task<List<ClientInsightDTO>> GetClientInsightsAsync(DateTime start, DateTime end)
     {
         end = end.Date.AddDays(1).AddTicks(-1);
-        return await _context.Ventas
+        
+        var ventas = await _context.Ventas
+            .Include(v => v.IdPersonaNavigation)
+            .Include(v => v.IdCondicionPagoNavigation)
             .Where(v => v.FechaVenta >= start && v.FechaVenta <= end && !v.Anulada && v.IdPersona != null)
-            .GroupBy(v => v.IdPersonaNavigation!.NombreCompleto)
-            .Select(g => new ClientInsightDTO
-            {
-                Nombre = g.Key ?? "Cliente General",
-                TotalCompras = g.Count(),
-                MontoTotal = g.Sum(v => v.TotalBase)
-            })
-            .OrderByDescending(x => x.MontoTotal)
-            .Take(10)
             .ToListAsync();
+
+        var creditos = await _context.Creditos
+            .Include(c => c.Venta)
+            .Where(c => c.Venta.FechaVenta >= start && c.Venta.FechaVenta <= end && !c.Venta.Anulada && c.IdPersona != null)
+            .ToListAsync();
+
+        var groupedVentas = ventas.GroupBy(v => v.IdPersonaNavigation!.NombreCompleto);
+        var result = new List<ClientInsightDTO>();
+
+        foreach (var g in groupedVentas)
+        {
+            var nombre = g.Key ?? "Cliente General";
+            var idPersona = g.First().IdPersona;
+            
+            var clienteCreditos = creditos.Where(c => c.IdPersona == idPersona).ToList();
+            
+            result.Add(new ClientInsightDTO
+            {
+                Nombre = nombre,
+                TotalCompras = g.Count(),
+                MontoTotal = g.Sum(v => v.TotalBase),
+                ComprasContado = g.Count(v => v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CONTADO") == true || v.IdCondicionPago == 1),
+                ComprasCredito = g.Count(v => v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CRÉDITO") == true || v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CREDITO") == true || v.IdCondicionPago == 2),
+                SaldoPendiente = clienteCreditos.Sum(c => c.SaldoPendiente)
+            });
+        }
+
+        return result.OrderByDescending(x => x.MontoTotal).Take(10).ToList();
     }
 
     public async Task<List<CashierAuditDTO>> GetCashierAuditAsync(DateTime start, DateTime end)
