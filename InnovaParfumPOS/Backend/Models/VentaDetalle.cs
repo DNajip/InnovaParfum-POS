@@ -20,6 +20,8 @@ public partial class VentaDetalle
     public decimal DescuentoLineaBase { get; set; }
 
     public decimal SubtotalBase { get; set; }
+    
+    public decimal? CostoUnitarioNio { get; set; }
 
     public int? IdPeriodoGarantia { get; set; }
 

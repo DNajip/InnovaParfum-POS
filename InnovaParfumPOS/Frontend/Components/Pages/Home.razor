@@ -281,6 +281,7 @@
                 Description = prod.Nombre,
                 PrecioMayorista = prod.PrecioMayorista ?? 0,
                 PrecioMinorista = prod.PrecioMinorista ?? 0,
+                CostoUnitario = (prod.CostoProducto ?? 0) + (prod.CostoEnvio ?? 0),
                 Quantity = 1,
                 IdCategoria = prod.IdCategoria,
                 Marca = prod.Marca,

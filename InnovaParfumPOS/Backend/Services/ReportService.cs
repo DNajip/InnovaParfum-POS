@@ -62,8 +62,16 @@ public class ReportService : IReportService
             TotalFacturas = currentVentas.Count,
             ProductosVendidos = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => d.Cantidad),
             TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => v.TotalBase) : 0,
-            UtilidadNeta = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => 
-                d.SubtotalBase - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad)),
+            UtilidadNeta = currentVentas.Sum(v => v.VentaDetalles.Sum(d => 
+                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+            GananciaMinorista = currentVentas.Where(v => v.IdTipoVenta == 1).Sum(v => v.VentaDetalles.Sum(d => 
+                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+            GananciaMayorista = currentVentas.Where(v => v.IdTipoVenta == 2).Sum(v => v.VentaDetalles.Sum(d => 
+                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+            GananciaRealizada = currentVentas.Where(v => v.IdCondicionPago == 1).Sum(v => v.VentaDetalles.Sum(d => 
+                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+            GananciaEstancada = currentVentas.Where(v => v.IdCondicionPago == 2).Sum(v => v.VentaDetalles.Sum(d => 
+                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
             ClientesNuevos = await _context.Personas.CountAsync(p => p.FechaCreacion >= start && p.FechaCreacion <= end && p.EsCliente),
             Anulaciones = await _context.Ventas.CountAsync(v => v.FechaVenta >= start && v.FechaVenta <= end && v.Anulada)
         };
@@ -73,8 +81,8 @@ public class ReportService : IReportService
         stats.PorcentajeVentas = CalcularVariacion(stats.VentasBrutas, prevVentasTotal);
         stats.PorcentajeFacturas = CalcularVariacion(stats.TotalFacturas, prevVentas.Count);
         
-        decimal prevUtilidad = prevVentas.SelectMany(v => v.VentaDetalles).Sum(d => 
-            d.SubtotalBase - ((d.IdProductoNavigation?.CostoProducto ?? 0) * d.Cantidad));
+        decimal prevUtilidad = prevVentas.Sum(v => v.VentaDetalles.Sum(d => 
+            d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad)));
         stats.PorcentajeUtilidad = CalcularVariacion(stats.UtilidadNeta, prevUtilidad);
         
         decimal prevTicket = prevVentas.Any() ? prevVentas.Average(v => v.TotalBase) : 0;

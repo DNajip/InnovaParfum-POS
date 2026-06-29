@@ -21,6 +21,12 @@ public class DashboardStatsDTO
     public decimal PorcentajeClientes { get; set; }
     public decimal PorcentajeProductos { get; set; }
     public decimal MargenUtilidadPorcentaje => VentasBrutas > 0 ? (UtilidadNeta / VentasBrutas) * 100 : 0;
+    
+    // Nuevas metricas de auditoria
+    public decimal GananciaRealizada { get; set; }
+    public decimal GananciaEstancada { get; set; }
+    public decimal GananciaMayorista { get; set; }
+    public decimal GananciaMinorista { get; set; }
 }
 
 public class TrendPointDTO

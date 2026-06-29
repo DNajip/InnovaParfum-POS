@@ -51,6 +51,7 @@ public class CheckoutService : ICheckoutService
             UnitPrice = i.IsRegalia ? 0 : (idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista),
             SubTotal = i.IsRegalia ? 0 : ((idTipoVenta == 2 ? i.PrecioMayorista : i.PrecioMinorista) * i.Quantity),
             IsRegalia = i.IsRegalia,
+            CostoUnitario = i.CostoUnitario,
             i.Details
         });
         var itemsJson = System.Text.Json.JsonSerializer.Serialize(itemsMapped);

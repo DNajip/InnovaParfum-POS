@@ -142,6 +142,7 @@ namespace InnovaParfumPOS.Backend.Services
         
         public decimal PrecioMayorista { get; set; }
         public decimal PrecioMinorista { get; set; }
+        public decimal CostoUnitario { get; set; }
 
         public int? IdCategoria { get; set; }
         public string? Marca { get; set; }

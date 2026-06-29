@@ -20,6 +20,14 @@ else
         <InnovaKpiCard Title="Ticket Promedio" Value="stats?.TicketPromedio ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-receipt" IconBg="#f3e8ff" IconColor="#9333ea" Trend="stats?.PorcentajeTicket ?? 0" Loading="loading" />
     </div>
 
+    <!-- Detalles de Ganancias y Auditoría -->
+    <div class="kpi-grid" style="margin-top: 1rem;">
+        <InnovaKpiCard Title="Ganancia (Contado)" Value="stats?.GananciaRealizada ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-hand-holding-dollar" IconBg="#dbeafe" IconColor="#2563eb" Loading="loading" />
+        <InnovaKpiCard Title="Ganancia (Crédito)" Value="stats?.GananciaEstancada ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-hourglass-half" IconBg="#fee2e2" IconColor="#dc2626" Loading="loading" />
+        <InnovaKpiCard Title="Ganancia Mayorista" Value="stats?.GananciaMayorista ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-boxes" IconBg="#e0e7ff" IconColor="#4f46e5" Loading="loading" />
+        <InnovaKpiCard Title="Ganancia Minorista" Value="stats?.GananciaMinorista ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-shopping-bag" IconBg="#fce7f3" IconColor="#db2777" Loading="loading" />
+    </div>
+
     <div class="report-row">
         <!-- Tendencia de Ventas -->
         <div class="report-card">
