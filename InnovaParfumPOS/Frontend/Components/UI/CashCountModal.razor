@@ -41,7 +41,7 @@
                                 <div class="badge bg-success-subtle text-success p-2 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                                     <i class="fas fa-money-bill-wave"></i>
                                 </div>
-                                <h5 class="fw-bold m-0 text-success">Córdobas (@AppState.CurrencySymbol)</h5>
+                                <h5 class="fw-bold m-0 text-success">Córdobas (C$)</h5>
                             </div>
                             
                             <div class="denominations-list pe-2" style="max-height: 400px; overflow-y: auto;">
@@ -62,7 +62,7 @@
                                                    onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"
                                                    style="border-radius: 8px; flex: 1;" />
                                             <div class="text-end small fw-bold" style="min-width: 90px;">
-                                                @AppState.CurrencySymbol @item.Subtotal.ToString("N0")
+                                                C$ @item.Subtotal.ToString("N0")
                                             </div>
                                         </div>
                                     </div>
@@ -71,8 +71,8 @@
 
                             <div class="mt-4 p-3 bg-success-subtle rounded-3 text-success">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="small fw-bold">TOTAL APERTURA @AppState.CurrencySymbol:</span>
-                                    <span class="h4 fw-bold m-0">@AppState.CurrencySymbol @totalBase.ToString("N2")</span>
+                                    <span class="small fw-bold">TOTAL APERTURA C$:</span>
+                                    <span class="h4 fw-bold m-0">C$ @totalBase.ToString("N2")</span>
                                 </div>
                             </div>
                         </div>

@@ -1,4 +1,4 @@
-@using InnovaParfumPOS.Backend.Services
+﻿@using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.Models
 @inject InnovaParfumPOS.Backend.Services.AppState AppState
 @inject IShiftService ShiftService
@@ -32,7 +32,7 @@
                     </div>
                     <div class="d-flex gap-4">
                         <span class="badge bg-white text-info px-3 py-2" style="font-size: 0.9rem;">
-                            Córdobas: <strong class="ms-1">@AppState.CurrencySymbol @UserSession.ActiveShift?.MontoInicialBase.ToString("N2")</strong>
+                            Córdobas: <strong class="ms-1">C$ @UserSession.ActiveShift?.MontoInicialBase.ToString("N2")</strong>
                         </span>
                         <span class="badge bg-white text-info px-3 py-2" style="font-size: 0.9rem;">
                             Dólares: <strong class="ms-1">$ @UserSession.ActiveShift?.MontoInicialUsd.ToString("N2")</strong>
@@ -76,7 +76,7 @@
                                                    min="0" @bind="item.Quantity" @bind:event="oninput" @onkeyup="UpdateTotals" 
                                                    onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"
                                                    style="border-radius: 8px; flex: 1;" />
-                                            <div class="text-end small fw-bold" style="min-width: 90px;">@AppState.CurrencySymbol @item.Subtotal.ToString("N0")</div>
+                                            <div class="text-end small fw-bold" style="min-width: 90px;">C$ @item.Subtotal.ToString("N0")</div>
                                         </div>
                                     </div>
                                 }
@@ -120,8 +120,8 @@
                     <div class="row g-3 mt-1">
                         <div class="col-6">
                             <div class="p-3 rounded-4 shadow-sm @(diffBase == 0 ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : diffBase > 0 ? "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" : "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25")">
-                                <div class="small fw-bold opacity-75">Diferencia @AppState.CurrencySymbol</div>
-                                <div class="h4 m-0 fw-bold">@AppState.CurrencySymbol @diffBase.ToString("N2")</div>
+                                <div class="small fw-bold opacity-75">Diferencia C$</div>
+                                <div class="h4 m-0 fw-bold">C$ @diffBase.ToString("N2")</div>
                                 <div class="x-small mt-1">@(diffBase == 0 ? "Caja Cuadrada" : diffBase > 0 ? "Sobrante" : "Faltante")</div>
                             </div>
                         </div>
@@ -154,7 +154,7 @@
                                 <div>
                                     <div class="fw-bold">FALTANTE DETECTADO</div>
                                     <div class="small text-muted">
-                                        @(diffBase < 0 ? $"@AppState.CurrencySymbol {Math.Abs(diffBase):N2} " : "")
+                                        @(diffBase < 0 ? $"C$ {Math.Abs(diffBase):N2} " : "")
                                         @(diffUsd < 0 ? $"$ {Math.Abs(diffUsd):N2}" : "")
                                         <br/>¿Deseas cerrar la caja con este faltante?
                                     </div>
@@ -298,7 +298,7 @@
             showConfirmation = true;
             
             var msg = "Se ha detectado un faltante: ";
-            if (diffBase < 0) msg += $"@AppState.CurrencySymbol {Math.Abs(diffBase):N2} ";
+            if (diffBase < 0) msg += $"C$ {Math.Abs(diffBase):N2} ";
             if (diffUsd < 0) msg += $"$ {Math.Abs(diffUsd):N2}";
             ToastService.ShowWarning(msg);
         }
