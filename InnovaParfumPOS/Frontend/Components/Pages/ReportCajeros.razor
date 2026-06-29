@@ -17,8 +17,11 @@ else
                     <tr>
                         <th>Cajero</th>
                         <th class="text-center">Facturas</th>
+                        <th class="text-center" title="Ventas Anuladas">Anulaciones</th>
                         <th class="text-end">Ventas Totales</th>
                         <th class="text-end">Descuentos</th>
+                        <th class="text-end" title="Sumatoria de faltantes y sobrantes">Dif. Arqueo</th>
+                        <th class="text-center">Riesgo</th>
                         <th class="text-center">Participación</th>
                     </tr>
                 </thead>
@@ -34,8 +37,26 @@ else
                                 <i class="fas fa-user-circle me-2 text-muted"></i>@c.Cajero
                             </td>
                             <td class="text-center">@c.Facturas</td>
+                            <td class="text-center fw-bold @(c.Anulaciones > 0 ? "text-danger" : "text-muted")">@c.Anulaciones</td>
                             <td class="text-end fw-bold">@AppState.CurrencySymbol @c.TotalVentas.ToString("N2")</td>
                             <td class="text-end text-danger">-@AppState.CurrencySymbol @c.Descuentos.ToString("N2")</td>
+                            <td class="text-end fw-bold @(c.DiferenciaArqueos < 0 ? "text-danger" : c.DiferenciaArqueos > 0 ? "text-warning" : "text-success")">
+                                @AppState.CurrencySymbol @c.DiferenciaArqueos.ToString("N2")
+                            </td>
+                            <td class="text-center">
+                                @if (c.NivelRiesgo == "ROJO")
+                                {
+                                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill"><i class="fas fa-exclamation-triangle me-1"></i>ALTO</span>
+                                }
+                                else if (c.NivelRiesgo == "AMARILLO")
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill"><i class="fas fa-exclamation-circle me-1"></i>MEDIO</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill"><i class="fas fa-check-circle me-1"></i>BAJO</span>
+                                }
+                            </td>
                             <td style="min-width: 150px;">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="progress flex-grow-1" style="height: 6px; border-radius: 10px; background: #f1f5f9;">

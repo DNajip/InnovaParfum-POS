@@ -289,27 +289,41 @@ public class ReportService : IReportService
     public async Task<List<CashierAuditDTO>> GetCashierAuditAsync(DateTime start, DateTime end)
     {
         end = end.Date.AddDays(1).AddTicks(-1);
-        var data = await _context.Ventas
+        
+        var ventas = await _context.Ventas
             .Include(v => v.IdUsuarioNavigation)
-            .Where(v => v.FechaVenta >= start && v.FechaVenta <= end && !v.Anulada)
-            .GroupBy(v => v.IdUsuarioNavigation.Username)
-            .Select(g => new
-            {
-                Username = g.Key ?? "N/A",
-                FacturasGeneradas = g.Count(),
-                TotalVentas = g.Sum(v => v.TotalBase),
-                DescuentosAplicados = g.Sum(v => v.DescuentoBase)
-            })
-            .OrderByDescending(x => x.TotalVentas)
+            .Where(v => v.FechaVenta >= start && v.FechaVenta <= end)
+            .ToListAsync();
+            
+        var turnos = await _context.Turnos
+            .Include(t => t.IdUsuarioNavigation)
+            .Where(t => t.FechaApertura >= start && t.FechaApertura <= end)
             .ToListAsync();
 
-        return data.Select(g => new CashierAuditDTO
+        var users = ventas.Select(v => v.IdUsuarioNavigation?.Username)
+            .Concat(turnos.Select(t => t.IdUsuarioNavigation?.Username))
+            .Where(u => u != null)
+            .Distinct();
+
+        var auditList = new List<CashierAuditDTO>();
+
+        foreach(var u in users)
         {
-            Cajero = g.Username,
-            Facturas = g.FacturasGeneradas,
-            TotalVentas = g.TotalVentas,
-            Descuentos = g.DescuentosAplicados
-        }).ToList();
+            var userVentas = ventas.Where(v => v.IdUsuarioNavigation?.Username == u).ToList();
+            var userTurnos = turnos.Where(t => t.IdUsuarioNavigation?.Username == u).ToList();
+            
+            auditList.Add(new CashierAuditDTO
+            {
+                Cajero = u ?? "Sistema",
+                Facturas = userVentas.Count(v => !v.Anulada),
+                TotalVentas = userVentas.Where(v => !v.Anulada).Sum(v => v.TotalBase),
+                Descuentos = userVentas.Where(v => !v.Anulada).Sum(v => v.DescuentoBase),
+                Anulaciones = userVentas.Count(v => v.Anulada),
+                DiferenciaArqueos = userTurnos.Sum(t => t.DiferenciaBase ?? 0)
+            });
+        }
+
+        return auditList.OrderByDescending(x => x.TotalVentas).ToList();
     }
 
     public async Task<List<ArqueoInsightDTO>> GetArqueoInsightsAsync(DateTime start, DateTime end)

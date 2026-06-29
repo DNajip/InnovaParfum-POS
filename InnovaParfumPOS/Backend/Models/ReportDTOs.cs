@@ -114,6 +114,20 @@ public class CashierAuditDTO
     public decimal TotalVentas { get; set; }
     public decimal Descuentos { get; set; }
     public decimal TicketPromedio => Facturas > 0 ? TotalVentas / Facturas : 0;
+    
+    // Metricas de Riesgo
+    public int Anulaciones { get; set; }
+    public decimal DiferenciaArqueos { get; set; }
+    
+    public string NivelRiesgo 
+    {
+        get
+        {
+            if (Anulaciones > 5 || DiferenciaArqueos < -500) return "ROJO";
+            if (Anulaciones > 2 || DiferenciaArqueos < -100) return "AMARILLO";
+            return "VERDE";
+        }
+    }
 }
 
 public class ArqueoInsightDTO
