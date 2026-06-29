@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InnovaParfumPOS.Backend.Models;
 
@@ -21,6 +22,7 @@ public partial class VentaDetalle
 
     public decimal SubtotalBase { get; set; }
     
+    [Column("COSTO_UNITARIO_NIO", TypeName = "decimal(18, 2)")]
     public decimal? CostoUnitarioNio { get; set; }
 
     public int? IdPeriodoGarantia { get; set; }

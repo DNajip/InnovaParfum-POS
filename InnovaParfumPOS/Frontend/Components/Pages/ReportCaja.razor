@@ -182,10 +182,11 @@ else
                         <th class="py-3 text-uppercase small fw-bold text-muted">Referencia</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted">Hora</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted">Cliente</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Monto</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted">Método Pago</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted pe-4">Estado</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Monto</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end" title="Monto con el que paga">Pagado</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -226,6 +227,10 @@ else
                                     {
                                         <span class="badge bg-primary bg-opacity-10 text-primary px-2 rounded">VENTA</span>
                                     }
+                                    else if (v.TipoMovimiento == "Regalía")
+                                    {
+                                        <span class="badge bg-info bg-opacity-10 text-info px-2 rounded"><i class="fas fa-gift me-1"></i>REGALÍA</span>
+                                    }
                                     else if (v.TipoMovimiento == "Ingreso")
                                     {
                                         <span class="badge bg-success bg-opacity-10 text-success px-2 rounded">INGRESO</span>
@@ -247,27 +252,30 @@ else
                                         @v.Cliente
                                     }
                                 </td>
-                                <td class="py-3 text-end fw-bold @(v.TipoMovimiento == "Egreso" ? "text-danger" : "text-primary")">
+                                <td class="py-3">
+                                    <span class="small fw-semibold">@v.MetodoPago</span>
+                                </td>
+                                <td class="py-3 text-end fw-bold @(v.TipoMovimiento == "Egreso" ? "text-danger" : v.TipoMovimiento == "Regalía" ? "text-info" : "text-primary")">
                                     @(v.TipoMovimiento == "Egreso" ? "-" : "")@AppState.CurrencySymbol @v.Monto.ToString("N2")
                                 </td>
+                                <td class="py-3 text-end fw-bold text-dark">
+                                    @AppState.CurrencySymbol @v.MontoPagado.ToString("N2")
+                                </td>
                                 <td class="py-3 text-end fw-semibold text-success">
-                                    @(v.Vuelto > 0 ? $"@AppState.CurrencySymbol {v.Vuelto.ToString("N2")}" : "--")
+                                    @(v.Vuelto > 0 ? $"{AppState.CurrencySymbol} {v.Vuelto.ToString("N2")}" : "--")
                                 </td>
-                                <td class="py-3">
-                                    <span class="small">@v.MetodoPago</span>
-                                </td>
-                                <td class="py-3 pe-4">
+                                <td class="py-3 pe-4 text-center">
                                     @if (v.Estado == "ANULADA")
                                     {
-                                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">ANULADA</span>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">ANULADA</span>
                                     }
                                     else if (v.Estado == "EFECTUADA")
                                     {
-                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">EFECTUADA</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill">EFECTUADA</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">COMPLETADO</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill">COMPLETADO</span>
                                     }
                                 </td>
                             </tr>
@@ -276,7 +284,6 @@ else
                 </tbody>
             </table>
         </div>
-
         @if (movimientosTurno != null && movimientosTurno.Count > pageSizeMovimientos)
         {
             var totalPages = (int)Math.Ceiling((double)movimientosTurno.Count / pageSizeMovimientos);

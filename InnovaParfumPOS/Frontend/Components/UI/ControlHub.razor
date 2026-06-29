@@ -201,7 +201,7 @@
 
             var settings = await ConfigService.GetAllSettingsAsync();
             var configPrint = new {
-                nombreNegocio = settings.GetValueOrDefault("Empresa_Nombre", "INNOVATEC POS"),
+                nombreNegocio = settings.GetValueOrDefault("Empresa_Nombre", "INNOVAPARFUM POS"),
                 printerName = settings.GetValueOrDefault("Hardware_Impresora_Nombre", "")
             };
 

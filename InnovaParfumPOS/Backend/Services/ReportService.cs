@@ -389,7 +389,7 @@ public class ReportService : IReportService
                 SaldoTeorico = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) - (t.DiferenciaBase ?? 0) : t.MontoInicialBase + t.TotalEfectivoBase + ingresosVarios - salidasVarias,
                 SaldoReal = t.MontoContadoBase ?? 0,
                 Diferencia = t.DiferenciaBase ?? 0,
-                EstadoCuadre = t.EstadoCuadre ?? "ABIERTO",
+                EstadoCuadre = t.FechaCierre == null ? "ABIERTO" : ((t.DiferenciaBase ?? 0) < 0 ? "FALTANTE" : ((t.DiferenciaBase ?? 0) > 0 ? "SOBRANTE" : "CUADRADO")),
                 DesglosePagos = desglose
             };
         }).ToList();
@@ -424,11 +424,12 @@ public class ReportService : IReportService
 
             result.Add(new MovimientoTurnoDTO
             {
-                TipoMovimiento = "Venta",
+                TipoMovimiento = v.TotalBase == 0 ? "Regalía" : "Venta",
                 Referencia = v.NumeroFactura ?? $"FAC-{v.IdVenta}",
                 Fecha = v.FechaVenta,
                 Cliente = v.IdPersonaNavigation?.NombreCompleto ?? "Cliente de Contado",
                 Monto = v.TotalBase,
+                MontoPagado = v.TotalBase + totalVuelto,
                 Vuelto = totalVuelto,
                 MetodoPago = metodoPago,
                 Estado = v.Anulada ? "ANULADA" : "EFECTUADA"
@@ -444,6 +445,7 @@ public class ReportService : IReportService
                 Fecha = m.Fecha,
                 Cliente = "N/A",
                 Monto = m.Monto,
+                MontoPagado = m.Monto,
                 Vuelto = 0,
                 MetodoPago = "EFECTIVO",
                 Estado = "COMPLETADO"

@@ -193,11 +193,12 @@ public class CategoryStatDTO
 
 public class MovimientoTurnoDTO
 {
-    public string TipoMovimiento { get; set; } = ""; // "Venta", "Ingreso", "Egreso"
+    public string TipoMovimiento { get; set; } = ""; // "Venta", "Ingreso", "Egreso", "Regalía"
     public string Referencia { get; set; } = ""; // Factura # o Concepto
     public DateTime Fecha { get; set; }
     public string Cliente { get; set; } = ""; 
     public decimal Monto { get; set; }
+    public decimal MontoPagado { get; set; }
     public decimal Vuelto { get; set; } 
     public string MetodoPago { get; set; } = "";
     public string Estado { get; set; } = ""; // EFECTUADA, ANULADA, COMPLETADO

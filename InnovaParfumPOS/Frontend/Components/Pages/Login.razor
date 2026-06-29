@@ -95,7 +95,7 @@
     private bool isProcessing = false;
     private bool showPassword = false;
 
-    private string empresaNombre = "INNOVATEC";
+    private string empresaNombre = "INNOVAPARFUM";
     private string empresaLogo = "images/logo.png";
 
     protected override async Task OnInitializedAsync()
@@ -103,7 +103,7 @@
         try
         {
             var settings = await ConfigService.GetAllSettingsAsync();
-            empresaNombre = settings.GetValueOrDefault("Empresa_Nombre", "INNOVATEC");
+            empresaNombre = settings.GetValueOrDefault("Empresa_Nombre", "INNOVAPARFUM");
             empresaLogo = settings.GetValueOrDefault("Empresa_Logo", "images/logo.png");
             
             AppState.UpdateFromDictionary(settings);
