@@ -348,8 +348,10 @@ public class ReportService : IReportService
                 VentasEfectivo = t.TotalEfectivoBase,
                 VentasTransferencia = t.TotalTransferencia,
                 VentasTarjeta = t.TotalTarjeta,
-                SaldoTeorico = t.MontoInicialBase + t.TotalEfectivoBase + ingresosVarios - salidasVarias,
+                SaldoTeorico = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) - (t.DiferenciaBase ?? 0) : t.MontoInicialBase + t.TotalEfectivoBase + ingresosVarios - salidasVarias,
                 SaldoReal = t.MontoContadoBase ?? 0,
+                Diferencia = t.DiferenciaBase ?? 0,
+                EstadoCuadre = t.EstadoCuadre ?? "ABIERTO",
                 DesglosePagos = desglose
             };
         }).ToList();

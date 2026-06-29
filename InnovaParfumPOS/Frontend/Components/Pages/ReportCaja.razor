@@ -31,7 +31,8 @@ else
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Tarj.</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Teórico</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Real</th>
-                        <th class="pe-3 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Diferencia</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Diferencia</th>
+                        <th class="pe-3 py-2 text-uppercase small fw-bold text-muted text-center text-nowrap">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,8 +77,29 @@ else
                                 </td>
                                 <td class="px-2 py-2 text-end fw-bold text-nowrap">@AppState.CurrencySymbol&nbsp;@a.SaldoTeorico.ToString("N2")</td>
                                 <td class="px-2 py-2 text-end fw-semibold text-nowrap">@AppState.CurrencySymbol&nbsp;@a.SaldoReal.ToString("N2")</td>
-                                <td class="pe-3 py-2 text-end fw-bold text-nowrap @(a.Diferencia < 0 ? "text-danger" : a.Diferencia > 0 ? "text-warning" : "text-success")">
+                                <td class="px-2 py-2 text-end fw-bold text-nowrap @(a.Diferencia < 0 ? "text-danger" : a.Diferencia > 0 ? "text-warning" : "text-success")">
                                     @AppState.CurrencySymbol&nbsp;@a.Diferencia.ToString("N2")
+                                </td>
+                                <td class="pe-3 py-2 text-center text-nowrap">
+                                    @if (a.Cierre != null)
+                                    {
+                                        @if (a.EstadoCuadre == "FALTANTE")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill fw-bold"><i class="fas fa-exclamation-circle me-1"></i>FALTANTE</span>
+                                        }
+                                        else if (a.EstadoCuadre == "SOBRANTE")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>SOBRANTE</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill fw-bold"><i class="fas fa-check-circle me-1"></i>CUADRADO</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill fw-bold">ABIERTO</span>
+                                    }
                                 </td>
                             </tr>
                         }

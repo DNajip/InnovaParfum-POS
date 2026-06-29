@@ -128,7 +128,8 @@ public class ArqueoInsightDTO
     public decimal VentasTarjeta { get; set; }
     public decimal SaldoTeorico { get; set; }
     public decimal SaldoReal { get; set; }
-    public decimal Diferencia => SaldoReal - SaldoTeorico;
+    public decimal Diferencia { get; set; }
+    public string? EstadoCuadre { get; set; }
     public List<PaymentMethodStatDTO> DesglosePagos { get; set; } = new();
 }
 
