@@ -140,12 +140,19 @@ public class ArqueoInsightDTO
     public DateTime Apertura { get; set; }
     public DateTime? Cierre { get; set; }
     public decimal MontoInicial { get; set; }
+    public decimal MontoInicialUSD { get; set; }
     public decimal VentasEfectivo { get; set; }
+    public decimal VentasEfectivoUSD { get; set; }
     public decimal VentasTransferencia { get; set; }
+    public decimal VentasTransferenciaUSD { get; set; }
     public decimal VentasTarjeta { get; set; }
+    public decimal VentasTarjetaUSD { get; set; }
     public decimal SaldoTeorico { get; set; }
-    public decimal SaldoReal { get; set; }
-    public decimal Diferencia { get; set; }
+    public decimal SaldoTeoricoUSD { get; set; }
+    public decimal? SaldoReal { get; set; }
+    public decimal? SaldoRealUSD { get; set; }
+    public decimal? Diferencia { get; set; }
+    public decimal? DiferenciaUSD { get; set; }
     public string? EstadoCuadre { get; set; }
     public List<PaymentMethodStatDTO> DesglosePagos { get; set; } = new();
 }

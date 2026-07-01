@@ -354,7 +354,10 @@ public class ReportService : IReportService
     {
         end = end.Date.AddDays(1).AddTicks(-1);
         var turnos = await _context.Turnos
+            .AsNoTracking()
             .Include(t => t.IdUsuarioNavigation)
+                .ThenInclude(u => u.IdEmpleadoNavigation)
+                    .ThenInclude(e => e.IdPersonaNavigation)
             .Include(t => t.MovimientosVarios)
             .Include(t => t.Venta)
                 .ThenInclude(v => v.Pagos)
@@ -364,8 +367,11 @@ public class ReportService : IReportService
             .ToListAsync();
 
         return turnos.Select(t => {
-            decimal ingresosVarios = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO").Sum(m => m.Monto);
-            decimal salidasVarias = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO").Sum(m => m.Monto);
+            decimal ingresosVariosBase = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO" && m.IdMoneda == 1).Sum(m => m.Monto);
+            decimal salidasVariasBase = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1).Sum(m => m.Monto);
+            
+            decimal ingresosVariosUSD = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO" && m.IdMoneda == 2).Sum(m => m.Monto);
+            decimal salidasVariasUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2).Sum(m => m.Monto);
             
             var desglose = t.Venta.Where(v => !v.Anulada)
                 .SelectMany(v => v.Pagos)
@@ -376,19 +382,29 @@ public class ReportService : IReportService
                     Total = g.Sum(p => p.MontoEnBase - (p.VueltoBase ?? 0))
                 }).ToList();
 
+            var nombreCompleto = t.IdUsuarioNavigation?.IdEmpleadoNavigation?.IdPersonaNavigation?.NombreCompleto;
+            var usuarioFinal = !string.IsNullOrWhiteSpace(nombreCompleto) ? nombreCompleto : (t.IdUsuarioNavigation?.Username ?? "Sistema");
+
             return new ArqueoInsightDTO
             {
                 IdTurno = t.IdTurno,
-                Usuario = t.IdUsuarioNavigation?.Username ?? "Sistema",
+                Usuario = usuarioFinal,
                 Apertura = t.FechaApertura,
                 Cierre = t.FechaCierre,
                 MontoInicial = t.MontoInicialBase,
+                MontoInicialUSD = t.MontoInicialUsd,
                 VentasEfectivo = t.TotalEfectivoBase,
-                VentasTransferencia = t.TotalTransferencia,
-                VentasTarjeta = t.TotalTarjeta,
-                SaldoTeorico = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) - (t.DiferenciaBase ?? 0) : t.MontoInicialBase + t.TotalEfectivoBase + ingresosVarios - salidasVarias,
-                SaldoReal = t.MontoContadoBase ?? 0,
-                Diferencia = t.DiferenciaBase ?? 0,
+                VentasEfectivoUSD = t.TotalEfectivoUsd,
+                VentasTransferencia = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado),
+                VentasTransferenciaUSD = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado),
+                VentasTarjeta = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado),
+                VentasTarjetaUSD = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado),
+                SaldoTeorico = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) - (t.DiferenciaBase ?? 0) : t.MontoInicialBase + t.TotalEfectivoBase + ingresosVariosBase - salidasVariasBase,
+                SaldoTeoricoUSD = t.FechaCierre != null ? (t.MontoContadoUsd ?? 0) - (t.DiferenciaUsd ?? 0) : t.MontoInicialUsd + t.TotalEfectivoUsd + ingresosVariosUSD - salidasVariasUSD,
+                SaldoReal = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) : null,
+                SaldoRealUSD = t.FechaCierre != null ? (t.MontoContadoUsd ?? 0) : null,
+                Diferencia = t.FechaCierre != null ? (t.DiferenciaBase ?? 0) : null,
+                DiferenciaUSD = t.FechaCierre != null ? (t.DiferenciaUsd ?? 0) : null,
                 EstadoCuadre = t.FechaCierre == null ? "ABIERTO" : ((t.DiferenciaBase ?? 0) < 0 ? "FALTANTE" : ((t.DiferenciaBase ?? 0) > 0 ? "SOBRANTE" : "CUADRADO")),
                 DesglosePagos = desglose
             };
