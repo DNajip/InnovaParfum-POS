@@ -1,6 +1,7 @@
 @using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.Models
 @inject InnovaParfumPOS.Backend.Services.AppState AppState
+@inject IReportService ReportService
 @inject IShiftService ShiftService
 @inject ToastService ToastService
 @inject UserSession UserSession
@@ -240,11 +241,20 @@
             if (UserSession.ActiveShift == null) { await OnClose.InvokeAsync(); return; }
 
             var shift = UserSession.ActiveShift;
-            var extraBase = await ShiftService.GetTotalCashEntriesAsync(shift.IdTurno, 1);
-            var extraUsd = await ShiftService.GetTotalCashEntriesAsync(shift.IdTurno, 2);
-
-            expectedBase = shift.MontoInicialBase + shift.TotalEfectivoBase + extraBase;
-            expectedUsd = shift.MontoInicialUsd + shift.TotalEfectivoUsd + extraUsd;
+            var arqueos = await ReportService.GetArqueoInsightsAsync(shift.FechaApertura.Date.AddDays(-1), DateTime.Now.AddDays(1));
+            var myArqueo = arqueos.FirstOrDefault(a => a.IdTurno == shift.IdTurno);
+            if (myArqueo != null)
+            {
+                expectedBase = myArqueo.SaldoTeoricoNIO;
+                expectedUsd = myArqueo.SaldoTeoricoUSD;
+            }
+            else
+            {
+                var extraBase = await ShiftService.GetTotalCashEntriesAsync(shift.IdTurno, 1);
+                var extraUsd = await ShiftService.GetTotalCashEntriesAsync(shift.IdTurno, 2);
+                expectedBase = shift.MontoInicialBase + shift.TotalEfectivoBase + extraBase;
+                expectedUsd = shift.MontoInicialUsd + shift.TotalEfectivoUsd + extraUsd;
+            }
 
             var denoms = await ShiftService.GetDenominationsAsync();
             nioDenominations = denoms.Where(d => d.IdMonedaNavigation?.Codigo == "NIO" || d.IdMoneda == 1)

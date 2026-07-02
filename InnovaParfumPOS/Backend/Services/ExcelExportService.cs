@@ -287,9 +287,9 @@ public class ExcelExportService
             ws.Cell(row, 2).Value = a.Usuario;
             ws.Cell(row, 3).Value = a.Apertura;
             if (a.Cierre.HasValue) ws.Cell(row, 4).Value = a.Cierre.Value; else ws.Cell(row, 4).Value = "Abierto";
-            ws.Cell(row, 5).Value = a.SaldoTeorico;
-            ws.Cell(row, 6).Value = a.SaldoReal;
-            ws.Cell(row, 7).Value = a.Diferencia;
+            ws.Cell(row, 5).Value = a.SaldoTeoricoNIO;
+            ws.Cell(row, 6).Value = a.SaldoRealNIO ?? 0m;
+            ws.Cell(row, 7).Value = a.DiferenciaNIO ?? 0m;
             ws.Cell(row, 8).Value = string.Join(" | ", a.DesglosePagos.Select(p => $"{p.Metodo}: {p.Total:C0}"));
             row++;
         }

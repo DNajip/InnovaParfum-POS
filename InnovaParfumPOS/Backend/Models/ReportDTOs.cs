@@ -139,21 +139,57 @@ public class ArqueoInsightDTO
     public string Usuario { get; set; } = "";
     public DateTime Apertura { get; set; }
     public DateTime? Cierre { get; set; }
-    public decimal MontoInicial { get; set; }
+
+    // IDENTIFICACIÓN
+    public decimal MontoInicialNIO { get; set; }
     public decimal MontoInicialUSD { get; set; }
-    public decimal VentasEfectivo { get; set; }
-    public decimal VentasEfectivoUSD { get; set; }
-    public decimal VentasTransferencia { get; set; }
-    public decimal VentasTransferenciaUSD { get; set; }
-    public decimal VentasTarjeta { get; set; }
-    public decimal VentasTarjetaUSD { get; set; }
-    public decimal SaldoTeorico { get; set; }
+
+    // VENTAS (Sólo base)
+    public decimal VentasEfectuadasBase { get; set; }
+    public int CantVentasEfectuadas { get; set; }
+
+    public decimal VentasAnuladasBase { get; set; }
+    public int CantVentasAnuladas { get; set; }
+
+    public decimal VentasNetasBase => VentasEfectuadasBase - VentasAnuladasBase;
+
+    // COBROS
+    public decimal CobrosEfectivoNIO { get; set; }
+    public decimal CobrosEfectivoUSD { get; set; }
+
+    public decimal CobrosTransferenciaNIO { get; set; }
+    public decimal CobrosTransferenciaUSD { get; set; }
+
+    public decimal CobrosTarjetaNIO { get; set; }
+    public decimal CobrosTarjetaUSD { get; set; }
+
+    // Crédito (Para Abonos y/o Ventas al crédito según diseño)
+    public decimal CobrosCreditoNIO { get; set; }
+    public decimal CobrosCreditoUSD { get; set; }
+
+    // OTROS MOVIMIENTOS
+    public decimal IngresosManualesNIO { get; set; }
+    public decimal IngresosManualesUSD { get; set; }
+
+    public decimal RetirosManualesNIO { get; set; }
+    public decimal RetirosManualesUSD { get; set; }
+
+    public decimal VueltoNIO { get; set; }
+    public decimal VueltoUSD { get; set; }
+
+    // CAJA
+    public decimal SaldoTeoricoNIO { get; set; }
     public decimal SaldoTeoricoUSD { get; set; }
-    public decimal? SaldoReal { get; set; }
+
+    public decimal? SaldoRealNIO { get; set; }
     public decimal? SaldoRealUSD { get; set; }
-    public decimal? Diferencia { get; set; }
-    public decimal? DiferenciaUSD { get; set; }
-    public string? EstadoCuadre { get; set; }
+
+    public decimal? DiferenciaNIO => SaldoRealNIO.HasValue ? SaldoRealNIO - SaldoTeoricoNIO : null;
+    public decimal? DiferenciaUSD => SaldoRealUSD.HasValue ? SaldoRealUSD - SaldoTeoricoUSD : null;
+
+    public string? EstadoCuadreNIO { get; set; }
+    public string? EstadoCuadreUSD { get; set; }
+
     public List<PaymentMethodStatDTO> DesglosePagos { get; set; } = new();
 }
 

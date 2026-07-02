@@ -21,15 +21,32 @@ else
             <table class="table table-hover mb-0" style="font-size: 0.82rem;">
                 <thead style="background: #f8f9fa;">
                     <tr>
+                        <th colspan="4" class="text-center py-2 text-uppercase small fw-bold text-muted border-end">Identificación</th>
+                        <th colspan="3" class="text-center py-2 text-uppercase small fw-bold text-muted border-end" style="background: rgba(0,0,0,0.02)">Ventas</th>
+                        <th colspan="4" class="text-center py-2 text-uppercase small fw-bold text-muted border-end">Cobros</th>
+                        <th colspan="3" class="text-center py-2 text-uppercase small fw-bold text-muted border-end" style="background: rgba(0,0,0,0.02)">Otros Movimientos</th>
+                        <th colspan="4" class="text-center py-2 text-uppercase small fw-bold text-muted">Caja</th>
+                    </tr>
+                    <tr style="border-bottom: 2px solid #e9ecef;">
+                        <!-- Identificación -->
                         <th class="ps-3 py-2 text-uppercase small fw-bold text-muted text-nowrap">Turno</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-nowrap">Cajero</th>
-                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-nowrap">Apertura</th>
-                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-nowrap">Cierre</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-nowrap">Moneda</th>
-                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Inicial</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap border-end">Inicial</th>
+                        <!-- Ventas -->
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap" style="background: rgba(0,0,0,0.02)">Efectuadas</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap" style="background: rgba(0,0,0,0.02)">Anuladas</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap border-end" style="background: rgba(0,0,0,0.02)">Netas</th>
+                        <!-- Cobros -->
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Efectivo</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Transf.</th>
-                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Tarj.</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Tarjeta</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap border-end">Crédito</th>
+                        <!-- Otros Mov. -->
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap" style="background: rgba(0,0,0,0.02)">Ingresos</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap" style="background: rgba(0,0,0,0.02)">Retiros</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap border-end" style="background: rgba(0,0,0,0.02)">Vuelto</th>
+                        <!-- Caja -->
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Teórico</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Real</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Diferencia</th>
@@ -40,7 +57,7 @@ else
                     @if (!arqueos.Any())
                     {
                         <tr>
-                            <td colspan="13" class="text-center py-5 text-muted">
+                            <td colspan="18" class="text-center py-5 text-muted">
                                 <i class="fas fa-receipt fa-2x mb-2 opacity-50"></i>
                                 <p class="mb-0">No hay registros para este período</p>
                             </td>
@@ -50,81 +67,140 @@ else
                     {
                         @foreach (var a in arqueos.Skip((currentPage - 1) * pageSize).Take(pageSize))
                         {
-                            <!-- Fila de CÓRDOBAS (y datos generales del turno) -->
+                            <!-- Fila de CÓRDOBAS -->
                             <tr style="transition: background-color 0.2s; cursor: pointer;" 
                                 class="@(selectedTurnoId == a.IdTurno ? "table-primary" : "")"
                                 @onclick="() => SelectTurno(a.IdTurno)">
                                 
-                                <!-- Datos Generales (rowspan=2) -->
-                                <td rowspan="2" class="ps-3 py-2 fw-bold text-primary text-nowrap align-middle">#@a.IdTurno</td>
-                                <td rowspan="2" class="px-2 py-2 fw-semibold text-nowrap align-middle">@a.Usuario</td>
-                                <td rowspan="2" class="px-2 py-2 text-muted text-nowrap align-middle">@a.Apertura.ToString("dd/MM HH:mm")</td>
-                                <td rowspan="2" class="px-2 py-2 text-nowrap align-middle">
-                                    @if (a.Cierre == null)
-                                    {
-                                        <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill fw-bold" style="font-size: 0.65rem;">
-                                            <i class="fas fa-spinner fa-spin me-1"></i> EN CURSO
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">@a.Cierre?.ToString("dd/MM HH:mm")</span>
-                                    }
+                                <!-- IDENTIFICACIÓN -->
+                                <td rowspan="2" class="ps-3 py-2 text-nowrap align-middle border-end">
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-primary">#@a.IdTurno</span>
+                                        <span class="small text-muted">@a.Apertura.ToString("dd/MM")</span>
+                                    </div>
+                                </td>
+                                <td rowspan="2" class="px-2 py-2 fw-semibold text-nowrap align-middle border-end">
+                                    <div class="d-flex flex-column">
+                                        <span>@a.Usuario</span>
+                                        @if (a.Cierre == null)
+                                        {
+                                            <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill mt-1" style="font-size: 0.65rem;">EN CURSO</span>
+                                        }
+                                    </div>
                                 </td>
                                 
-                                <!-- Moneda y Valores C$ -->
-                                <td class="px-2 py-2 fw-bold text-nowrap" style="color: #495057;">CORDOBAS</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.MontoInicial < 0 ? "text-danger" : "")">C$&nbsp;@a.MontoInicial.ToString("N2")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.VentasEfectivo < 0 ? "text-danger" : "")">C$&nbsp;@a.VentasEfectivo.ToString("N2")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.VentasTransferencia > 0 ? "text-info" : "")">@(a.VentasTransferencia > 0 ? $"C$ {a.VentasTransferencia:N2}".Replace(" ", "\u00A0") : "--")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.VentasTarjeta > 0 ? "text-info" : "")">@(a.VentasTarjeta > 0 ? $"C$ {a.VentasTarjeta:N2}".Replace(" ", "\u00A0") : "--")</td>
-                                <td class="px-2 py-2 text-end fw-bold text-nowrap @(a.SaldoTeorico < 0 ? "text-danger" : "")">C$&nbsp;@a.SaldoTeorico.ToString("N2")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.SaldoReal < 0 ? "text-danger" : "")">
-                                    @(a.Cierre == null ? "--" : $"C$ {a.SaldoReal?.ToString("N2")}".Replace(" ", "\u00A0"))
-                                </td>
-                                <td class="px-2 py-2 text-end fw-bold text-nowrap @(a.Cierre != null && a.Diferencia < 0 ? "text-danger" : a.Diferencia > 0 ? "text-warning" : "text-success")">
-                                    @(a.Cierre == null ? "--" : $"C$ {a.Diferencia?.ToString("N2")}".Replace(" ", "\u00A0"))
-                                </td>
+                                <td class="px-2 py-2 fw-bold text-nowrap" style="color: #495057;">C$ CORDOBAS</td>
+                                <td class="px-2 py-2 text-end text-nowrap border-end">@a.MontoInicialNIO.ToString("N2")</td>
                                 
-                                <!-- Estado (rowspan=2) -->
-                                <td rowspan="2" class="pe-3 py-2 text-center text-nowrap align-middle border-bottom" style="border-bottom-width: 2px !important;">
+                                <!-- VENTAS -->
+                                @if (AppState.CurrencyCode == "NIO")
+                                {
+                                    <td class="px-2 py-2 text-end text-nowrap" style="background: rgba(0,0,0,0.02)">
+                                        <div>@a.VentasEfectuadasBase.ToString("N2")</div>
+                                        <div class="small text-muted">(@a.CantVentasEfectuadas vtas)</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-end text-nowrap" style="background: rgba(0,0,0,0.02)">
+                                        <div>@a.VentasAnuladasBase.ToString("N2")</div>
+                                        <div class="small text-muted">(@a.CantVentasAnuladas anul)</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-end text-nowrap border-end fw-bold text-primary" style="background: rgba(0,0,0,0.02)">
+                                        @a.VentasNetasBase.ToString("N2")
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
+                                    <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
+                                    <td class="px-2 py-2 text-center text-nowrap border-end text-muted" style="background: rgba(0,0,0,0.02)">--</td>
+                                }
+                                
+                                <!-- COBROS -->
+                                <td class="px-2 py-2 text-end text-nowrap">@a.CobrosEfectivoNIO.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap">@a.CobrosTransferenciaNIO.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap">@a.CobrosTarjetaNIO.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap border-end">@a.CobrosCreditoNIO.ToString("N2")</td>
+                                
+                                <!-- OTROS MOVIMIENTOS -->
+                                <td class="px-2 py-2 text-end text-nowrap text-success" style="background: rgba(0,0,0,0.02)">@a.IngresosManualesNIO.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-danger" style="background: rgba(0,0,0,0.02)">@a.RetirosManualesNIO.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-danger border-end" style="background: rgba(0,0,0,0.02)">@a.VueltoNIO.ToString("N2")</td>
+                                
+                                <!-- CAJA -->
+                                <td class="px-2 py-2 text-end fw-bold text-nowrap">@a.SaldoTeoricoNIO.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end fw-semibold text-nowrap">
+                                    @(a.Cierre == null ? "--" : a.SaldoRealNIO?.ToString("N2"))
+                                </td>
+                                <td class="px-2 py-2 text-end fw-bold text-nowrap @(a.Cierre != null && a.DiferenciaNIO < 0 ? "text-danger" : a.DiferenciaNIO > 0 ? "text-warning" : "text-success")">
+                                    @(a.Cierre == null ? "--" : a.DiferenciaNIO?.ToString("N2"))
+                                </td>
+                                <td class="pe-3 py-2 text-center text-nowrap">
                                     @if (a.Cierre != null)
                                     {
-                                        @if (a.EstadoCuadre == "FALTANTE")
-                                        {
-                                            <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill fw-bold"><i class="fas fa-exclamation-circle me-1"></i>FALTANTE</span>
-                                        }
-                                        else if (a.EstadoCuadre == "SOBRANTE")
-                                        {
-                                            <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>SOBRANTE</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill fw-bold"><i class="fas fa-check-circle me-1"></i>CUADRADO</span>
-                                        }
+                                        @if (a.EstadoCuadreNIO == "FALTANTE") { <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">FALTANTE</span> }
+                                        else if (a.EstadoCuadreNIO == "SOBRANTE") { <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill">SOBRANTE</span> }
+                                        else { <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill">CUADRADO</span> }
                                     }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill fw-bold">ABIERTO</span>
-                                    }
+                                    else { <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill">ABIERTO</span> }
                                 </td>
                             </tr>
                             
                             <!-- Fila de DÓLARES -->
-                            <tr style="transition: background-color 0.2s; cursor: pointer; border-bottom-width: 2px !important;" 
-                                class="border-bottom @(selectedTurnoId == a.IdTurno ? "table-primary" : "")"
+                            <tr style="transition: background-color 0.2s; cursor: pointer; border-bottom: 2px solid #dee2e6;" 
+                                class="@(selectedTurnoId == a.IdTurno ? "table-primary" : "")"
                                 @onclick="() => SelectTurno(a.IdTurno)">
-                                <td class="px-2 py-2 fw-bold text-nowrap text-muted">DOLARES</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-muted text-nowrap">$&nbsp;@a.MontoInicialUSD.ToString("N2")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-muted text-nowrap">$&nbsp;@a.VentasEfectivoUSD.ToString("N2")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.VentasTransferenciaUSD > 0 ? "text-info" : "")">@(a.VentasTransferenciaUSD > 0 ? $"$ {a.VentasTransferenciaUSD:N2}".Replace(" ", "\u00A0") : "--")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-nowrap @(a.VentasTarjetaUSD > 0 ? "text-info" : "")">@(a.VentasTarjetaUSD > 0 ? $"$ {a.VentasTarjetaUSD:N2}".Replace(" ", "\u00A0") : "--")</td>
-                                <td class="px-2 py-2 text-end fw-bold text-muted text-nowrap">$&nbsp;@a.SaldoTeoricoUSD.ToString("N2")</td>
-                                <td class="px-2 py-2 text-end fw-semibold text-muted text-nowrap">
-                                    @(a.Cierre == null ? "--" : $"$ {a.SaldoRealUSD?.ToString("N2")}".Replace(" ", "\u00A0"))
+                                
+                                <td class="px-2 py-2 fw-bold text-nowrap text-muted">$ DOLARES</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-muted border-end">@a.MontoInicialUSD.ToString("N2")</td>
+                                
+                                <!-- VENTAS -->
+                                @if (AppState.CurrencyCode == "USD")
+                                {
+                                    <td class="px-2 py-2 text-end text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">
+                                        <div>@a.VentasEfectuadasBase.ToString("N2")</div>
+                                        <div class="small opacity-50">(@a.CantVentasEfectuadas vtas)</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-end text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">
+                                        <div>@a.VentasAnuladasBase.ToString("N2")</div>
+                                        <div class="small opacity-50">(@a.CantVentasAnuladas anul)</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-end text-nowrap border-end fw-bold text-primary opacity-75" style="background: rgba(0,0,0,0.02)">
+                                        @a.VentasNetasBase.ToString("N2")
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
+                                    <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
+                                    <td class="px-2 py-2 text-center text-nowrap border-end text-muted" style="background: rgba(0,0,0,0.02)">--</td>
+                                }
+                                
+                                <!-- COBROS -->
+                                <td class="px-2 py-2 text-end text-nowrap text-muted">@a.CobrosEfectivoUSD.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-muted">@a.CobrosTransferenciaUSD.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-muted">@a.CobrosTarjetaUSD.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-muted border-end">@a.CobrosCreditoUSD.ToString("N2")</td>
+                                
+                                <!-- OTROS MOVIMIENTOS -->
+                                <td class="px-2 py-2 text-end text-nowrap text-success opacity-75" style="background: rgba(0,0,0,0.02)">@a.IngresosManualesUSD.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-danger opacity-75" style="background: rgba(0,0,0,0.02)">@a.RetirosManualesUSD.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-danger opacity-75 border-end" style="background: rgba(0,0,0,0.02)">@a.VueltoUSD.ToString("N2")</td>
+                                
+                                <!-- CAJA -->
+                                <td class="px-2 py-2 text-end fw-bold text-nowrap text-muted">@a.SaldoTeoricoUSD.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end fw-semibold text-nowrap text-muted">
+                                    @(a.Cierre == null ? "--" : a.SaldoRealUSD?.ToString("N2"))
                                 </td>
                                 <td class="px-2 py-2 text-end fw-bold text-nowrap @(a.Cierre != null && a.DiferenciaUSD < 0 ? "text-danger" : a.DiferenciaUSD > 0 ? "text-warning" : "text-success opacity-75")">
-                                    @(a.Cierre == null ? "--" : $"$ {a.DiferenciaUSD?.ToString("N2")}".Replace(" ", "\u00A0"))
+                                    @(a.Cierre == null ? "--" : a.DiferenciaUSD?.ToString("N2"))
+                                </td>
+                                <td class="pe-3 py-2 text-center text-nowrap">
+                                    @if (a.Cierre != null)
+                                    {
+                                        @if (a.EstadoCuadreUSD == "FALTANTE") { <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">FALTANTE</span> }
+                                        else if (a.EstadoCuadreUSD == "SOBRANTE") { <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill">SOBRANTE</span> }
+                                        else { <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill opacity-75">CUADRADO</span> }
+                                    }
+                                    else { <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill">ABIERTO</span> }
                                 </td>
                             </tr>
                         }

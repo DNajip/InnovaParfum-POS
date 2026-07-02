@@ -366,21 +366,63 @@ public class ReportService : IReportService
             .OrderByDescending(t => t.FechaApertura)
             .ToListAsync();
 
+        var abonos = await _context.CreditoAbonos
+            .AsNoTracking()
+            .Include(a => a.MetodoPago)
+            .Where(a => a.Fecha >= start && a.Fecha <= end)
+            .ToListAsync();
+
         return turnos.Select(t => {
-            decimal ingresosVariosBase = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO" && m.IdMoneda == 1).Sum(m => m.Monto);
-            decimal salidasVariasBase = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1).Sum(m => m.Monto);
+            var ventasValidas = t.Venta.Where(v => !v.Anulada).ToList();
+            var ventasAnuladas = t.Venta.Where(v => v.Anulada).ToList();
             
-            decimal ingresosVariosUSD = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO" && m.IdMoneda == 2).Sum(m => m.Monto);
-            decimal salidasVariasUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2).Sum(m => m.Monto);
+            // Ventas Netas (Base)
+            decimal ventasEfectuadasBase = ventasValidas.Sum(v => v.TotalBase);
+            decimal ventasAnuladasBase = ventasAnuladas.Sum(v => v.TotalBase);
+
+            // Cobros (De ventas válidas)
+            var pagos = ventasValidas.SelectMany(v => v.Pagos).ToList();
             
-            var desglose = t.Venta.Where(v => !v.Anulada)
-                .SelectMany(v => v.Pagos)
-                .GroupBy(p => p.IdMetodoPagoNavigation.Nombre)
-                .Select(g => new PaymentMethodStatDTO
-                {
-                    Metodo = g.Key,
-                    Total = g.Sum(p => p.MontoEnBase - (p.VueltoBase ?? 0))
-                }).ToList();
+            // Abonos del turno (Mismo usuario, dentro de la franja horaria)
+            var abonosTurno = abonos.Where(a => a.IdUsuario == t.IdUsuario && a.Fecha >= t.FechaApertura && a.Fecha <= (t.FechaCierre ?? DateTime.MaxValue)).ToList();
+
+            // Desglose de Cobros Físicos (Efectivo) + Electrónicos (SIN convertir a base, sumando MontoPagado que es la moneda física)
+            decimal efectivoVentasNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
+            decimal efectivoVentasUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
+            
+            decimal efectivoAbonosNIO = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("EFECTIVO") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
+            decimal efectivoAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("EFECTIVO") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
+
+            decimal transfNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
+            decimal transfUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
+
+            decimal tarjetaNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
+            decimal tarjetaUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
+
+            // Abonos a Crédito (Lo que el cliente pagó de sus deudas) - Agrupado por moneda
+            decimal abonosCreditoNIO = abonosTurno.Where(a => a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
+            decimal abonosCreditoUSD = abonosTurno.Where(a => a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
+
+            // Vueltos Físicos Reales
+            decimal vueltoVentasNIO = ventasValidas.Where(v => v.MonedaVuelto == "NIO").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
+            decimal vueltoVentasUSD = ventasValidas.Where(v => v.MonedaVuelto == "USD").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
+            
+            decimal vueltoAbonosNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && (m.Concepto ?? "").Contains("Vuelto de Abono")).Sum(m => m.Monto);
+            decimal vueltoAbonosUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && (m.Concepto ?? "").Contains("Vuelto de Abono")).Sum(m => m.Monto);
+
+            // Otros Movimientos
+            decimal ingresosManualesNIO = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO" && m.IdMoneda == 1 && !(m.Concepto ?? "").Contains("Abono a Cr")).Sum(m => m.Monto);
+            decimal ingresosManualesUSD = t.MovimientosVarios.Where(m => m.Tipo == "INGRESO" && m.IdMoneda == 2 && !(m.Concepto ?? "").Contains("Abono a Cr")).Sum(m => m.Monto);
+
+            decimal retirosManualesNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && !(m.Concepto ?? "").Contains("Vuelto de Abono")).Sum(m => m.Monto);
+            decimal retirosManualesUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && !(m.Concepto ?? "").Contains("Vuelto de Abono")).Sum(m => m.Monto);
+
+            // Caja Teórica (puramente física)
+            decimal teoricoNIO = t.MontoInicialBase + efectivoVentasNIO + efectivoAbonosNIO + ingresosManualesNIO - retirosManualesNIO - vueltoVentasNIO - vueltoAbonosNIO;
+            decimal teoricoUSD = t.MontoInicialUsd + efectivoVentasUSD + efectivoAbonosUSD + ingresosManualesUSD - retirosManualesUSD - vueltoVentasUSD - vueltoAbonosUSD;
+            
+            decimal realNIO = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) : 0;
+            decimal realUSD = t.FechaCierre != null ? (t.MontoContadoUsd ?? 0) : 0;
 
             var nombreCompleto = t.IdUsuarioNavigation?.IdEmpleadoNavigation?.IdPersonaNavigation?.NombreCompleto;
             var usuarioFinal = !string.IsNullOrWhiteSpace(nombreCompleto) ? nombreCompleto : (t.IdUsuarioNavigation?.Username ?? "Sistema");
@@ -391,22 +433,49 @@ public class ReportService : IReportService
                 Usuario = usuarioFinal,
                 Apertura = t.FechaApertura,
                 Cierre = t.FechaCierre,
-                MontoInicial = t.MontoInicialBase,
+                
+                MontoInicialNIO = t.MontoInicialBase,
                 MontoInicialUSD = t.MontoInicialUsd,
-                VentasEfectivo = t.TotalEfectivoBase,
-                VentasEfectivoUSD = t.TotalEfectivoUsd,
-                VentasTransferencia = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado),
-                VentasTransferenciaUSD = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado),
-                VentasTarjeta = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado),
-                VentasTarjetaUSD = t.Venta.Where(v => !v.Anulada).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado),
-                SaldoTeorico = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) - (t.DiferenciaBase ?? 0) : t.MontoInicialBase + t.TotalEfectivoBase + ingresosVariosBase - salidasVariasBase,
-                SaldoTeoricoUSD = t.FechaCierre != null ? (t.MontoContadoUsd ?? 0) - (t.DiferenciaUsd ?? 0) : t.MontoInicialUsd + t.TotalEfectivoUsd + ingresosVariosUSD - salidasVariasUSD,
-                SaldoReal = t.FechaCierre != null ? (t.MontoContadoBase ?? 0) : null,
-                SaldoRealUSD = t.FechaCierre != null ? (t.MontoContadoUsd ?? 0) : null,
-                Diferencia = t.FechaCierre != null ? (t.DiferenciaBase ?? 0) : null,
-                DiferenciaUSD = t.FechaCierre != null ? (t.DiferenciaUsd ?? 0) : null,
-                EstadoCuadre = t.FechaCierre == null ? "ABIERTO" : ((t.DiferenciaBase ?? 0) < 0 ? "FALTANTE" : ((t.DiferenciaBase ?? 0) > 0 ? "SOBRANTE" : "CUADRADO")),
-                DesglosePagos = desglose
+
+                VentasEfectuadasBase = ventasEfectuadasBase,
+                CantVentasEfectuadas = ventasValidas.Count,
+
+                VentasAnuladasBase = ventasAnuladasBase,
+                CantVentasAnuladas = ventasAnuladas.Count,
+
+                CobrosEfectivoNIO = efectivoVentasNIO + efectivoAbonosNIO,
+                CobrosEfectivoUSD = efectivoVentasUSD + efectivoAbonosUSD,
+
+                CobrosTransferenciaNIO = transfNIO,
+                CobrosTransferenciaUSD = transfUSD,
+
+                CobrosTarjetaNIO = tarjetaNIO,
+                CobrosTarjetaUSD = tarjetaUSD,
+
+                CobrosCreditoNIO = abonosCreditoNIO,
+                CobrosCreditoUSD = abonosCreditoUSD,
+
+                IngresosManualesNIO = ingresosManualesNIO,
+                IngresosManualesUSD = ingresosManualesUSD,
+
+                RetirosManualesNIO = retirosManualesNIO,
+                RetirosManualesUSD = retirosManualesUSD,
+
+                VueltoNIO = vueltoVentasNIO + vueltoAbonosNIO,
+                VueltoUSD = vueltoVentasUSD + vueltoAbonosUSD,
+
+                SaldoTeoricoNIO = teoricoNIO,
+                SaldoTeoricoUSD = teoricoUSD,
+
+                SaldoRealNIO = t.FechaCierre != null ? realNIO : null,
+                SaldoRealUSD = t.FechaCierre != null ? realUSD : null,
+
+
+
+                EstadoCuadreNIO = t.FechaCierre == null ? "ABIERTO" : ((realNIO - teoricoNIO) < 0 ? "FALTANTE" : ((realNIO - teoricoNIO) > 0 ? "SOBRANTE" : "CUADRADO")),
+                EstadoCuadreUSD = t.FechaCierre == null ? "ABIERTO" : ((realUSD - teoricoUSD) < 0 ? "FALTANTE" : ((realUSD - teoricoUSD) > 0 ? "SOBRANTE" : "CUADRADO")),
+
+                DesglosePagos = new()
             };
         }).ToList();
     }

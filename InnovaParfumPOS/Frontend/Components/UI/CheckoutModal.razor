@@ -502,8 +502,8 @@
 
             ToastService.ShowSuccess("Venta procesada con éxito.");
             
-            // Imprimir Ticket automáticamente (el JS tiene fallback a impresora por defecto si PrinterName está vacío)
-            await ImprimirTicketVenta(result);
+            // Imprimir Ticket automáticamente (fuego y olvido para no bloquear la UI si QZ Tray no responde)
+            _ = ImprimirTicketVenta(result);
 
             await OnSuccess.InvokeAsync();
         }
