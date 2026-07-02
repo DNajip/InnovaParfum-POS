@@ -173,6 +173,8 @@ public class ArqueoInsightDTO
 
     public decimal RetirosManualesNIO { get; set; }
     public decimal RetirosManualesUSD { get; set; }
+    public decimal ReversosNIO { get; set; }
+    public decimal ReversosUSD { get; set; }
 
     public decimal VueltoNIO { get; set; }
     public decimal VueltoUSD { get; set; }
@@ -243,9 +245,8 @@ public class MovimientoTurnoDTO
     public decimal Monto { get; set; }
     public decimal MontoPagado { get; set; }
     public decimal Vuelto { get; set; } 
+    public string SimboloMonedaPago { get; set; } = "$";
+    public string SimboloMonedaVuelto { get; set; } = "$";
     public string MetodoPago { get; set; } = "";
     public string Estado { get; set; } = ""; // EFECTUADA, ANULADA, COMPLETADO
 }
-
-
-

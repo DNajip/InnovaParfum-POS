@@ -24,7 +24,7 @@ else
                         <th colspan="4" class="text-center py-2 text-uppercase small fw-bold text-muted border-end">Identificación</th>
                         <th colspan="3" class="text-center py-2 text-uppercase small fw-bold text-muted border-end" style="background: rgba(0,0,0,0.02)">Ventas</th>
                         <th colspan="4" class="text-center py-2 text-uppercase small fw-bold text-muted border-end">Cobros</th>
-                        <th colspan="3" class="text-center py-2 text-uppercase small fw-bold text-muted border-end" style="background: rgba(0,0,0,0.02)">Otros Movimientos</th>
+                        <th colspan="4" class="text-center py-2 text-uppercase small fw-bold text-muted border-end" style="background: rgba(0,0,0,0.02)">Otros Movimientos</th>
                         <th colspan="4" class="text-center py-2 text-uppercase small fw-bold text-muted">Caja</th>
                     </tr>
                     <tr style="border-bottom: 2px solid #e9ecef;">
@@ -45,6 +45,7 @@ else
                         <!-- Otros Mov. -->
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap" style="background: rgba(0,0,0,0.02)">Ingresos</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap" style="background: rgba(0,0,0,0.02)">Retiros</th>
+                        <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap" style="background: rgba(0,0,0,0.02)">Reversos</th>
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap border-end" style="background: rgba(0,0,0,0.02)">Vuelto</th>
                         <!-- Caja -->
                         <th class="px-2 py-2 text-uppercase small fw-bold text-muted text-end text-nowrap">Teórico</th>
@@ -123,6 +124,7 @@ else
                                 <!-- OTROS MOVIMIENTOS -->
                                 <td class="px-2 py-2 text-end text-nowrap text-success" style="background: rgba(0,0,0,0.02)">@a.IngresosManualesNIO.ToString("N2")</td>
                                 <td class="px-2 py-2 text-end text-nowrap text-danger" style="background: rgba(0,0,0,0.02)">@a.RetirosManualesNIO.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-danger" style="background: rgba(0,0,0,0.02)">@a.ReversosNIO.ToString("N2")</td>
                                 <td class="px-2 py-2 text-end text-nowrap text-danger border-end" style="background: rgba(0,0,0,0.02)">@a.VueltoNIO.ToString("N2")</td>
                                 
                                 <!-- CAJA -->
@@ -183,6 +185,7 @@ else
                                 <!-- OTROS MOVIMIENTOS -->
                                 <td class="px-2 py-2 text-end text-nowrap text-success opacity-75" style="background: rgba(0,0,0,0.02)">@a.IngresosManualesUSD.ToString("N2")</td>
                                 <td class="px-2 py-2 text-end text-nowrap text-danger opacity-75" style="background: rgba(0,0,0,0.02)">@a.RetirosManualesUSD.ToString("N2")</td>
+                                <td class="px-2 py-2 text-end text-nowrap text-danger opacity-75" style="background: rgba(0,0,0,0.02)">@a.ReversosUSD.ToString("N2")</td>
                                 <td class="px-2 py-2 text-end text-nowrap text-danger opacity-75 border-end" style="background: rgba(0,0,0,0.02)">@a.VueltoUSD.ToString("N2")</td>
                                 
                                 <!-- CAJA -->
@@ -360,10 +363,10 @@ else
                                     @(v.TipoMovimiento == "Egreso" ? "-" : "")@AppState.CurrencySymbol @v.Monto.ToString("N2")
                                 </td>
                                 <td class="py-3 text-end fw-bold text-dark">
-                                    @AppState.CurrencySymbol @v.MontoPagado.ToString("N2")
+                                    @v.SimboloMonedaPago @v.MontoPagado.ToString("N2")
                                 </td>
                                 <td class="py-3 text-end fw-semibold text-success">
-                                    @(v.Vuelto > 0 ? $"{AppState.CurrencySymbol} {v.Vuelto.ToString("N2")}" : "--")
+                                    @(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")
                                 </td>
                                 <td class="py-3 pe-4 text-center">
                                     @if (v.Estado == "ANULADA")
