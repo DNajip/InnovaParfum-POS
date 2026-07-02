@@ -516,6 +516,13 @@ public class ReportService : IReportService
             var simboloPago = pagoPrincipal?.IdMetodoPagoNavigation?.IdMoneda == 1 ? "C$" : "$";
             var simboloVuelto = v.MonedaVuelto == "NIO" ? "C$" : "$";
 
+            var reversoMovimientos = movimientos.Where(m => m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith($"Reverso/Devolución de Fac {v.IdVenta} -")).ToList();
+            var reversoFisico = reversoMovimientos.Sum(m => m.Monto);
+            var motivoReverso = string.Join(" | ", reversoMovimientos.Select(m => {
+                var parts = (m.Concepto ?? "").Split(" - ", 2);
+                return parts.Length > 1 ? parts[1] : m.Concepto;
+            }));
+
             result.Add(new MovimientoTurnoDTO
             {
                 TipoMovimiento = v.TotalBase == 0 ? "Regalía" : "Venta",
@@ -525,6 +532,9 @@ public class ReportService : IReportService
                 Monto = v.TotalBase,
                 MontoPagado = montoPagadoFisico,
                 Vuelto = vueltoMostradoFisico,
+                MontoReverso = reversoFisico,
+                MotivoReverso = motivoReverso,
+                MontoTotal = montoPagadoFisico - vueltoMostradoFisico - reversoFisico,
                 SimboloMonedaPago = simboloPago,
                 SimboloMonedaVuelto = simboloVuelto,
                 MetodoPago = metodoPago,
@@ -532,7 +542,9 @@ public class ReportService : IReportService
             });
         }
 
-        foreach (var m in movimientos)
+        var otrosMovimientos = movimientos.Where(m => !(m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith("Reverso/Devolución de Fac ")));
+
+        foreach (var m in otrosMovimientos)
         {
             var simboloMov = m.IdMoneda == 1 ? "C$" : "$";
             result.Add(new MovimientoTurnoDTO
@@ -541,9 +553,11 @@ public class ReportService : IReportService
                 Referencia = m.Concepto,
                 Fecha = m.Fecha,
                 Cliente = "N/A",
-                Monto = m.Monto,
-                MontoPagado = m.Monto,
+                Monto = 0,
+                MontoPagado = 0,
                 Vuelto = 0,
+                MontoReverso = 0,
+                MontoTotal = m.Tipo == "INGRESO" ? m.Monto : -m.Monto,
                 SimboloMonedaPago = simboloMov,
                 SimboloMonedaVuelto = simboloMov,
                 MetodoPago = "EFECTIVO",

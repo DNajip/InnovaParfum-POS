@@ -290,6 +290,8 @@ else
                         <th class="py-3 text-uppercase small fw-bold text-muted text-end">Monto</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted text-end" title="Monto con el que paga">Pagado</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Reverso</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Total</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center">Estado</th>
                     </tr>
                 </thead>
@@ -297,7 +299,7 @@ else
                     @if (selectedTurnoId == null)
                     {
                         <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
+                            <td colspan="11" class="text-center py-5 text-muted">
                                 <i class="fas fa-mouse-pointer fa-2x mb-2 opacity-50"></i>
                                 <p class="mb-0">Haga clic en un turno de la tabla superior para ver sus detalles</p>
                             </td>
@@ -315,7 +317,7 @@ else
                     else if (movimientosTurno == null || !movimientosTurno.Any())
                     {
                         <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
+                            <td colspan="11" class="text-center py-5 text-muted">
                                 <i class="fas fa-info-circle fa-2x mb-2 opacity-50"></i>
                                 <p class="mb-0">No se encontraron movimientos para este turno</p>
                             </td>
@@ -360,13 +362,36 @@ else
                                     <span class="small fw-semibold">@v.MetodoPago</span>
                                 </td>
                                 <td class="py-3 text-end fw-bold @(v.TipoMovimiento == "Egreso" ? "text-danger" : v.TipoMovimiento == "Regalía" ? "text-info" : "text-primary")">
-                                    @(v.TipoMovimiento == "Egreso" ? "-" : "")@AppState.CurrencySymbol @v.Monto.ToString("N2")
+                                    @if(v.Monto == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
+                                        <span class="text-muted">--</span>
+                                    } else {
+                                        @(v.TipoMovimiento == "Egreso" ? "-" : "")@AppState.CurrencySymbol @v.Monto.ToString("N2")
+                                    }
                                 </td>
                                 <td class="py-3 text-end fw-bold text-dark">
-                                    @v.SimboloMonedaPago @v.MontoPagado.ToString("N2")
+                                    @if(v.MontoPagado == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
+                                        <span class="text-muted">--</span>
+                                    } else {
+                                        @v.SimboloMonedaPago @v.MontoPagado.ToString("N2")
+                                    }
                                 </td>
                                 <td class="py-3 text-end fw-semibold text-success">
                                     @(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")
+                                </td>
+                                <td class="py-3 text-end fw-semibold text-danger">
+                                    @if(v.MontoReverso > 0)
+                                    {
+                                        <span title="@v.MotivoReverso" style="cursor: help; border-bottom: 1px dotted #dc3545;">
+                                            @v.SimboloMonedaPago @v.MontoReverso.ToString("N2")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <text>--</text>
+                                    }
+                                </td>
+                                <td class="py-3 text-end fw-bold @(v.MontoTotal < 0 ? "text-danger" : "text-success")">
+                                    @(v.MontoTotal < 0 ? "-" : "")@v.SimboloMonedaPago @Math.Abs(v.MontoTotal).ToString("N2")
                                 </td>
                                 <td class="py-3 pe-4 text-center">
                                     @if (v.Estado == "ANULADA")

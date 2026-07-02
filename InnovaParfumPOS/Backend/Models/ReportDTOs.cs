@@ -140,11 +140,11 @@ public class ArqueoInsightDTO
     public DateTime Apertura { get; set; }
     public DateTime? Cierre { get; set; }
 
-    // IDENTIFICACIÓN
+    // IDENTIFICACIÃ“N
     public decimal MontoInicialNIO { get; set; }
     public decimal MontoInicialUSD { get; set; }
 
-    // VENTAS (Sólo base)
+    // VENTAS (SÃ³lo base)
     public decimal VentasEfectuadasBase { get; set; }
     public int CantVentasEfectuadas { get; set; }
 
@@ -163,7 +163,7 @@ public class ArqueoInsightDTO
     public decimal CobrosTarjetaNIO { get; set; }
     public decimal CobrosTarjetaUSD { get; set; }
 
-    // Crédito (Para Abonos y/o Ventas al crédito según diseño)
+    // CrÃ©dito (Para Abonos y/o Ventas al crÃ©dito segÃºn diseÃ±o)
     public decimal CobrosCreditoNIO { get; set; }
     public decimal CobrosCreditoUSD { get; set; }
 
@@ -238,15 +238,18 @@ public class CategoryStatDTO
 
 public class MovimientoTurnoDTO
 {
-    public string TipoMovimiento { get; set; } = ""; // "Venta", "Ingreso", "Egreso", "Regalía"
-    public string Referencia { get; set; } = ""; // Factura # o Concepto
+    public string TipoMovimiento { get; set; } = "";
+    public string Referencia { get; set; } = "";
     public DateTime Fecha { get; set; }
     public string Cliente { get; set; } = ""; 
     public decimal Monto { get; set; }
     public decimal MontoPagado { get; set; }
     public decimal Vuelto { get; set; } 
+    public decimal MontoReverso { get; set; }
+    public string MotivoReverso { get; set; } = "";
+    public decimal MontoTotal { get; set; }
     public string SimboloMonedaPago { get; set; } = "$";
     public string SimboloMonedaVuelto { get; set; } = "$";
     public string MetodoPago { get; set; } = "";
-    public string Estado { get; set; } = ""; // EFECTUADA, ANULADA, COMPLETADO
+    public string Estado { get; set; } = "";
 }
