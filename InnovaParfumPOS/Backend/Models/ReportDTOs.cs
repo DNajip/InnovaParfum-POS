@@ -163,9 +163,13 @@ public class ArqueoInsightDTO
     public decimal CobrosTarjetaNIO { get; set; }
     public decimal CobrosTarjetaUSD { get; set; }
 
-    // CrÃ©dito (Para Abonos y/o Ventas al crÃ©dito segÃºn diseÃ±o)
-    public decimal CobrosCreditoNIO { get; set; }
-    public decimal CobrosCreditoUSD { get; set; }
+    // ABONOS
+    public decimal AbonosEfectivoNIO { get; set; }
+    public decimal AbonosEfectivoUSD { get; set; }
+    public decimal AbonosTransferenciaNIO { get; set; }
+    public decimal AbonosTransferenciaUSD { get; set; }
+    public decimal AbonosTarjetaNIO { get; set; }
+    public decimal AbonosTarjetaUSD { get; set; }
 
     // OTROS MOVIMIENTOS
     public decimal IngresosManualesNIO { get; set; }
@@ -250,6 +254,8 @@ public class MovimientoTurnoDTO
     public decimal MontoTotal { get; set; }
     public string SimboloMonedaPago { get; set; } = "$";
     public string SimboloMonedaVuelto { get; set; } = "$";
+    public string SimboloMonedaMonto { get; set; } = "$";
     public string MetodoPago { get; set; } = "";
     public string Estado { get; set; } = "";
 }
+

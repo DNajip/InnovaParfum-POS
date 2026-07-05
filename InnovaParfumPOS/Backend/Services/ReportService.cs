@@ -366,11 +366,14 @@ public class ReportService : IReportService
             .OrderByDescending(t => t.FechaApertura)
             .ToListAsync();
 
-        var abonos = await _context.CreditoAbonos
-            .AsNoTracking()
-            .Include(a => a.MetodoPago)
-            .Where(a => a.Fecha >= start && a.Fecha <= end)
-            .ToListAsync();
+          DateTime minDate = turnos.Any() ? turnos.Min(t => t.FechaApertura) : start;
+          DateTime maxDate = turnos.Any() ? turnos.Max(t => t.FechaCierre) ?? DateTime.MaxValue : end;
+
+          var abonos = await _context.CreditoAbonos
+              .AsNoTracking()
+              .Include(a => a.MetodoPago)
+              .Where(a => turnos.Any() && a.Fecha >= minDate && a.Fecha <= maxDate)
+              .ToListAsync();
 
         return turnos.Select(t => {
             var ventasValidas = t.Venta.Where(v => !v.Anulada).ToList();
@@ -393,11 +396,17 @@ public class ReportService : IReportService
             decimal efectivoAbonosNIO = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("EFECTIVO") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
             decimal efectivoAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("EFECTIVO") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
-            decimal transfNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
-            decimal transfUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
+            decimal transfVentasNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
+            decimal transfAbonosNIO = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
 
-            decimal tarjetaNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
-            decimal tarjetaUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado) + abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
+            decimal transfVentasUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
+            decimal transfAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
+
+            decimal tarjetaVentasNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
+            decimal tarjetaAbonosNIO = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
+
+            decimal tarjetaVentasUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
+            decimal tarjetaAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
             // Abonos a Crédito (Lo que el cliente pagó de sus deudas) - Agrupado por moneda
             decimal abonosCreditoNIO = abonosTurno.Where(a => a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
@@ -446,17 +455,21 @@ public class ReportService : IReportService
                 VentasAnuladasBase = ventasAnuladasBase,
                 CantVentasAnuladas = ventasAnuladas.Count,
 
-                CobrosEfectivoNIO = efectivoVentasNIO + efectivoAbonosNIO,
-                CobrosEfectivoUSD = efectivoVentasUSD + efectivoAbonosUSD,
+                CobrosEfectivoNIO = efectivoVentasNIO,
+                CobrosEfectivoUSD = efectivoVentasUSD,
 
-                CobrosTransferenciaNIO = transfNIO,
-                CobrosTransferenciaUSD = transfUSD,
+                CobrosTransferenciaNIO = transfVentasNIO,
+                CobrosTransferenciaUSD = transfVentasUSD,
 
-                CobrosTarjetaNIO = tarjetaNIO,
-                CobrosTarjetaUSD = tarjetaUSD,
+                CobrosTarjetaNIO = tarjetaVentasNIO,
+                CobrosTarjetaUSD = tarjetaVentasUSD,
 
-                CobrosCreditoNIO = abonosCreditoNIO,
-                CobrosCreditoUSD = abonosCreditoUSD,
+                AbonosEfectivoNIO = efectivoAbonosNIO,
+                AbonosEfectivoUSD = efectivoAbonosUSD,
+                AbonosTransferenciaNIO = transfAbonosNIO,
+                AbonosTransferenciaUSD = transfAbonosUSD,
+                AbonosTarjetaNIO = tarjetaAbonosNIO,
+                AbonosTarjetaUSD = tarjetaAbonosUSD,
 
                 IngresosManualesNIO = ingresosManualesNIO,
                 IngresosManualesUSD = ingresosManualesUSD,
@@ -537,12 +550,61 @@ public class ReportService : IReportService
                 MontoTotal = montoPagadoFisico - vueltoMostradoFisico - reversoFisico,
                 SimboloMonedaPago = simboloPago,
                 SimboloMonedaVuelto = simboloVuelto,
+                SimboloMonedaMonto = "$",
                 MetodoPago = metodoPago,
                 Estado = v.Anulada ? "ANULADA" : "EFECTUADA"
             });
         }
 
-        var otrosMovimientos = movimientos.Where(m => !(m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith("Reverso/Devolución de Fac ")));
+        var turno = await _context.Turnos.FindAsync(idTurno);
+        var abonos = new List<CreditoAbono>();
+        if (turno != null)
+        {
+            var nextTurno = await _context.Turnos
+                .Where(t => t.IdTurno > turno.IdTurno)
+                .OrderBy(t => t.IdTurno)
+                .FirstOrDefaultAsync();
+
+            var minDate = turno.FechaApertura;
+            var maxDate = nextTurno?.FechaApertura ?? DateTime.MaxValue;
+            if (turno.FechaCierre != null && turno.FechaCierre < maxDate) maxDate = turno.FechaCierre.Value;
+
+            abonos = await _context.CreditoAbonos
+                .Include(a => a.Credito)
+                    .ThenInclude(c => c.Persona)
+                .Include(a => a.MetodoPago)
+                .Where(a => a.Fecha >= minDate && a.Fecha <= maxDate)
+                .ToListAsync();
+        }
+
+        foreach (var a in abonos)
+        {
+            var simboloPago = a.MetodoPago.IdMoneda == 1 ? "C$" : "$";
+            result.Add(new MovimientoTurnoDTO
+            {
+                TipoMovimiento = "Ingreso",
+                Referencia = $"Abono a Crédito #{a.IdCredito}",
+                Fecha = a.Fecha,
+                Cliente = a.Credito?.Persona?.NombreCompleto ?? "N/A",
+                Monto = a.Monto,
+                MontoPagado = a.MontoRecibidoMoneda,
+                Vuelto = a.VueltoBase,
+                MontoReverso = 0,
+                MotivoReverso = "",
+                MontoTotal = a.Monto,
+                SimboloMonedaPago = simboloPago,
+                SimboloMonedaVuelto = "C$",
+                SimboloMonedaMonto = "$",
+                MetodoPago = a.MetodoPago.Nombre,
+                Estado = "COMPLETADO"
+            });
+        }
+
+        var otrosMovimientos = movimientos.Where(m => 
+            !(m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith("Reverso/Devolución de Fac ")) &&
+            !(m.Concepto ?? "").StartsWith("Abono a Crédito #") &&
+            !(m.Concepto ?? "").StartsWith("Vuelto de Abono a Crédito #")
+        );
 
         foreach (var m in otrosMovimientos)
         {
@@ -560,6 +622,7 @@ public class ReportService : IReportService
                 MontoTotal = m.Tipo == "INGRESO" ? m.Monto : -m.Monto,
                 SimboloMonedaPago = simboloMov,
                 SimboloMonedaVuelto = simboloMov,
+                SimboloMonedaMonto = simboloMov,
                 MetodoPago = "EFECTIVO",
                 Estado = "COMPLETADO"
             });
