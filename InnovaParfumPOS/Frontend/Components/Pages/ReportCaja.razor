@@ -299,6 +299,7 @@ else
                         <th class="py-3 text-uppercase small fw-bold text-muted">Hora</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted">Cliente</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted">Método Pago</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Descuento</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted text-end">Monto</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted text-end" title="Monto con el que paga">Pagado</th>
                         <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
@@ -311,7 +312,7 @@ else
                     @if (selectedTurnoId == null)
                     {
                         <tr>
-                            <td colspan="11" class="text-center py-5 text-muted">
+                            <td colspan="12" class="text-center py-5 text-muted">
                                 <i class="fas fa-mouse-pointer fa-2x mb-2 opacity-50"></i>
                                 <p class="mb-0">Haga clic en un turno de la tabla superior para ver sus detalles</p>
                             </td>
@@ -322,14 +323,14 @@ else
                         @for (int i = 0; i < 3; i++)
                         {
                             <tr>
-                                <td colspan="9" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
+                                <td colspan="12" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
                             </tr>
                         }
                     }
                     else if (movimientosTurno == null || !movimientosTurno.Any())
                     {
                         <tr>
-                            <td colspan="11" class="text-center py-5 text-muted">
+                            <td colspan="12" class="text-center py-5 text-muted">
                                 <i class="fas fa-info-circle fa-2x mb-2 opacity-50"></i>
                                 <p class="mb-0">No se encontraron movimientos para este turno</p>
                             </td>
@@ -372,6 +373,16 @@ else
                                 </td>
                                 <td class="py-3">
                                     <span class="small fw-semibold">@v.MetodoPago</span>
+                                </td>
+                                <td class="py-3 text-end fw-bold text-warning">
+                                    @if (v.Descuento > 0)
+                                    {
+                                        <span title="Descuento aplicado">@v.SimboloMonedaMonto @v.Descuento.ToString("N2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
                                 </td>
                                 <td class="py-3 text-end fw-bold @(v.TipoMovimiento == "Egreso" ? "text-danger" : v.TipoMovimiento == "Regalía" ? "text-info" : "text-primary")">
                                     @if(v.Monto == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {

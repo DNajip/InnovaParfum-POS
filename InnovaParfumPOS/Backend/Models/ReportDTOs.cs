@@ -246,6 +246,7 @@ public class MovimientoTurnoDTO
     public string Referencia { get; set; } = "";
     public DateTime Fecha { get; set; }
     public string Cliente { get; set; } = ""; 
+    public decimal Descuento { get; set; }
     public decimal Monto { get; set; }
     public decimal MontoPagado { get; set; }
     public decimal Vuelto { get; set; } 
