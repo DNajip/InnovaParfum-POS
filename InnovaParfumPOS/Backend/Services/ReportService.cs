@@ -42,7 +42,21 @@ public class ReportService : IReportService
         var currentVentas = await _context.Ventas
             .Include(v => v.VentaDetalles)
                 .ThenInclude(d => d.IdProductoNavigation)
+            .Include(v => v.Pagos) // Para metricas de pago
             .Where(v => v.FechaVenta >= start && v.FechaVenta <= end && !v.Anulada)
+            .ToListAsync();
+
+        var todasLasVentasParaAnulaciones = await _context.Ventas
+            .Include(v => v.VentaDetalles)
+            .Where(v => v.FechaVenta >= start && v.FechaVenta <= end)
+            .ToListAsync();
+
+        var reversosMovimientos = await _context.MovimientosVarios
+            .Where(m => m.Fecha >= start && m.Fecha <= end && m.Tipo == "EGRESO" && m.Concepto.StartsWith("Reverso"))
+            .ToListAsync();
+
+        var turnos = await _context.Turnos
+            .Where(t => t.FechaApertura >= start && t.FechaApertura <= end && t.IdEstado == 2)
             .ToListAsync();
 
         // Calcular periodo anterior equivalente
@@ -56,9 +70,14 @@ public class ReportService : IReportService
             .Where(v => v.FechaVenta >= prevStart && v.FechaVenta <= prevEnd && !v.Anulada)
             .ToListAsync();
 
+        var regaliasDetalles = currentVentas.SelectMany(v => v.VentaDetalles
+            .Where(d => d.PrecioUnitarioBase == 0 && d.IdProductoNavigation != null)
+            .Select(d => new { Detalle = d, Venta = v })).ToList();
+
         var stats = new DashboardStatsDTO
         {
             VentasBrutas = currentVentas.Sum(v => v.TotalBase),
+            VentasBrutasUsd = currentVentas.Sum(v => v.TasaCambioUsd > 0 ? v.TotalBase / v.TasaCambioUsd : 0),
             TotalFacturas = currentVentas.Count,
             ProductosVendidos = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => d.Cantidad),
             TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => v.TotalBase) : 0,
@@ -73,7 +92,35 @@ public class ReportService : IReportService
             GananciaEstancada = currentVentas.Where(v => v.IdCondicionPago == 2).Sum(v => v.VentaDetalles.Sum(d => 
                 d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
             ClientesNuevos = await _context.Personas.CountAsync(p => p.FechaCreacion >= start && p.FechaCreacion <= end && p.EsCliente),
-            Anulaciones = await _context.Ventas.CountAsync(v => v.FechaVenta >= start && v.FechaVenta <= end && v.Anulada)
+            Anulaciones = todasLasVentasParaAnulaciones.Count(v => v.Anulada),
+
+            // Nuevas metricas
+            DescuentosNio = currentVentas.Sum(v => v.DescuentoBase),
+            DescuentosUsd = currentVentas.Sum(v => v.TasaCambioUsd > 0 ? v.DescuentoBase / v.TasaCambioUsd : 0),
+            FacturasConDescuento = currentVentas.Count(v => v.DescuentoBase > 0),
+
+            RegaliasMinoristaNio = regaliasDetalles.Sum(r => (r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad),
+            RegaliasMinoristaUsd = regaliasDetalles.Sum(r => r.Venta.TasaCambioUsd > 0 ? ((r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad) / r.Venta.TasaCambioUsd : 0),
+            RegaliasMayoristaNio = regaliasDetalles.Sum(r => (r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad),
+            RegaliasMayoristaUsd = regaliasDetalles.Sum(r => r.Venta.TasaCambioUsd > 0 ? ((r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad) / r.Venta.TasaCambioUsd : 0),
+            FacturasRegalia = currentVentas.Count(v => v.VentaDetalles.Any(d => d.PrecioUnitarioBase == 0)),
+
+            EfectivoNio = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1).Sum(p => p.MontoPagado),
+            EfectivoUsd = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 2).Sum(p => p.MontoPagado),
+            TarjetaNio = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 3).Sum(p => p.MontoPagado),
+            TarjetaUsd = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1005).Sum(p => p.MontoPagado),
+            TransferenciaNio = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 4).Sum(p => p.MontoPagado),
+            TransferenciaUsd = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 5).Sum(p => p.MontoPagado),
+
+            FacturasReversadas = todasLasVentasParaAnulaciones.Count(v => v.Anulada),
+            MontoReversadoNio = reversosMovimientos.Where(m => m.IdMoneda == 1).Sum(m => m.Monto),
+            MontoReversadoUsd = reversosMovimientos.Where(m => m.IdMoneda == 2).Sum(m => m.Monto),
+            ArticulosReversados = todasLasVentasParaAnulaciones.SelectMany(v => v.VentaDetalles).Count(d => d.Devuelto),
+
+            FaltantesNio = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => Math.Abs(t.DiferenciaBase ?? 0)),
+            FaltantesUsd = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => Math.Abs(t.DiferenciaUsd ?? 0)),
+            SobrantesNio = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => Math.Abs(t.DiferenciaBase ?? 0)),
+            SobrantesUsd = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => Math.Abs(t.DiferenciaUsd ?? 0))
         };
 
         // Calcular porcentajes

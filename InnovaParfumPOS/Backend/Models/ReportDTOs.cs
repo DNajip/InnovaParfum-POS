@@ -6,12 +6,41 @@ namespace InnovaParfumPOS.Backend.Models;
 public class DashboardStatsDTO
 {
     public decimal VentasBrutas { get; set; }
+    public decimal VentasBrutasUsd { get; set; } // Nuevo
     public decimal UtilidadNeta { get; set; }
     public int TotalFacturas { get; set; }
     public decimal TicketPromedio { get; set; }
     public int ClientesNuevos { get; set; }
     public int ProductosVendidos { get; set; }
     public int Anulaciones { get; set; }
+    
+    // Nuevas metricas bimonetarias y contadores
+    public decimal DescuentosNio { get; set; }
+    public decimal DescuentosUsd { get; set; }
+    public int FacturasConDescuento { get; set; }
+
+    public decimal RegaliasMinoristaNio { get; set; }
+    public decimal RegaliasMinoristaUsd { get; set; }
+    public decimal RegaliasMayoristaNio { get; set; }
+    public decimal RegaliasMayoristaUsd { get; set; }
+    public int FacturasRegalia { get; set; }
+
+    public decimal EfectivoNio { get; set; }
+    public decimal EfectivoUsd { get; set; }
+    public decimal TransferenciaNio { get; set; }
+    public decimal TransferenciaUsd { get; set; }
+    public decimal TarjetaNio { get; set; }
+    public decimal TarjetaUsd { get; set; }
+
+    public int FacturasReversadas { get; set; }
+    public decimal MontoReversadoNio { get; set; }
+    public decimal MontoReversadoUsd { get; set; }
+    public int ArticulosReversados { get; set; }
+
+    public decimal FaltantesNio { get; set; }
+    public decimal FaltantesUsd { get; set; }
+    public decimal SobrantesNio { get; set; }
+    public decimal SobrantesUsd { get; set; }
     
     // Comparativas con periodo anterior
     public decimal PorcentajeVentas { get; set; }

@@ -12,20 +12,84 @@
 }
 else
 {
-    <!-- KPI Grid -->
+    <!-- KPI Grid Principal -->
     <div class="kpi-grid">
-        <InnovaKpiCard Title="Ventas Brutas" Value="stats?.VentasBrutas ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-dollar-sign" IconBg="#dcfce7" IconColor="#16a34a" Trend="stats?.PorcentajeVentas ?? 0" Loading="loading" />
-        <InnovaKpiCard Title="Utilidad Neta" Value="stats?.UtilidadNeta ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-chart-line" IconBg="#fef9c3" IconColor="#ca8a04" Trend="stats?.PorcentajeUtilidad ?? 0" Loading="loading" />
-        <InnovaKpiCard Title="Facturas" Value="stats?.TotalFacturas ?? 0" Format="N0" IconClass="fas fa-file-invoice" IconBg="#ffedd5" IconColor="#ea580c" Trend="stats?.PorcentajeFacturas ?? 0" Loading="loading" />
-        <InnovaKpiCard Title="Ticket Promedio" Value="stats?.TicketPromedio ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-receipt" IconBg="#f3e8ff" IconColor="#9333ea" Trend="stats?.PorcentajeTicket ?? 0" Loading="loading" />
+        <InnovaKpiCard Title="Ventas Brutas" 
+            Value="GetPrimary(stats?.VentasBrutas ?? 0, stats?.VentasBrutasUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="GetSecondary(stats?.VentasBrutas ?? 0, stats?.VentasBrutasUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-dollar-sign" IconBg="#dcfce7" IconColor="#16a34a" Loading="loading" />
+        
+        <InnovaKpiCard Title="Descuentos" 
+            Value="-(GetPrimary(stats?.DescuentosNio ?? 0, stats?.DescuentosUsd ?? 0))" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="-(GetSecondary(stats?.DescuentosNio ?? 0, stats?.DescuentosUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-tags" IconBg="#fee2e2" IconColor="#ef4444" Loading="loading" />
+            
+        <InnovaKpiCard Title="Regalías (Min)" 
+            Value="-(GetPrimary(stats?.RegaliasMinoristaNio ?? 0, stats?.RegaliasMinoristaUsd ?? 0))" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="-(GetSecondary(stats?.RegaliasMinoristaNio ?? 0, stats?.RegaliasMinoristaUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-gift" IconBg="#f3e8ff" IconColor="#a855f7" Loading="loading" />
+            
+        <InnovaKpiCard Title="Regalías (May)" 
+            Value="-(GetPrimary(stats?.RegaliasMayoristaNio ?? 0, stats?.RegaliasMayoristaUsd ?? 0))" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="-(GetSecondary(stats?.RegaliasMayoristaNio ?? 0, stats?.RegaliasMayoristaUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-gifts" IconBg="#f3e8ff" IconColor="#9333ea" Loading="loading" />
     </div>
 
-    <!-- Detalles de Ganancias y Auditoría -->
+    <!-- KPI Grid Medios de Pago -->
     <div class="kpi-grid" style="margin-top: 1rem;">
-        <InnovaKpiCard Title="Ganancia (Contado)" Value="stats?.GananciaRealizada ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-hand-holding-dollar" IconBg="#dbeafe" IconColor="#2563eb" Loading="loading" />
-        <InnovaKpiCard Title="Ganancia (Crédito)" Value="stats?.GananciaEstancada ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-hourglass-half" IconBg="#fee2e2" IconColor="#dc2626" Loading="loading" />
-        <InnovaKpiCard Title="Ganancia Mayorista" Value="stats?.GananciaMayorista ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-boxes" IconBg="#e0e7ff" IconColor="#4f46e5" Loading="loading" />
-        <InnovaKpiCard Title="Ganancia Minorista" Value="stats?.GananciaMinorista ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")"  IconClass="fas fa-shopping-bag" IconBg="#fce7f3" IconColor="#db2777" Loading="loading" />
+        <InnovaKpiCard Title="Total Efectivo" 
+            Value="GetPrimary(stats?.EfectivoNio ?? 0, stats?.EfectivoUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="GetSecondary(stats?.EfectivoNio ?? 0, stats?.EfectivoUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-money-bill-wave" IconBg="#dcfce7" IconColor="#22c55e" Loading="loading" />
+            
+        <InnovaKpiCard Title="Total Tarjeta" 
+            Value="GetPrimary(stats?.TarjetaNio ?? 0, stats?.TarjetaUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="GetSecondary(stats?.TarjetaNio ?? 0, stats?.TarjetaUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-credit-card" IconBg="#e0f2fe" IconColor="#0ea5e9" Loading="loading" />
+            
+        <InnovaKpiCard Title="Total Transferencia" 
+            Value="GetPrimary(stats?.TransferenciaNio ?? 0, stats?.TransferenciaUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="GetSecondary(stats?.TransferenciaNio ?? 0, stats?.TransferenciaUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-exchange-alt" IconBg="#f3e8ff" IconColor="#a855f7" Loading="loading" />
+            
+        <InnovaKpiCard Title="Total Facturas" 
+            Value="stats?.TotalFacturas ?? 0" Format="N0" IconClass="fas fa-file-invoice" IconBg="#e0f2fe" IconColor="#0ea5e9" Loading="loading" />
+    </div>
+
+    <!-- KPI Grid Reversos y Contadores -->
+    <div class="kpi-grid" style="margin-top: 1rem;">
+        <InnovaKpiCard Title="Monto Reversado" 
+            Value="-(GetPrimary(stats?.MontoReversadoNio ?? 0, stats?.MontoReversadoUsd ?? 0))" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="-(GetSecondary(stats?.MontoReversadoNio ?? 0, stats?.MontoReversadoUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-hand-holding-usd" IconBg="#ffedd5" IconColor="#f97316" Loading="loading" />
+            
+        <InnovaKpiCard Title="Art. Reversados" 
+            Value="stats?.ArticulosReversados ?? 0" Format="N0" IconClass="fas fa-box-open" IconBg="#ffedd5" IconColor="#f97316" Loading="loading" />
+            
+        <InnovaKpiCard Title="Fact. Reversadas" 
+            Value="stats?.FacturasReversadas ?? 0" Format="N0" IconClass="fas fa-undo" IconBg="#ffedd5" IconColor="#ea580c" Loading="loading" />
+            
+        <InnovaKpiCard Title="Fact. con Descuento" 
+            Value="stats?.FacturasConDescuento ?? 0" Format="N0" IconClass="fas fa-percent" IconBg="#fee2e2" IconColor="#ef4444" Loading="loading" />
+    </div>
+
+    <!-- KPI Grid Cierres y Ganancias -->
+    <div class="kpi-grid" style="margin-top: 1rem;">
+        <InnovaKpiCard Title="Faltantes en Caja" 
+            Value="-(GetPrimary(stats?.FaltantesNio ?? 0, stats?.FaltantesUsd ?? 0))" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="-(GetSecondary(stats?.FaltantesNio ?? 0, stats?.FaltantesUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-level-down-alt" IconBg="#fee2e2" IconColor="#dc2626" Loading="loading" />
+            
+        <InnovaKpiCard Title="Sobrantes en Caja" 
+            Value="GetPrimary(stats?.SobrantesNio ?? 0, stats?.SobrantesUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="GetSecondary(stats?.SobrantesNio ?? 0, stats?.SobrantesUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-level-up-alt" IconBg="#dcfce7" IconColor="#16a34a" Loading="loading" />
+            
+        <InnovaKpiCard Title="Fact. de Regalía" 
+            Value="stats?.FacturasRegalia ?? 0" Format="N0" IconClass="fas fa-hand-holding-heart" IconBg="#f3e8ff" IconColor="#a855f7" Loading="loading" />
+            
+        <InnovaKpiCard Title="Utilidad Neta" 
+            Value="stats?.UtilidadNeta ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")" IconClass="fas fa-chart-line" IconBg="#fef9c3" IconColor="#ca8a04" Loading="loading" />
     </div>
 
     <div class="report-row">
@@ -208,6 +272,10 @@ else
             return "Mes Actual";
         return $"{StartDate:dd/MM} - {EndDate:dd/MM}";
     }
-}
 
+    private decimal GetPrimary(decimal valNio, decimal valUsd) => AppState.CurrencySymbol == "C$" ? valNio : valUsd;
+    private decimal GetSecondary(decimal valNio, decimal valUsd) => AppState.CurrencySymbol == "C$" ? valUsd : valNio;
+    private string GetPrimaryPrefix() => AppState.CurrencySymbol == "C$" ? "C$ " : "U$ ";
+    private string GetSecondaryPrefix() => AppState.CurrencySymbol == "C$" ? "U$ " : "C$ ";
+}
 
