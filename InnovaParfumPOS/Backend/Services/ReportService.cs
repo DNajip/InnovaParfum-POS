@@ -105,12 +105,20 @@ public class ReportService : IReportService
             RegaliasMayoristaUsd = regaliasDetalles.Sum(r => r.Venta.TasaCambioUsd > 0 ? ((r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad) / r.Venta.TasaCambioUsd : 0),
             FacturasRegalia = currentVentas.Count(v => v.VentaDetalles.Any(d => d.PrecioUnitarioBase == 0)),
 
-            EfectivoNio = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1).Sum(p => p.MontoPagado),
-            EfectivoUsd = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 2).Sum(p => p.MontoPagado),
-            TarjetaNio = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 3).Sum(p => p.MontoPagado),
-            TarjetaUsd = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1005).Sum(p => p.MontoPagado),
-            TransferenciaNio = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 4).Sum(p => p.MontoPagado),
-            TransferenciaUsd = currentVentas.SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 5).Sum(p => p.MontoPagado),
+            EfectivoMinoristaNio = currentVentas.Where(v => v.IdTipoVenta == 1).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1).Sum(p => p.MontoPagado),
+            EfectivoMinoristaUsd = currentVentas.Where(v => v.IdTipoVenta == 1).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 2).Sum(p => p.MontoPagado),
+            EfectivoMayoristaNio = currentVentas.Where(v => v.IdTipoVenta == 2).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1).Sum(p => p.MontoPagado),
+            EfectivoMayoristaUsd = currentVentas.Where(v => v.IdTipoVenta == 2).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 2).Sum(p => p.MontoPagado),
+            
+            TarjetaMinoristaNio = currentVentas.Where(v => v.IdTipoVenta == 1).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 3).Sum(p => p.MontoPagado),
+            TarjetaMinoristaUsd = currentVentas.Where(v => v.IdTipoVenta == 1).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1005).Sum(p => p.MontoPagado),
+            TarjetaMayoristaNio = currentVentas.Where(v => v.IdTipoVenta == 2).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 3).Sum(p => p.MontoPagado),
+            TarjetaMayoristaUsd = currentVentas.Where(v => v.IdTipoVenta == 2).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1005).Sum(p => p.MontoPagado),
+            
+            TransferenciaMinoristaNio = currentVentas.Where(v => v.IdTipoVenta == 1).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 4).Sum(p => p.MontoPagado),
+            TransferenciaMinoristaUsd = currentVentas.Where(v => v.IdTipoVenta == 1).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 5).Sum(p => p.MontoPagado),
+            TransferenciaMayoristaNio = currentVentas.Where(v => v.IdTipoVenta == 2).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 4).Sum(p => p.MontoPagado),
+            TransferenciaMayoristaUsd = currentVentas.Where(v => v.IdTipoVenta == 2).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 5).Sum(p => p.MontoPagado),
 
             FacturasReversadas = todasLasVentasParaAnulaciones.Count(v => v.Anulada),
             MontoReversadoNio = reversosMovimientos.Where(m => m.IdMoneda == 1).Sum(m => m.Monto),

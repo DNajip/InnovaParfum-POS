@@ -25,12 +25,20 @@ public class DashboardStatsDTO
     public decimal RegaliasMayoristaUsd { get; set; }
     public int FacturasRegalia { get; set; }
 
-    public decimal EfectivoNio { get; set; }
-    public decimal EfectivoUsd { get; set; }
-    public decimal TransferenciaNio { get; set; }
-    public decimal TransferenciaUsd { get; set; }
-    public decimal TarjetaNio { get; set; }
-    public decimal TarjetaUsd { get; set; }
+    public decimal EfectivoMinoristaNio { get; set; }
+    public decimal EfectivoMinoristaUsd { get; set; }
+    public decimal EfectivoMayoristaNio { get; set; }
+    public decimal EfectivoMayoristaUsd { get; set; }
+
+    public decimal TransferenciaMinoristaNio { get; set; }
+    public decimal TransferenciaMinoristaUsd { get; set; }
+    public decimal TransferenciaMayoristaNio { get; set; }
+    public decimal TransferenciaMayoristaUsd { get; set; }
+
+    public decimal TarjetaMinoristaNio { get; set; }
+    public decimal TarjetaMinoristaUsd { get; set; }
+    public decimal TarjetaMayoristaNio { get; set; }
+    public decimal TarjetaMayoristaUsd { get; set; }
 
     public int FacturasReversadas { get; set; }
     public decimal MontoReversadoNio { get; set; }

@@ -24,36 +24,116 @@ else
             SecondaryValue="-(GetSecondary(stats?.DescuentosNio ?? 0, stats?.DescuentosUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
             IconClass="fas fa-tags" IconBg="#fee2e2" IconColor="#ef4444" Loading="loading" />
             
-        <InnovaKpiCard Title="Regalías (Min)" 
-            Value="-(GetPrimary(stats?.RegaliasMinoristaNio ?? 0, stats?.RegaliasMinoristaUsd ?? 0))" Prefix="@GetPrimaryPrefix()"
-            SecondaryValue="-(GetSecondary(stats?.RegaliasMinoristaNio ?? 0, stats?.RegaliasMinoristaUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
-            IconClass="fas fa-gift" IconBg="#f3e8ff" IconColor="#a855f7" Loading="loading" />
-            
-        <InnovaKpiCard Title="Regalías (May)" 
-            Value="-(GetPrimary(stats?.RegaliasMayoristaNio ?? 0, stats?.RegaliasMayoristaUsd ?? 0))" Prefix="@GetPrimaryPrefix()"
-            SecondaryValue="-(GetSecondary(stats?.RegaliasMayoristaNio ?? 0, stats?.RegaliasMayoristaUsd ?? 0))" SecondaryPrefix="@GetSecondaryPrefix()"
-            IconClass="fas fa-gifts" IconBg="#f3e8ff" IconColor="#9333ea" Loading="loading" />
+        <div class="innova-kpi-card" style="min-width: 0;">
+            <div class="kpi-card-header">
+                <span class="kpi-card-title text-truncate">Regalías (Min | May)</span>
+                <div class="kpi-card-icon" style="background: #f3e8ff; color: #a855f7; flex-shrink: 0;">
+                    <i class="fas fa-gift"></i>
+                </div>
+            </div>
+            @if (loading)
+            {
+                <div class="skeleton mt-2" style="width: 120px; height: 32px;"></div>
+            }
+            else
+            {
+                <div class="kpi-card-value d-flex align-items-center mt-2 flex-wrap" style="font-size: 1.1rem; line-height: 1.2;">
+                    <span class="text-nowrap">-@(AppState.CurrencySymbol) @((stats?.RegaliasMinoristaNio ?? 0).ToString("N2"))</span>
+                    <span class="text-muted mx-1 fw-light">|</span>
+                    <span class="text-nowrap">-@(AppState.CurrencySymbol) @((stats?.RegaliasMayoristaNio ?? 0).ToString("N2"))</span>
+                </div>
+            }
+        </div>
+        
+        <InnovaKpiCard Title="Total Facturas" 
+            Value="stats?.TotalFacturas ?? 0" Format="N0" IconClass="fas fa-file-invoice" IconBg="#e0f2fe" IconColor="#0ea5e9" Loading="loading" />
     </div>
 
     <!-- KPI Grid Medios de Pago -->
     <div class="kpi-grid" style="margin-top: 1rem;">
-        <InnovaKpiCard Title="Total Efectivo" 
-            Value="GetPrimary(stats?.EfectivoNio ?? 0, stats?.EfectivoUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
-            SecondaryValue="GetSecondary(stats?.EfectivoNio ?? 0, stats?.EfectivoUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
-            IconClass="fas fa-money-bill-wave" IconBg="#dcfce7" IconColor="#22c55e" Loading="loading" />
+        <div class="innova-kpi-card" style="min-width: 0;">
+            <div class="kpi-card-header">
+                <span class="kpi-card-title text-truncate">Total Efectivo (Min | May)</span>
+                <div class="kpi-card-icon" style="background: #dcfce7; color: #22c55e; flex-shrink: 0;">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+            @if (loading)
+            {
+                <div class="skeleton mt-2" style="width: 120px; height: 32px;"></div>
+                <div class="skeleton mt-2" style="width: 100px; height: 16px;"></div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center mt-2 flex-wrap" style="line-height: 1.2;">
+                    <div class="d-flex flex-column align-items-start">
+                        <span class="kpi-card-value text-nowrap" style="font-size: 1.1rem;">@(GetPrimaryPrefix())@((Math.Abs(GetPrimary(stats?.EfectivoMinoristaNio ?? 0, stats?.EfectivoMinoristaUsd ?? 0))).ToString("N2"))</span>
+                        <span class="kpi-card-secondary text-muted small text-nowrap mt-1">@(GetSecondaryPrefix())@((Math.Abs(GetSecondary(stats?.EfectivoMinoristaNio ?? 0, stats?.EfectivoMinoristaUsd ?? 0))).ToString("N2"))</span>
+                    </div>
+                    <span class="text-muted mx-2 fw-light" style="font-size: 1.25rem;">|</span>
+                    <div class="d-flex flex-column align-items-start">
+                        <span class="kpi-card-value text-nowrap" style="font-size: 1.1rem;">@(GetPrimaryPrefix())@((Math.Abs(GetPrimary(stats?.EfectivoMayoristaNio ?? 0, stats?.EfectivoMayoristaUsd ?? 0))).ToString("N2"))</span>
+                        <span class="kpi-card-secondary text-muted small text-nowrap mt-1">@(GetSecondaryPrefix())@((Math.Abs(GetSecondary(stats?.EfectivoMayoristaNio ?? 0, stats?.EfectivoMayoristaUsd ?? 0))).ToString("N2"))</span>
+                    </div>
+                </div>
+            }
+        </div>
             
-        <InnovaKpiCard Title="Total Tarjeta" 
-            Value="GetPrimary(stats?.TarjetaNio ?? 0, stats?.TarjetaUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
-            SecondaryValue="GetSecondary(stats?.TarjetaNio ?? 0, stats?.TarjetaUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
-            IconClass="fas fa-credit-card" IconBg="#e0f2fe" IconColor="#0ea5e9" Loading="loading" />
+        <div class="innova-kpi-card" style="min-width: 0;">
+            <div class="kpi-card-header">
+                <span class="kpi-card-title text-truncate">Total Tarjeta (Min | May)</span>
+                <div class="kpi-card-icon" style="background: #e0f2fe; color: #0ea5e9; flex-shrink: 0;">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+            </div>
+            @if (loading)
+            {
+                <div class="skeleton mt-2" style="width: 120px; height: 32px;"></div>
+                <div class="skeleton mt-2" style="width: 100px; height: 16px;"></div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center mt-2 flex-wrap" style="line-height: 1.2;">
+                    <div class="d-flex flex-column align-items-start">
+                        <span class="kpi-card-value text-nowrap" style="font-size: 1.1rem;">@(GetPrimaryPrefix())@((Math.Abs(GetPrimary(stats?.TarjetaMinoristaNio ?? 0, stats?.TarjetaMinoristaUsd ?? 0))).ToString("N2"))</span>
+                        <span class="kpi-card-secondary text-muted small text-nowrap mt-1">@(GetSecondaryPrefix())@((Math.Abs(GetSecondary(stats?.TarjetaMinoristaNio ?? 0, stats?.TarjetaMinoristaUsd ?? 0))).ToString("N2"))</span>
+                    </div>
+                    <span class="text-muted mx-2 fw-light" style="font-size: 1.25rem;">|</span>
+                    <div class="d-flex flex-column align-items-start">
+                        <span class="kpi-card-value text-nowrap" style="font-size: 1.1rem;">@(GetPrimaryPrefix())@((Math.Abs(GetPrimary(stats?.TarjetaMayoristaNio ?? 0, stats?.TarjetaMayoristaUsd ?? 0))).ToString("N2"))</span>
+                        <span class="kpi-card-secondary text-muted small text-nowrap mt-1">@(GetSecondaryPrefix())@((Math.Abs(GetSecondary(stats?.TarjetaMayoristaNio ?? 0, stats?.TarjetaMayoristaUsd ?? 0))).ToString("N2"))</span>
+                    </div>
+                </div>
+            }
+        </div>
             
-        <InnovaKpiCard Title="Total Transferencia" 
-            Value="GetPrimary(stats?.TransferenciaNio ?? 0, stats?.TransferenciaUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
-            SecondaryValue="GetSecondary(stats?.TransferenciaNio ?? 0, stats?.TransferenciaUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
-            IconClass="fas fa-exchange-alt" IconBg="#f3e8ff" IconColor="#a855f7" Loading="loading" />
-            
-        <InnovaKpiCard Title="Total Facturas" 
-            Value="stats?.TotalFacturas ?? 0" Format="N0" IconClass="fas fa-file-invoice" IconBg="#e0f2fe" IconColor="#0ea5e9" Loading="loading" />
+        <div class="innova-kpi-card" style="min-width: 0;">
+            <div class="kpi-card-header">
+                <span class="kpi-card-title text-truncate">Transferencia (Min | May)</span>
+                <div class="kpi-card-icon" style="background: #f3e8ff; color: #a855f7; flex-shrink: 0;">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+            </div>
+            @if (loading)
+            {
+                <div class="skeleton mt-2" style="width: 120px; height: 32px;"></div>
+                <div class="skeleton mt-2" style="width: 100px; height: 16px;"></div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center mt-2 flex-wrap" style="line-height: 1.2;">
+                    <div class="d-flex flex-column align-items-start">
+                        <span class="kpi-card-value text-nowrap" style="font-size: 1.1rem;">@(GetPrimaryPrefix())@((Math.Abs(GetPrimary(stats?.TransferenciaMinoristaNio ?? 0, stats?.TransferenciaMinoristaUsd ?? 0))).ToString("N2"))</span>
+                        <span class="kpi-card-secondary text-muted small text-nowrap mt-1">@(GetSecondaryPrefix())@((Math.Abs(GetSecondary(stats?.TransferenciaMinoristaNio ?? 0, stats?.TransferenciaMinoristaUsd ?? 0))).ToString("N2"))</span>
+                    </div>
+                    <span class="text-muted mx-2 fw-light" style="font-size: 1.25rem;">|</span>
+                    <div class="d-flex flex-column align-items-start">
+                        <span class="kpi-card-value text-nowrap" style="font-size: 1.1rem;">@(GetPrimaryPrefix())@((Math.Abs(GetPrimary(stats?.TransferenciaMayoristaNio ?? 0, stats?.TransferenciaMayoristaUsd ?? 0))).ToString("N2"))</span>
+                        <span class="kpi-card-secondary text-muted small text-nowrap mt-1">@(GetSecondaryPrefix())@((Math.Abs(GetSecondary(stats?.TransferenciaMayoristaNio ?? 0, stats?.TransferenciaMayoristaUsd ?? 0))).ToString("N2"))</span>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 
     <!-- KPI Grid Reversos y Contadores -->
