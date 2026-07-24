@@ -188,7 +188,8 @@ public class ArqueoInsightDTO
     public decimal VentasAnuladasBase { get; set; }
     public int CantVentasAnuladas { get; set; }
 
-    public decimal VentasNetasBase => VentasEfectuadasBase - VentasAnuladasBase;
+    public decimal VentasNetasNIO { get; set; }
+    public decimal VentasNetasUSD { get; set; }
 
     // COBROS
     public decimal CobrosEfectivoNIO { get; set; }

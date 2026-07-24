@@ -108,16 +108,15 @@ else
                                         <div>@a.VentasAnuladasBase.ToString("N2")</div>
                                         <div class="small text-muted">(@a.CantVentasAnuladas anul)</div>
                                     </td>
-                                    <td class="px-2 py-2 text-end text-nowrap border-end fw-bold text-primary" style="background: rgba(0,0,0,0.02)">
-                                        @a.VentasNetasBase.ToString("N2")
-                                    </td>
                                 }
                                 else
                                 {
                                     <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
                                     <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
-                                    <td class="px-2 py-2 text-center text-nowrap border-end text-muted" style="background: rgba(0,0,0,0.02)">--</td>
                                 }
+                                <td class="px-2 py-2 text-end text-nowrap border-end fw-bold text-primary" style="background: rgba(0,0,0,0.02)">
+                                    @a.VentasNetasNIO.ToString("N2")
+                                </td>
                                 
                                 <!-- COBROS VENTAS -->
                                 <td class="px-2 py-2 text-end text-nowrap">@a.CobrosEfectivoNIO.ToString("N2")</td>
@@ -173,16 +172,15 @@ else
                                         <div>@a.VentasAnuladasBase.ToString("N2")</div>
                                         <div class="small opacity-50">(@a.CantVentasAnuladas anul)</div>
                                     </td>
-                                    <td class="px-2 py-2 text-end text-nowrap border-end fw-bold text-primary opacity-75" style="background: rgba(0,0,0,0.02)">
-                                        @a.VentasNetasBase.ToString("N2")
-                                    </td>
                                 }
                                 else
                                 {
                                     <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
                                     <td class="px-2 py-2 text-center text-nowrap text-muted" style="background: rgba(0,0,0,0.02)">--</td>
-                                    <td class="px-2 py-2 text-center text-nowrap border-end text-muted" style="background: rgba(0,0,0,0.02)">--</td>
                                 }
+                                <td class="px-2 py-2 text-end text-nowrap border-end fw-bold text-primary opacity-75" style="background: rgba(0,0,0,0.02)">
+                                    @a.VentasNetasUSD.ToString("N2")
+                                </td>
                                 
                                 <!-- COBROS VENTAS -->
                                 <td class="px-2 py-2 text-end text-nowrap text-muted">@a.CobrosEfectivoUSD.ToString("N2")</td>

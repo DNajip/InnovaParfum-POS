@@ -494,6 +494,22 @@ public class ReportService : IReportService
             var nombreCompleto = t.IdUsuarioNavigation?.IdEmpleadoNavigation?.IdPersonaNavigation?.NombreCompleto;
             var usuarioFinal = !string.IsNullOrWhiteSpace(nombreCompleto) ? nombreCompleto : (t.IdUsuarioNavigation?.Username ?? "Sistema");
 
+            // --- CÁLCULO DE VENTAS NETAS (CONTADO) ---
+            var ventasContado = ventasValidas.Where(v => v.IdCondicionPago == 1).ToList();
+            var pagosContado = ventasContado.SelectMany(v => v.Pagos).ToList();
+            
+            decimal cobrosContadoNIO = pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
+            decimal cobrosContadoUSD = pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
+            
+            decimal vueltoContadoNIO = ventasContado.Where(v => v.MonedaVuelto == "NIO").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
+            decimal vueltoContadoUSD = ventasContado.Where(v => v.MonedaVuelto == "USD").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
+            
+            decimal reversosContadoNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
+            decimal reversosContadoUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
+            
+            decimal ventasNetasNIO = Math.Max(0, cobrosContadoNIO - vueltoContadoNIO - reversosContadoNIO);
+            decimal ventasNetasUSD = Math.Max(0, cobrosContadoUSD - vueltoContadoUSD - reversosContadoUSD);
+
             return new ArqueoInsightDTO
             {
                 IdTurno = t.IdTurno,
@@ -509,6 +525,9 @@ public class ReportService : IReportService
 
                 VentasAnuladasBase = ventasAnuladasBase,
                 CantVentasAnuladas = ventasAnuladas.Count,
+                
+                VentasNetasNIO = ventasNetasNIO,
+                VentasNetasUSD = ventasNetasUSD,
 
                 CobrosEfectivoNIO = efectivoVentasNIO,
                 CobrosEfectivoUSD = efectivoVentasUSD,
