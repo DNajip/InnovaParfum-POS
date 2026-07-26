@@ -438,38 +438,38 @@ public class ReportService : IReportService
             decimal ventasEfectuadasBase = ventasValidas.Sum(v => v.TotalBase);
             decimal ventasAnuladasBase = ventasAnuladas.Sum(v => v.TotalBase);
 
-            // Cobros (De ventas válidas)
-            var pagos = ventasValidas.SelectMany(v => v.Pagos).ToList();
+            // Cobros y Vueltos físicos (De TODAS las ventas, incluyendo anuladas, porque el dinero entró y salió físicamente de gaveta)
+            var todosPagos = t.Venta.SelectMany(v => v.Pagos).ToList();
             
             // Abonos del turno (Mismo usuario, dentro de la franja horaria)
             var abonosTurno = abonos.Where(a => a.IdUsuario == t.IdUsuario && a.Fecha >= t.FechaApertura && a.Fecha <= (t.FechaCierre ?? DateTime.MaxValue)).ToList();
 
             // Desglose de Cobros Físicos (Efectivo) + Electrónicos (SIN convertir a base, sumando MontoPagado que es la moneda física)
-            decimal efectivoVentasNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
-            decimal efectivoVentasUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
+            decimal efectivoVentasNIO = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
+            decimal efectivoVentasUSD = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
             
             decimal efectivoAbonosNIO = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("EFECTIVO") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
             decimal efectivoAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("EFECTIVO") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
-            decimal transfVentasNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
+            decimal transfVentasNIO = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
             decimal transfAbonosNIO = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
 
-            decimal transfVentasUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
+            decimal transfVentasUSD = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TRANSFERENCIA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
             decimal transfAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TRANSFERENCIA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
-            decimal tarjetaVentasNIO = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
+            decimal tarjetaVentasNIO = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
             decimal tarjetaAbonosNIO = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
 
-            decimal tarjetaVentasUSD = pagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
+            decimal tarjetaVentasUSD = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
             decimal tarjetaAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
             // Abonos a Crédito (Lo que el cliente pagó de sus deudas) - Agrupado por moneda
             decimal abonosCreditoNIO = abonosTurno.Where(a => a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
             decimal abonosCreditoUSD = abonosTurno.Where(a => a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
-            // Vueltos Físicos Reales
-            decimal vueltoVentasNIO = ventasValidas.Where(v => v.MonedaVuelto == "NIO").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
-            decimal vueltoVentasUSD = ventasValidas.Where(v => v.MonedaVuelto == "USD").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
+            // Vuelto / Cambio (Extraemos de TODAS las ventas porque si fue anulada, el vuelto ya se había entregado físicamente)
+            decimal vueltoVentasNIO = t.Venta.Where(v => v.MonedaVuelto == "NIO").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
+            decimal vueltoVentasUSD = t.Venta.Where(v => v.MonedaVuelto == "USD").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
             
             decimal vueltoAbonosNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && (m.Concepto ?? "").Contains("Vuelto de Abono")).Sum(m => m.Monto);
             decimal vueltoAbonosUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && (m.Concepto ?? "").Contains("Vuelto de Abono")).Sum(m => m.Monto);
@@ -647,6 +647,8 @@ public class ReportService : IReportService
             abonos = await _context.CreditoAbonos
                 .Include(a => a.Credito)
                     .ThenInclude(c => c.Persona)
+                .Include(a => a.Credito)
+                    .ThenInclude(c => c.Abonos)
                 .Include(a => a.MetodoPago)
                 .Where(a => a.Fecha >= minDate && a.Fecha <= maxDate)
                 .ToListAsync();
@@ -672,7 +674,10 @@ public class ReportService : IReportService
                 SimboloMonedaVuelto = "C$",
                 SimboloMonedaMonto = "$",
                 MetodoPago = a.MetodoPago.Nombre,
-                Estado = "COMPLETADO"
+                Estado = "COMPLETADO",
+                SaldoPendiente = a.Credito != null 
+                    ? a.Credito.MontoOriginal - a.Credito.Abonos.Where(prev => prev.IdAbono < a.IdAbono).Sum(prev => prev.Monto) 
+                    : 0
             });
         }
 

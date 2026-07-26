@@ -325,7 +325,7 @@ else
                             </tr>
                         }
                     }
-                    else if (movimientosTurno == null || !movimientosTurno.Any())
+                    else if (movimientosGenerales == null || !movimientosGenerales.Any())
                     {
                         <tr>
                             <td colspan="12" class="text-center py-5 text-muted">
@@ -336,7 +336,7 @@ else
                     }
                     else
                     {
-                        @foreach (var v in movimientosTurno.Skip((currentPageMovimientos - 1) * pageSizeMovimientos).Take(pageSizeMovimientos))
+                        @foreach (var v in movimientosGenerales.Skip((currentPageMovimientos - 1) * pageSizeMovimientos).Take(pageSizeMovimientos))
                         {
                             <tr>
                                 <td class="ps-4 py-3 fw-bold">
@@ -434,12 +434,12 @@ else
                 </tbody>
             </table>
         </div>
-        @if (movimientosTurno != null && movimientosTurno.Count > pageSizeMovimientos)
+        @if (movimientosGenerales != null && movimientosGenerales.Count > pageSizeMovimientos)
         {
-            var totalPages = (int)Math.Ceiling((double)movimientosTurno.Count / pageSizeMovimientos);
+            var totalPages = (int)Math.Ceiling((double)movimientosGenerales.Count / pageSizeMovimientos);
             <div class="pagination-container p-3 border-top bg-white d-flex justify-content-center align-items-center position-relative">
                 <div class="position-absolute start-0 ps-4 d-none d-lg-block">
-                    <span class="small text-muted">Mostrando @(Math.Min(movimientosTurno.Count, (currentPageMovimientos - 1) * pageSizeMovimientos + 1)) a @(Math.Min(movimientosTurno.Count, currentPageMovimientos * pageSizeMovimientos)) de @movimientosTurno.Count registros</span>
+                    <span class="small text-muted">Mostrando @(Math.Min(movimientosGenerales.Count, (currentPageMovimientos - 1) * pageSizeMovimientos + 1)) a @(Math.Min(movimientosGenerales.Count, currentPageMovimientos * pageSizeMovimientos)) de @movimientosGenerales.Count registros</span>
                 </div>
                 <div class="pagination-carousel-container">
                     <ul class="pagination pagination-premium mb-0">
@@ -486,6 +486,124 @@ else
             </div>
         }
     </div>
+
+    <!-- Historial de Abono a cr�ditos por turno -->
+    <div class="report-card mb-4 shadow-sm animate__animated animate__fadeInUp" style="border-radius: 16px; border: none; overflow: hidden;">
+        <div class="report-card-title px-4 py-3 bg-white d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #f1f3f5;">
+            <span class="fw-bold" style="font-size: 1.1rem; color: var(--text-dark);">
+                <i class="fas fa-hand-holding-usd me-2 text-success"></i>
+                @(selectedTurnoId == null ? "Seleccione un turno para ver abonos a créditos" : $"Historial de Abono a créditos por turno #{selectedTurnoId}")
+            </span>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Tipo</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Referencia</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Hora</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Cliente</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted">Método Pago</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Crédito</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Abono</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end" title="Monto con el que paga">Paga con</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Total</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (selectedTurnoId == null)
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center py-5 text-muted">
+                                <i class="fas fa-mouse-pointer fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">Haga clic en un turno de la tabla superior para ver sus detalles</p>
+                            </td>
+                        </tr>
+                    }
+                    else if (loadingMovimientos)
+                    {
+                        @for (int i = 0; i < 2; i++)
+                        {
+                            <tr>
+                                <td colspan="11" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
+                            </tr>
+                        }
+                    }
+                    else if (abonosCredito == null || !abonosCredito.Any())
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center py-5 text-muted">
+                                <i class="fas fa-info-circle fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">No se registraron abonos a créditos en este turno</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var v in abonosCredito.Skip((currentPageAbonos - 1) * pageSizeAbonos).Take(pageSizeAbonos))
+                        {
+                            <tr>
+                                <td class="ps-4 py-3 fw-bold">
+                                    <span class="badge bg-success bg-opacity-10 text-success px-2 rounded">INGRESO</span>
+                                </td>
+                                <td class="py-3 fw-bold">@v.Referencia</td>
+                                <td class="py-3 text-muted">@v.Fecha.ToString("hh:mm tt")</td>
+                                <td class="py-3">@v.Cliente</td>
+                                <td class="py-3"><span class="small fw-semibold">@v.MetodoPago</span></td>
+                                <td class="py-3 text-end fw-bold text-warning">@v.SimboloMonedaMonto @v.SaldoPendiente.ToString("N2")</td>
+                                <td class="py-3 text-end fw-bold text-success">@v.SimboloMonedaMonto @v.Monto.ToString("N2")</td>
+                                <td class="py-3 text-end fw-bold text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2")</td>
+                                <td class="py-3 text-end fw-semibold text-danger">@(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")</td>
+                                <td class="py-3 text-end fw-bold">@v.SimboloMonedaMonto @v.MontoTotal.ToString("N2")</td>
+                                <td class="py-3 text-center pe-4"><span class="badge rounded-pill bg-success fw-bold">@v.Estado</span></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (abonosCredito != null && abonosCredito.Count > pageSizeAbonos)
+        {
+            var totalPages = (int)Math.Ceiling((double)abonosCredito.Count / pageSizeAbonos);
+            <div class="pagination-container p-3 border-top bg-white d-flex justify-content-center align-items-center position-relative">
+                <div class="position-absolute start-0 ps-4 d-none d-lg-block">
+                    <span class="small text-muted">Mostrando @(Math.Min(abonosCredito.Count, (currentPageAbonos - 1) * pageSizeAbonos + 1)) a @(Math.Min(abonosCredito.Count, currentPageAbonos * pageSizeAbonos)) de @abonosCredito.Count registros</span>
+                </div>
+                <div class="pagination-carousel-container">
+                    <ul class="pagination pagination-premium mb-0">
+                        <li class="page-item @(currentPageAbonos == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPageAbonos(currentPageAbonos - 1)" title="Anterior">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </li>
+                        @{
+                            int maxVisible = 5;
+                            int startPage = Math.Max(1, Math.Min(currentPageAbonos - 2, totalPages - maxVisible + 1));
+                            int endPage = Math.Min(totalPages, startPage + maxVisible - 1);
+                            
+                            if (totalPages > maxVisible && endPage == totalPages) startPage = Math.Max(1, totalPages - maxVisible + 1);
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                var pageNum = i;
+                                <li class="page-item @(currentPageAbonos == pageNum ? "active" : "") page-item-animated" @key="@("a-" + pageNum)">
+                                    <button class="page-link" @onclick="() => SetPageAbonos(pageNum)">@pageNum</button>
+                                </li>
+                            }
+                        }
+                        <li class="page-item @(currentPageAbonos == totalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => SetPageAbonos(currentPageAbonos + 1)" title="Siguiente">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
 }
 
 @code {
@@ -497,9 +615,15 @@ else
 
     private int? selectedTurnoId;
     private List<MovimientoTurnoDTO>? movimientosTurno;
+    private List<MovimientoTurnoDTO>? movimientosGenerales => movimientosTurno?.Where(m => !m.Referencia.StartsWith("Abono a Cr")).ToList();
+    private List<MovimientoTurnoDTO>? abonosCredito => movimientosTurno?.Where(m => m.Referencia.StartsWith("Abono a Cr")).ToList();
     private bool loadingMovimientos = false;
+    
     private int currentPageMovimientos = 1;
     private int pageSizeMovimientos = 10;
+
+    private int currentPageAbonos = 1;
+    private int pageSizeAbonos = 10;
 
     protected override async Task OnParametersSetAsync() 
     {
@@ -523,6 +647,7 @@ else
         
         selectedTurnoId = idTurno;
         currentPageMovimientos = 1;
+        currentPageAbonos = 1;
         loadingMovimientos = true;
         movimientosTurno = null;
         StateHasChanged();
@@ -543,6 +668,13 @@ else
         currentPageMovimientos = page;
         StateHasChanged();
     }
+
+    private void SetPageAbonos(int page)
+    {
+        currentPageAbonos = page;
+        StateHasChanged();
+    }
 }
+
 
 

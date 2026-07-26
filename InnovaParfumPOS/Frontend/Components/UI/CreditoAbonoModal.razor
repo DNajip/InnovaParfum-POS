@@ -334,7 +334,8 @@
                 currentPayment.Monto, 
                 isUsdMethod ? AppState.ExchangeRateSell : 1m, 
                 vueltoBase, 
-                currentPayment.Referencia ?? "Abono");
+                currentPayment.Referencia ?? "Abono",
+                MonedaVuelto);
             
             ToastService.ShowSuccess("Abono registrado correctamente");
             

@@ -296,5 +296,6 @@ public class MovimientoTurnoDTO
     public string SimboloMonedaMonto { get; set; } = "$";
     public string MetodoPago { get; set; } = "";
     public string Estado { get; set; } = "";
+    public decimal SaldoPendiente { get; set; }
 }
 

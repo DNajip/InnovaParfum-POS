@@ -11,7 +11,7 @@ public interface ICreditoService
 {
     Task<ClienteCredito?> GetPerfilCreditoAsync(int idPersona);
     Task<ClienteCredito> AsignarLimiteCreditoAsync(int idPersona, decimal limite, int dias);
-    Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion);
+    Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion, string monedaVuelto = "NIO");
     Task<List<Credito>> GetCreditosActivosAsync(int idPersona);
     Task<List<Credito>> GetAllActiveCreditosAsync();
     Task<List<CreditoAbono>> GetHistorialAbonosAsync(int idCredito);
@@ -119,7 +119,7 @@ public class CreditoService : ICreditoService
             .ToListAsync();
     }
 
-    public async Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion)
+    public async Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion, string monedaVuelto = "NIO")
     {
         using var context = await _factory.CreateDbContextAsync();
         using var transaction = await context.Database.BeginTransactionAsync();
@@ -173,30 +173,42 @@ public class CreditoService : ICreditoService
             {
                 // Solo si el monto recibido es mayor a cero afectamos caja.
                 // En abonos registramos como Ingreso el monto en moneda que entregó el cliente, PERO
-                // el Vuelto debemos sacarlo. Para simplificar, afectamos el TOTAL de efectivo con el monto en NIO cobrado.
-                // Sin embargo, MovimientoVario exige la moneda.
+                // el Vuelto debemos sacarlo en la moneda que el usuario seleccionó.
                 
                 var ingreso = new MovimientoVario
                 {
                     IdTurno = turnoAbierto.IdTurno,
                     Tipo = "INGRESO",
                     IdMoneda = metodoPago.IdMoneda ?? 1,
-                    Monto = metodoPago.IdMoneda == 2 ? montoRecibidoMoneda : montoAbonoBase, // Si paga dolares, guardamos los dolares que entraron
+                    Monto = metodoPago.IdMoneda == 2 ? montoRecibidoMoneda : montoRecibidoMoneda, // Guardamos SIEMPRE el monto físico bruto recibido
                     Concepto = $"Abono a Crédito #{idCredito}",
                     Fecha = DateTime.Now,
                     IdUsuario = idUsuario
                 };
                 context.MovimientosVarios.Add(ingreso);
 
-                // Si paga con dólares pero damos vuelto en córdobas, agregamos salida de vuelto
-                if (vueltoBase > 0 && metodoPago.IdMoneda == 2)
+                if (vueltoBase > 0)
                 {
+                    // vueltoBase viene en la moneda del METODO DE PAGO. Si es USD, viene en USD. Si es NIO, viene en NIO.
+                    decimal montoFisicoVuelto = vueltoBase; // Asumimos que viene igual a la moneda de pago
+                    
+                    if (metodoPago.IdMoneda == 2 && monedaVuelto == "NIO")
+                    {
+                        // Pagó en USD, pero el vuelto es en NIO -> Convertimos a NIO
+                        montoFisicoVuelto = vueltoBase * tasaCambio;
+                    }
+                    else if (metodoPago.IdMoneda == 1 && monedaVuelto == "USD")
+                    {
+                        // Pagó en NIO, pero el vuelto es en USD -> Convertimos a USD
+                        montoFisicoVuelto = vueltoBase / tasaCambio;
+                    }
+
                     var salidaVuelto = new MovimientoVario
                     {
                         IdTurno = turnoAbierto.IdTurno,
                         Tipo = "EGRESO",
-                        IdMoneda = 1, // Vuelto en NIO
-                        Monto = vueltoBase,
+                        IdMoneda = monedaVuelto == "USD" ? 2 : 1, 
+                        Monto = montoFisicoVuelto,
                         Concepto = $"Vuelto de Abono a Crédito #{idCredito}",
                         Fecha = DateTime.Now,
                         IdUsuario = idUsuario

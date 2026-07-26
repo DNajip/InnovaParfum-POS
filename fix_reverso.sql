@@ -1,6 +1,4 @@
-﻿SET QUOTED_IDENTIFIER ON;
-GO
-ALTER PROCEDURE [VEN].[sp_ReversoTransaccion]
+﻿ALTER PROCEDURE [VEN].[sp_ReversoTransaccion]
     @IdVenta INT,
     @IdUsuario INT,
     @Motivo NVARCHAR(200),
@@ -49,7 +47,7 @@ BEGIN
 
     BEGIN TRY
         BEGIN TRANSACTION;
-        
+
         DECLARE @EsTotal BIT = 1;
         IF @DetalleJson IS NOT NULL AND LEN(@DetalleJson) > 2 AND @DetalleJson <> '[]'
             SET @EsTotal = 0;
@@ -113,9 +111,7 @@ BEGIN
                 DECLARE @MontoReversoUsd DECIMAL(12,2) = @MontoReversoBase / @TasaCambioUsd;
                 UPDATE CAJA.TURNOS SET TOTAL_VENTAS_BASE = TOTAL_VENTAS_BASE - @MontoReversoBase, TOTAL_VENTAS_USD = TOTAL_VENTAS_USD - @MontoReversoUsd, TOTAL_EFECTIVO_BASE = TOTAL_EFECTIVO_BASE - @MontoReversoBase WHERE ID_TURNO = @IdTurno;
                 
-                -- NUEVA LÓGICA FÍSICA PARA EL REVERSO
-                -- 1. Determinar la moneda en la que pagó el cliente originalmente.
-                DECLARE @MonedaPago INT = 2; -- Default USD
+                DECLARE @MonedaPago INT = 2;
                 SELECT TOP 1 @MonedaPago = MP.ID_MONEDA 
                 FROM VEN.PAGOS P 
                 INNER JOIN CAT.METODOS_PAGO MP ON P.ID_METODO_PAGO = MP.ID_METODO 
@@ -123,9 +119,9 @@ BEGIN
                 ORDER BY P.MONTO_EN_BASE DESC;
 
                 DECLARE @MontoFisico DECIMAL(12,2) = @MontoReversoBase;
-                IF @MonedaPago = 1 -- Pagó en NIO
+                IF @MonedaPago = 2 -- Pagó en USD
                 BEGIN
-                    SET @MontoFisico = @MontoReversoBase * @TasaCambioUsd;
+                   SET @MontoFisico = @MontoReversoBase / @TasaCambioUsd;
                 END
 
                 INSERT INTO CAJA.MOVIMIENTOS_VARIOS (ID_TURNO, ID_USUARIO, ID_MONEDA, TIPO, MONTO, CONCEPTO, FECHA) 
@@ -143,5 +139,3 @@ BEGIN
         THROW;
     END CATCH
 END;
-
-
