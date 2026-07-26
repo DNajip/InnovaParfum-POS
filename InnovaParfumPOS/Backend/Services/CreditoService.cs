@@ -103,7 +103,7 @@ public class CreditoService : ICreditoService
             .Include(c => c.Persona)
             .Include(c => c.Venta)
             .Include(c => c.Abonos)
-            .Where(c => c.Estado == "ACTIVO")
+            .Where(c => c.Estado == "ACTIVO" || c.Estado == "VENCIDO")
             .OrderBy(c => c.FechaVencimiento)
             .ToListAsync();
     }

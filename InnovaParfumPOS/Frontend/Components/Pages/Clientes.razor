@@ -124,7 +124,7 @@
                             </td>
                             <td class="text-center">
                                 <span class="cli-badge-count" style="background-color: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;">
-                                    @c.Creditos.Count(cr => cr.Estado == "ACTIVO")
+                                    @c.Creditos.Count(cr => cr.Estado == "ACTIVO" || cr.Estado == "VENCIDO")
                                 </span>
                             </td>
                             <td class="text-end">
@@ -465,7 +465,7 @@
                                                     <td class="@(DateTime.Now.Date > c.FechaVencimiento.Date ? "text-danger fw-bold" : "")">@c.FechaVencimiento.ToString("dd/MM/yy")</td>
                                                     <td class="text-end fw-bold">@AppState.CurrencySymbol @c.SaldoPendiente.ToString("N2")</td>
                                                     <td class="text-center">
-                                                        <span class="badge @(c.Estado == "ACTIVO" ? "bg-warning text-dark" : "bg-success")">@c.Estado</span>
+                                                        <span class="badge @(c.Estado == "ACTIVO" ? "bg-warning text-dark" : c.Estado == "VENCIDO" ? "bg-danger" : "bg-success")">@c.Estado</span>
                                                     </td>
                                                     <td class="text-end">
                                                         <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalAbono(c)">Ver / Abonar</button>
