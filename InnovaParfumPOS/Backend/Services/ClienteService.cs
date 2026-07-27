@@ -139,27 +139,54 @@ public class ClienteService : IClienteService
     public async Task<List<Garantia>> GetGarantiasClienteAsync(int idPersona)
     {
         using var context = await _factory.CreateDbContextAsync();
-        return await context.Garantias
+        var garantias = await context.Garantias
             .Include(g => g.IdProductoNavigation)
             .Include(g => g.IdDetalleVentaNavigation)
-            .Where(g => g.IdPersona == idPersona)
+            .Where(g => g.IdPersona == idPersona && g.EstadoGarantia != "CANCELADA")
             .OrderByDescending(g => g.FechaInicio)
-            .AsNoTracking()
             .ToListAsync();
+
+        bool hasChanges = false;
+        var hoy = DateOnly.FromDateTime(DateTime.Now);
+        foreach (var g in garantias)
+        {
+            if (g.EstadoGarantia == "ACTIVA" && g.FechaVencimiento < hoy)
+            {
+                g.EstadoGarantia = "VENCIDA";
+                hasChanges = true;
+            }
+        }
+        
+        if (hasChanges) await context.SaveChangesAsync();
+        return garantias;
     }
 
     public async Task<List<Garantia>> GetAllActiveGarantiasAsync()
     {
         using var context = await _factory.CreateDbContextAsync();
-        return await context.Garantias
+        var garantias = await context.Garantias
             .Include(g => g.IdPersonaNavigation)
             .Include(g => g.IdProductoNavigation)
             .Include(g => g.IdDetalleVentaNavigation)
                 .ThenInclude(d => d.IdVentaNavigation)
             .Where(g => g.EstadoGarantia == "ACTIVA")
             .OrderBy(g => g.FechaVencimiento)
-            .AsNoTracking()
             .ToListAsync();
+
+        bool hasChanges = false;
+        var hoy = DateOnly.FromDateTime(DateTime.Now);
+        foreach (var g in garantias)
+        {
+            if (g.EstadoGarantia == "ACTIVA" && g.FechaVencimiento < hoy)
+            {
+                g.EstadoGarantia = "VENCIDA";
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges) await context.SaveChangesAsync();
+        
+        return garantias.Where(g => g.EstadoGarantia == "ACTIVA").ToList();
     }
 
     public async Task<ClienteStatsDto> GetClienteStatsAsync()

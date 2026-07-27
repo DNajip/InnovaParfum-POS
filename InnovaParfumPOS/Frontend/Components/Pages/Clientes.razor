@@ -119,7 +119,7 @@
                             </td>
                             <td class="text-center">
                                 <span class="cli-badge-count" style="background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
-                                    @c.Garantia.Count(g => g.EstadoGarantia != "VENCIDA")
+                                    @c.Garantia.Count(g => g.EstadoGarantia == "ACTIVA")
                                 </span>
                             </td>
                             <td class="text-center">
@@ -373,7 +373,7 @@
                                     <div class="purchase-history-card p-3">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
                                             <span class="fw-bold">@g.IdProductoNavigation?.Nombre</span>
-                                            <span class="badge @(g.EstadoGarantia == "ACTIVA" ? "bg-success" : "bg-secondary")">@g.EstadoGarantia</span>
+                                            <span class="badge @(g.EstadoGarantia == "ACTIVA" ? "bg-success" : g.EstadoGarantia == "VENCIDA" ? "bg-danger" : "bg-secondary")">@(g.EstadoGarantia == "VENCIDA" ? "FINALIZADO" : g.EstadoGarantia)</span>
                                         </div>
                                         <div class="small text-muted mb-2">@g.IdProductoNavigation?.Marca - @g.IdProductoNavigation?.IdConcentracionNavigation?.Nombre</div>
                                         
