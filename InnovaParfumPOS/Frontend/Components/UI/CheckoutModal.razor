@@ -547,7 +547,7 @@
                 abrirCajon = debeAbrirCajon,
                 simboloMoneda = AppState.CurrencySymbol + " ",
                 tipoVenta = SaleService.IsMayorista ? "MAYORISTA" : "MINORISTA",
-                condicionPago = SaleService.IsCredito ? "CRÉDITO" : "CONTADO",
+                condicionPago = SaleService.IsCredito ? "CREDITO" : "CONTADO",
                 cliente = selectedClient?.NombreCompleto ?? "Cliente General",
                 vendedor = UserSession.Username ?? "N/A",
                 subtotal = SubTotal,
