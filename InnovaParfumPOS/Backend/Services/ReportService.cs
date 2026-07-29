@@ -74,35 +74,42 @@ public class ReportService : IReportService
             .Where(d => d.PrecioUnitarioBase == 0 && d.IdProductoNavigation != null)
             .Select(d => new { Detalle = d, Venta = v })).ToList();
 
+        var configMoneda = await _context.Configuracions.FirstOrDefaultAsync(c => c.Clave == "Moneda_Principal");
+        bool isBaseUsd = configMoneda?.Valor == "USD";
+
         var stats = new DashboardStatsDTO
         {
-            VentasBrutas = currentVentas.Sum(v => v.TotalBase),
-            VentasBrutasUsd = currentVentas.Sum(v => v.TasaCambioUsd > 0 ? v.TotalBase / v.TasaCambioUsd : 0),
+            VentasBrutas = currentVentas.Sum(v => isBaseUsd ? v.TotalBase * v.TasaCambioUsd : v.TotalBase),
+            VentasBrutasUsd = currentVentas.Sum(v => isBaseUsd ? v.TotalBase : (v.TasaCambioUsd > 0 ? v.TotalBase / v.TasaCambioUsd : 0)),
             TotalFacturas = currentVentas.Count,
             ProductosVendidos = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => d.Cantidad),
-            TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => v.TotalBase) : 0,
+            TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => isBaseUsd ? v.TotalBase * v.TasaCambioUsd : v.TotalBase) : 0,
             UtilidadNeta = currentVentas.Sum(v => v.VentaDetalles.Sum(d => 
-                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+                (isBaseUsd ? (d.SubtotalBase * v.TasaCambioUsd) : d.SubtotalBase) - 
+                ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? v.TasaCambioUsd : 1)))),
             GananciaMinorista = currentVentas.Where(v => v.IdTipoVenta == 1).Sum(v => v.VentaDetalles.Sum(d => 
-                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+                (isBaseUsd ? (d.SubtotalBase * v.TasaCambioUsd) : d.SubtotalBase) - 
+                ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? v.TasaCambioUsd : 1)))),
             GananciaMayorista = currentVentas.Where(v => v.IdTipoVenta == 2).Sum(v => v.VentaDetalles.Sum(d => 
-                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+                (isBaseUsd ? (d.SubtotalBase * v.TasaCambioUsd) : d.SubtotalBase) - 
+                ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? v.TasaCambioUsd : 1)))),
             GananciaRealizada = currentVentas.Where(v => v.IdCondicionPago == 1).Sum(v => v.VentaDetalles.Sum(d => 
-                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+                (isBaseUsd ? (d.SubtotalBase * v.TasaCambioUsd) : d.SubtotalBase) - 
+                ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? v.TasaCambioUsd : 1)))),
             GananciaEstancada = currentVentas.Where(v => v.IdCondicionPago == 2).Sum(v => v.VentaDetalles.Sum(d => 
-                d.SubtotalBase - ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad))),
+                (isBaseUsd ? (d.SubtotalBase * v.TasaCambioUsd) : d.SubtotalBase) - 
+                ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? v.TasaCambioUsd : 1)))),
             ClientesNuevos = await _context.Personas.CountAsync(p => p.FechaCreacion >= start && p.FechaCreacion <= end && p.EsCliente),
             Anulaciones = todasLasVentasParaAnulaciones.Count(v => v.Anulada),
 
-            // Nuevas metricas
-            DescuentosNio = currentVentas.Sum(v => v.DescuentoBase),
-            DescuentosUsd = currentVentas.Sum(v => v.TasaCambioUsd > 0 ? v.DescuentoBase / v.TasaCambioUsd : 0),
+            DescuentosNio = currentVentas.Sum(v => isBaseUsd ? v.DescuentoBase * v.TasaCambioUsd : v.DescuentoBase),
+            DescuentosUsd = currentVentas.Sum(v => isBaseUsd ? v.DescuentoBase : (v.TasaCambioUsd > 0 ? v.DescuentoBase / v.TasaCambioUsd : 0)),
             FacturasConDescuento = currentVentas.Count(v => v.DescuentoBase > 0),
 
-            RegaliasMinoristaNio = regaliasDetalles.Sum(r => (r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad),
-            RegaliasMinoristaUsd = regaliasDetalles.Sum(r => r.Venta.TasaCambioUsd > 0 ? ((r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad) / r.Venta.TasaCambioUsd : 0),
-            RegaliasMayoristaNio = regaliasDetalles.Sum(r => (r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad),
-            RegaliasMayoristaUsd = regaliasDetalles.Sum(r => r.Venta.TasaCambioUsd > 0 ? ((r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad) / r.Venta.TasaCambioUsd : 0),
+            RegaliasMinoristaNio = regaliasDetalles.Sum(r => isBaseUsd ? ((r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad * r.Venta.TasaCambioUsd) : ((r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad)),
+            RegaliasMinoristaUsd = regaliasDetalles.Sum(r => isBaseUsd ? ((r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad) : (r.Venta.TasaCambioUsd > 0 ? ((r.Detalle.IdProductoNavigation.PrecioMinorista ?? 0) * r.Detalle.Cantidad) / r.Venta.TasaCambioUsd : 0)),
+            RegaliasMayoristaNio = regaliasDetalles.Sum(r => isBaseUsd ? ((r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad * r.Venta.TasaCambioUsd) : ((r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad)),
+            RegaliasMayoristaUsd = regaliasDetalles.Sum(r => isBaseUsd ? ((r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad) : (r.Venta.TasaCambioUsd > 0 ? ((r.Detalle.IdProductoNavigation.PrecioMayorista ?? 0) * r.Detalle.Cantidad) / r.Venta.TasaCambioUsd : 0)),
             FacturasRegalia = currentVentas.Count(v => v.VentaDetalles.Any(d => d.PrecioUnitarioBase == 0)),
 
             EfectivoMinoristaNio = currentVentas.Where(v => v.IdTipoVenta == 1).SelectMany(v => v.Pagos).Where(p => p.IdMetodoPago == 1).Sum(p => p.MontoPagado),
@@ -125,10 +132,10 @@ public class ReportService : IReportService
             MontoReversadoUsd = reversosMovimientos.Where(m => m.IdMoneda == 2).Sum(m => m.Monto),
             ArticulosReversados = todasLasVentasParaAnulaciones.SelectMany(v => v.VentaDetalles).Count(d => d.Devuelto),
 
-            FaltantesNio = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => Math.Abs(t.DiferenciaBase ?? 0)),
-            FaltantesUsd = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => Math.Abs(t.DiferenciaUsd ?? 0)),
-            SobrantesNio = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => Math.Abs(t.DiferenciaBase ?? 0)),
-            SobrantesUsd = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => Math.Abs(t.DiferenciaUsd ?? 0))
+            FaltantesNio = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? 36.5m) : Math.Abs(t.DiferenciaBase ?? 0)),
+            FaltantesUsd = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0)),
+            SobrantesNio = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? 36.5m) : Math.Abs(t.DiferenciaBase ?? 0)),
+            SobrantesUsd = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0))
         };
 
         // Calcular porcentajes
@@ -422,7 +429,7 @@ public class ReportService : IReportService
             .ToListAsync();
 
           DateTime minDate = turnos.Any() ? turnos.Min(t => t.FechaApertura) : start;
-          DateTime maxDate = turnos.Any() ? turnos.Max(t => t.FechaCierre) ?? DateTime.MaxValue : end;
+          DateTime maxDate = turnos.Any(t => t.FechaCierre == null) ? DateTime.MaxValue : (turnos.Any() ? turnos.Max(t => t.FechaCierre) ?? end : end);
 
           var abonos = await _context.CreditoAbonos
               .AsNoTracking()
