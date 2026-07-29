@@ -335,7 +335,7 @@
                                         </div>
                                         <div class="mb-2">
                                             <span class="badge bg-info text-dark me-1">@(sale.IdTipoVentaNavigation?.Descripcion ?? "Minorista")</span>
-                                            <span class="badge @(sale.IdCondicionPagoNavigation?.Descripcion == "CRÉDITO" ? "bg-warning text-dark" : "bg-success")">@(sale.IdCondicionPagoNavigation?.Descripcion ?? "Contado")</span>
+                                            <span class="badge @((sale.IdCondicionPagoNavigation?.Descripcion == "CREDITO" || sale.IdCondicionPagoNavigation?.Descripcion == "CRÉDITO") ? "bg-warning text-dark" : "bg-success")">@(sale.IdCondicionPagoNavigation?.Descripcion ?? "Contado")</span>
                                         </div>
                                         <div class="row g-2">
                                             <div class="col-8">
