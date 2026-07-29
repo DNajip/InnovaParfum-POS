@@ -636,7 +636,7 @@
                 abrirCajon = false, // Nunca abrir caja al reimprimir
                 simboloMoneda = AppState.CurrencySymbol + " ",
                 tipoVenta = selectedVenta.IdTipoVentaNavigation?.Descripcion ?? "NORMAL",
-                condicionPago = selectedVenta.IdCondicionPagoNavigation?.Descripcion ?? "CONTADO",
+                condicionPago = (selectedVenta.IdCondicionPagoNavigation?.Descripcion ?? "CONTADO").Replace("É", "E"),
                 cliente = selectedVenta.IdPersonaNavigation?.NombreCompleto ?? "Cliente General",
                 vendedor = selectedVenta.IdUsuarioNavigation?.Username ?? "N/A",
                 subtotal = selectedVenta.SubtotalBase,
