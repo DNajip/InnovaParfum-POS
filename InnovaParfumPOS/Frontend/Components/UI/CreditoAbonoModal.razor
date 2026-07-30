@@ -5,6 +5,7 @@
 @inject AppState AppState
 @inject ToastService ToastService
 @inject IJSRuntime JS
+@inject UserSession UserSession
 
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); z-index: 1060; overflow-x: hidden;">
     <div class="modal-dialog modal-lg" style="margin-top: 2rem;">
@@ -325,10 +326,10 @@
         isProcessing = true;
         try
         {
-            // OJO: IdUsuario = 1 (temporal)
+            // Se utiliza el ID del usuario en sesión
             var abono = await CreditoService.RegistrarAbonoAsync(
                 Credito.IdCredito, 
-                1, 
+                UserSession.UserId ?? 1, 
                 currentPayment.IdMetodoPago, 
                 MontoAbonarDeuda, 
                 currentPayment.Monto, 
