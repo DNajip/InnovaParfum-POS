@@ -146,6 +146,7 @@ public class CreditoService : ICreditoService
                 MontoRecibidoMoneda = montoRecibidoMoneda,
                 TasaCambio = tasaCambio,
                 VueltoBase = vueltoBase,
+                MonedaVuelto = monedaVuelto,
                 IdMetodoPago = idMetodoPago,
                 IdUsuario = idUsuario,
                 Observacion = observacion,

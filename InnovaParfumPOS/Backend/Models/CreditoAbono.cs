@@ -26,6 +26,10 @@ public class CreditoAbono
     [Column("VUELTO_Base", TypeName = "decimal(18, 2)")]
     public decimal VueltoBase { get; set; }
 
+    [Column("MONEDA_VUELTO")]
+    [MaxLength(3)]
+    public string? MonedaVuelto { get; set; }
+
     [Column("FECHA")]
     public DateTime Fecha { get; set; }
 
