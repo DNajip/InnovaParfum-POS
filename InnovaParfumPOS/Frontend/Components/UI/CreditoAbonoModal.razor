@@ -113,7 +113,7 @@
                                             <span class="fs-5 fw-bold mb-0 text-success">
                                                 @(MonedaVuelto == "USD" ? "$" : "C$") 
                                                 @((AppState.CurrencyCode == "USD" 
-                                                    ? (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell)
+                                                    ? (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateBuy)
                                                     : (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) / AppState.ExchangeRateSell : Math.Abs(SaldoRestante))
                                                 ).ToString("N2"))
                                             </span>
@@ -240,8 +240,8 @@
 
             if (baseCurrency == "NIO" && paymentCurrency == "USD")
             {
-                // Usamos ExchangeRateSell porque estamos convirtiendo USD ingresados a NIO para cobrar
-                tasaCambio = AppState.ExchangeRateSell; 
+                // Usamos ExchangeRateBuy porque el cliente nos está entregando USD para cubrir deuda en NIO (compramos sus USD)
+                tasaCambio = AppState.ExchangeRateBuy; 
                 montoEnMonedaBase = currentPayment.Monto * tasaCambio;
             }
             else if (baseCurrency == "USD" && paymentCurrency == "NIO")
@@ -293,7 +293,7 @@
         string baseCurrency = AppState.CurrencyCode;
 
         if (baseCurrency == "NIO" && paymentCurrency == "USD")
-            currentPayment.Monto = Math.Round(MontoAbonarDeuda / AppState.ExchangeRateSell, 2);
+            currentPayment.Monto = Math.Round(MontoAbonarDeuda / AppState.ExchangeRateBuy, 2);
         else if (baseCurrency == "USD" && paymentCurrency == "NIO")
             currentPayment.Monto = Math.Round(MontoAbonarDeuda * AppState.ExchangeRateSell, 2);
         else
@@ -323,6 +323,14 @@
         bool isUsdMethod = paymentCurrency == "USD";
 
         decimal vueltoBase = SaldoRestante < 0 ? Math.Abs(SaldoRestante) : 0;
+        decimal vueltoMostrado = 0;
+        if (SaldoRestante < 0)
+        {
+            vueltoMostrado = MonedaVuelto == "USD" ? 
+                (AppState.CurrencyCode == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) / AppState.ExchangeRateSell) : 
+                (AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateBuy);
+            vueltoMostrado = Math.Round(vueltoMostrado, 2);
+        }
 
         isProcessing = true;
         try
@@ -334,8 +342,9 @@
                 currentPayment.IdMetodoPago, 
                 MontoAbonarDeuda, 
                 currentPayment.Monto, 
-                isUsdMethod ? AppState.ExchangeRateSell : 1m, 
+                isUsdMethod ? (AppState.CurrencyCode == "USD" ? AppState.ExchangeRateSell : AppState.ExchangeRateBuy) : 1m, 
                 vueltoBase, 
+                vueltoMostrado,
                 currentPayment.Referencia ?? "Abono",
                 MonedaVuelto);
             

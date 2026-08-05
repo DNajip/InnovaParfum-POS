@@ -11,7 +11,7 @@ public interface ICreditoService
 {
     Task<ClienteCredito?> GetPerfilCreditoAsync(int idPersona);
     Task<ClienteCredito> AsignarLimiteCreditoAsync(int idPersona, decimal limite, int dias);
-    Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion, string monedaVuelto = "NIO");
+    Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, decimal vueltoMostrado, string observacion, string monedaVuelto = "NIO");
     Task<List<Credito>> GetCreditosActivosAsync(int idPersona);
     Task<List<Credito>> GetAllActiveCreditosAsync();
     Task<List<CreditoAbono>> GetHistorialAbonosAsync(int idCredito);
@@ -119,7 +119,7 @@ public class CreditoService : ICreditoService
             .ToListAsync();
     }
 
-    public async Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, string observacion, string monedaVuelto = "NIO")
+    public async Task<CreditoAbono> RegistrarAbonoAsync(int idCredito, int idUsuario, int idMetodoPago, decimal montoAbonoBase, decimal montoRecibidoMoneda, decimal tasaCambio, decimal vueltoBase, decimal vueltoMostrado, string observacion, string monedaVuelto = "NIO")
     {
         using var context = await _factory.CreateDbContextAsync();
         using var transaction = await context.Database.BeginTransactionAsync();
@@ -188,28 +188,14 @@ public class CreditoService : ICreditoService
                 };
                 context.MovimientosVarios.Add(ingreso);
 
-                if (vueltoBase > 0)
+                if (vueltoMostrado > 0)
                 {
-                    // vueltoBase viene en la moneda del METODO DE PAGO. Si es USD, viene en USD. Si es NIO, viene en NIO.
-                    decimal montoFisicoVuelto = vueltoBase; // Asumimos que viene igual a la moneda de pago
-                    
-                    if (metodoPago.IdMoneda == 2 && monedaVuelto == "NIO")
-                    {
-                        // Pagó en USD, pero el vuelto es en NIO -> Convertimos a NIO
-                        montoFisicoVuelto = vueltoBase * tasaCambio;
-                    }
-                    else if (metodoPago.IdMoneda == 1 && monedaVuelto == "USD")
-                    {
-                        // Pagó en NIO, pero el vuelto es en USD -> Convertimos a USD
-                        montoFisicoVuelto = vueltoBase / tasaCambio;
-                    }
-
                     var salidaVuelto = new MovimientoVario
                     {
                         IdTurno = turnoAbierto.IdTurno,
                         Tipo = "EGRESO",
                         IdMoneda = monedaVuelto == "USD" ? 2 : 1, 
-                        Monto = montoFisicoVuelto,
+                        Monto = vueltoMostrado,
                         Concepto = $"Vuelto de Abono a Crédito #{idCredito}",
                         Fecha = DateTime.Now,
                         IdUsuario = idUsuario
@@ -221,19 +207,21 @@ public class CreditoService : ICreditoService
                 if (metodoPago.IdMoneda == 1) // NIO
                 {
                     if (metodoPago.Nombre.Contains("Efectivo", StringComparison.OrdinalIgnoreCase))
-                        turnoAbierto.TotalEfectivoBase += montoAbonoBase;
+                    {
+                        turnoAbierto.TotalEfectivoBase += montoRecibidoMoneda;
+                        if (monedaVuelto == "NIO" && vueltoMostrado > 0) turnoAbierto.TotalEfectivoBase -= vueltoMostrado;
+                        if (monedaVuelto == "USD" && vueltoMostrado > 0) turnoAbierto.TotalEfectivoUsd -= vueltoMostrado;
+                    }
                     else if (metodoPago.Nombre.Contains("Tarjeta", StringComparison.OrdinalIgnoreCase))
-                        turnoAbierto.TotalTarjeta += montoAbonoBase;
+                        turnoAbierto.TotalTarjeta += montoRecibidoMoneda;
                     else if (metodoPago.Nombre.Contains("Transferencia", StringComparison.OrdinalIgnoreCase))
-                        turnoAbierto.TotalTransferencia += montoAbonoBase;
+                        turnoAbierto.TotalTransferencia += montoRecibidoMoneda;
                 }
                 else if (metodoPago.IdMoneda == 2) // USD
                 {
                     turnoAbierto.TotalEfectivoUsd += montoRecibidoMoneda; // sumamos lo que entro en USD
-                    if (vueltoBase > 0)
-                    {
-                        turnoAbierto.TotalEfectivoBase -= vueltoBase; // Restamos el vuelto de los córdobas
-                    }
+                    if (monedaVuelto == "NIO" && vueltoMostrado > 0) turnoAbierto.TotalEfectivoBase -= vueltoMostrado;
+                    if (monedaVuelto == "USD" && vueltoMostrado > 0) turnoAbierto.TotalEfectivoUsd -= vueltoMostrado;
                 }
             }
 

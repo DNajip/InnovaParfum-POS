@@ -273,7 +273,7 @@
                                             <span class="h4 fw-bold mb-0 text-success">
                                                 @(MonedaVuelto == "USD" ? "$" : "C$") 
                                                 @((AppState.CurrencyCode == "USD" 
-                                                    ? (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell)
+                                                    ? (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateBuy)
                                                     : (MonedaVuelto == "USD" ? Math.Abs(SaldoRestante) / AppState.ExchangeRateSell : Math.Abs(SaldoRestante))
                                                 ).ToString("N2"))
                                             </span>
@@ -485,9 +485,10 @@
             {
                 decimal numericVuelto = MonedaVuelto == "USD" ? 
                     (AppState.CurrencyCode == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) / AppState.ExchangeRateSell) : 
-                    (AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell);
+                    (AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateBuy);
                 
                 selectedPayments.Last().VueltoMostrado = Math.Round(numericVuelto, 2);
+                selectedPayments.Last().VueltoEnMonedaBase = Math.Abs(SaldoRestante);
             }
 
             var result = await CheckoutService.ProcessCheckoutAsync(
@@ -556,7 +557,7 @@
                 descuento = Discount,
                 total = Total,
                 vueltoText = hayVuelto ? (MonedaVuelto == "USD" ? "Vuelto en USD" : "Vuelto en C$") : "",
-                vueltoAmount = hayVuelto ? (MonedaVuelto == "USD" ? $"$ {(AppState.CurrencyCode == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) / AppState.ExchangeRateSell).ToString("N2")}" : $"C$ {(AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateSell).ToString("N2")}") : "",
+                vueltoAmount = hayVuelto ? (MonedaVuelto == "USD" ? $"$ {(AppState.CurrencyCode == "USD" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) / AppState.ExchangeRateSell).ToString("N2")}" : $"C$ {(AppState.CurrencyCode == "NIO" ? Math.Abs(SaldoRestante) : Math.Abs(SaldoRestante) * AppState.ExchangeRateBuy).ToString("N2")}") : "",
                 metodosPago = selectedPayments.Select(p => new {
                     metodo = p.MetodoNombre,
                     monto = p.Monto,
