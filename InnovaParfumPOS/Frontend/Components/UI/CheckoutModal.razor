@@ -324,7 +324,7 @@
     private List<PeriodosGarantium> periodos = new();
     private List<MetodosPago> metodosPago = new();
     private List<PaymentInput> selectedPayments = new();
-    private PaymentInput currentPayment = new PaymentInput { TasaCambio = 36.60m };
+    private PaymentInput currentPayment = new PaymentInput();
     private string MonedaVuelto = "NIO";
     private List<Persona> foundClients = new();
     private Persona? selectedClient;
@@ -338,6 +338,7 @@
     {
         periodos = await CheckoutService.GetPeriodosGarantiaAsync();
         metodosPago = await CheckoutService.GetMetodosPagoAsync();
+        currentPayment.TasaCambio = AppState.ExchangeRateSell;
         
         if (metodosPago.Any())
         {
@@ -495,6 +496,7 @@
                 SaleService.IdTipoVenta,
                 SaleService.IdCondicionPago,
                 Discount, 
+                AppState.ExchangeRateSell,
                 Items,
                 selectedPayments,
                 MonedaVuelto

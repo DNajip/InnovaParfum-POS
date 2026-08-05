@@ -5,7 +5,7 @@ namespace InnovaParfumPOS.Backend.Services;
 
 public interface ICheckoutService
 {
-    Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO");
+    Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, decimal tasaCambioUsd, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO");
     Task<List<PeriodosGarantium>> GetPeriodosGarantiaAsync();
     Task<List<MetodosPago>> GetMetodosPagoAsync();
     Task ReversarTransaccionAsync(int idVenta, int idUsuario, string motivo, string? detalleJson);
@@ -40,7 +40,7 @@ public class CheckoutService : ICheckoutService
             .ToListAsync();
     }
 
-    public async Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO")
+    public async Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, decimal tasaCambioUsd, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO")
     {
         using var context = await _factory.CreateDbContextAsync();
         
@@ -94,7 +94,7 @@ public class CheckoutService : ICheckoutService
                     idTipoVenta,
                     idCondicionPago,
                     discount,
-                    36.60m, // Podría venir de configuración
+                    tasaCambioUsd, // Viene de la configuración global
                     itemsJson,
                     paymentsJson,
                     monedaVuelto)

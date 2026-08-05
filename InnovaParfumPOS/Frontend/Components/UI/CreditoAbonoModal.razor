@@ -220,7 +220,7 @@
         }
     }
 
-    private PaymentInput currentPayment = new PaymentInput { TasaCambio = 36.60m };
+    private PaymentInput currentPayment = new PaymentInput();
     private string MonedaVuelto = "NIO";
     private bool isProcessing = false;
 
@@ -260,6 +260,7 @@
     {
         MontoAbonarDeuda = Credito.SaldoPendiente;
         metodosPago = await CheckoutService.GetMetodosPagoAsync();
+        currentPayment.TasaCambio = AppState.ExchangeRateSell;
         
         if (metodosPago.Any())
         {
