@@ -232,7 +232,7 @@ else
                 @{
                     var nioTotal = trends?.Sum(t => t.ValorBase) ?? 0;
                     var usdTotal = trends?.Sum(t => t.ValorUsd) ?? 0;
-                    var totalGlobal = nioTotal + (usdTotal * 36.5m);
+                    var totalGlobal = nioTotal + (usdTotal * AppState.ExchangeRateBuy);
                     var nioPct = totalGlobal > 0 ? (double)(nioTotal / totalGlobal * 100) : 100;
                     var usdPct = 100 - nioPct;
                     var dashArray = $"{nioPct} {usdPct}";

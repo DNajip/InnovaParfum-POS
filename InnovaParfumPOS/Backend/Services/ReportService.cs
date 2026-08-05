@@ -30,10 +30,12 @@ public interface IReportService
 public class ReportService : IReportService
 {
     private readonly InnovaParfumDbContext _context;
+    private readonly AppState _appState;
 
-    public ReportService(InnovaParfumDbContext context)
+    public ReportService(InnovaParfumDbContext context, AppState appState)
     {
         _context = context;
+        _appState = appState;
     }
 
     public async Task<DashboardStatsDTO> GetDashboardStatsAsync(DateTime start, DateTime end)
@@ -132,9 +134,9 @@ public class ReportService : IReportService
             MontoReversadoUsd = reversosMovimientos.Where(m => m.IdMoneda == 2).Sum(m => m.Monto),
             ArticulosReversados = todasLasVentasParaAnulaciones.SelectMany(v => v.VentaDetalles).Count(d => d.Devuelto),
 
-            FaltantesNio = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? 36.5m) : Math.Abs(t.DiferenciaBase ?? 0)),
+            FaltantesNio = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? _appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
             FaltantesUsd = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0)),
-            SobrantesNio = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? 36.5m) : Math.Abs(t.DiferenciaBase ?? 0)),
+            SobrantesNio = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? _appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
             SobrantesUsd = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0))
         };
 
@@ -169,7 +171,7 @@ public class ReportService : IReportService
             {
                 Label = g.Key.ToString("dd MMM"),
                 ValorBase = g.Sum(v => v.TotalBase),
-                ValorUsd = g.Sum(v => v.TotalBase / 36.5m) // Asumiendo tasa fija por ahora para el gráfico
+                ValorUsd = g.Sum(v => v.TasaCambioUsd > 0 ? v.TotalBase / v.TasaCambioUsd : v.TotalBase / _appState.ExchangeRateBuy)
             })
             .ToList();
     }
