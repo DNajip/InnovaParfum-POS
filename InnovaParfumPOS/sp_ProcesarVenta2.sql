@@ -1,4 +1,8 @@
-﻿
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
 CREATE PROCEDURE [VEN].[sp_ProcesarVenta2]
     @IdUsuario INT,
     @IdPersona INT = NULL,
@@ -65,7 +69,7 @@ BEGIN
                 SELECT 1 FROM OPENJSON(@PaymentsJson) pj JOIN CAT.METODOS_PAGO mp ON mp.ID_METODO = CAST(JSON_VALUE(pj.[value], '$.IdMetodoPago') AS INT) WHERE mp.NOMBRE NOT LIKE '%EFECTIVO%'
             )
             BEGIN
-                DECLARE @NotaAuto NVARCHAR(200) = 'Vuelto de ' + CAST(@VueltoTotalBase AS NVARCHAR(20)) + ' entregado en efectivo por sobrepago en mÃ©todo no-efectivo.';
+                DECLARE @NotaAuto NVARCHAR(200) = 'Vuelto de ' + CAST(@VueltoTotalBase AS NVARCHAR(20)) + ' entregado en efectivo por sobrepago en método no-efectivo.';
                 UPDATE VEN.VENTAS SET OBSERVACION = ISNULL(OBSERVACION + ' | ', '') + @NotaAuto WHERE ID_VENTA = @IdVenta;
             END
         END
@@ -139,4 +143,5 @@ BEGIN
         THROW;
     END CATCH
 END;
+
 

@@ -1,3 +1,7 @@
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
 
 ALTER PROCEDURE [VEN].[sp_ProcesarVenta]
     @IdUsuario INT,
@@ -139,4 +143,5 @@ BEGIN
         THROW;
     END CATCH
 END;
+
 
