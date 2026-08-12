@@ -86,9 +86,13 @@ public class ReportService : IReportService
             TotalFacturas = currentVentas.Count,
             ProductosVendidos = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => d.Cantidad),
             TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => isBaseUsd ? v.TotalBase * v.TasaCambioUsd : v.TotalBase) : 0,
+            TicketPromedioUsd = currentVentas.Any() ? currentVentas.Average(v => isBaseUsd ? v.TotalBase : (v.TasaCambioUsd > 0 ? v.TotalBase / v.TasaCambioUsd : 0)) : 0,
             UtilidadNeta = currentVentas.Sum(v => v.VentaDetalles.Sum(d => 
                 (isBaseUsd ? (d.SubtotalBase * v.TasaCambioUsd) : d.SubtotalBase) - 
                 ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? v.TasaCambioUsd : 1)))),
+            UtilidadNetaUsd = currentVentas.Sum(v => v.VentaDetalles.Sum(d => 
+                (isBaseUsd ? d.SubtotalBase : (v.TasaCambioUsd > 0 ? d.SubtotalBase / v.TasaCambioUsd : 0)) - 
+                ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? 1 : (v.TasaCambioUsd > 0 ? 1 / v.TasaCambioUsd : 0))))),
             GananciaMinorista = currentVentas.Where(v => v.IdTipoVenta == 1).Sum(v => v.VentaDetalles.Sum(d => 
                 (isBaseUsd ? (d.SubtotalBase * v.TasaCambioUsd) : d.SubtotalBase) - 
                 ((d.CostoUnitarioNio ?? ((d.IdProductoNavigation?.CostoProducto ?? 0) + (d.IdProductoNavigation?.CostoEnvio ?? 0))) * d.Cantidad * (isBaseUsd ? v.TasaCambioUsd : 1)))),

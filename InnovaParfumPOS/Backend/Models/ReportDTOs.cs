@@ -8,8 +8,10 @@ public class DashboardStatsDTO
     public decimal VentasBrutas { get; set; }
     public decimal VentasBrutasUsd { get; set; } // Nuevo
     public decimal UtilidadNeta { get; set; }
+    public decimal UtilidadNetaUsd { get; set; }
     public int TotalFacturas { get; set; }
     public decimal TicketPromedio { get; set; }
+    public decimal TicketPromedioUsd { get; set; }
     public int ClientesNuevos { get; set; }
     public int ProductosVendidos { get; set; }
     public int Anulaciones { get; set; }

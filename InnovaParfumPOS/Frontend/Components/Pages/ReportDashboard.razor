@@ -168,7 +168,9 @@ else
             Value="stats?.FacturasRegalia ?? 0" Format="N0" IconClass="fas fa-hand-holding-heart" IconBg="#f3e8ff" IconColor="#a855f7" Loading="loading" />
             
         <InnovaKpiCard Title="Utilidad Neta" 
-            Value="stats?.UtilidadNeta ?? 0" Prefix="@($"{AppState.CurrencySymbol} ")" IconClass="fas fa-chart-line" IconBg="#fef9c3" IconColor="#ca8a04" Loading="loading" />
+            Value="GetPrimary(stats?.UtilidadNeta ?? 0, stats?.UtilidadNetaUsd ?? 0)" Prefix="@GetPrimaryPrefix()"
+            SecondaryValue="GetSecondary(stats?.UtilidadNeta ?? 0, stats?.UtilidadNetaUsd ?? 0)" SecondaryPrefix="@GetSecondaryPrefix()"
+            IconClass="fas fa-chart-line" IconBg="#fef9c3" IconColor="#ca8a04" Loading="loading" />
     </div>
 
     <div class="report-row">
