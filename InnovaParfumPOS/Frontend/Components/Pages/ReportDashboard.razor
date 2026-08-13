@@ -37,9 +37,9 @@ else
             else
             {
                 <div class="kpi-card-value d-flex align-items-center mt-2 flex-wrap" style="font-size: 1.1rem; line-height: 1.2;">
-                    <span class="text-nowrap">-@(AppState.CurrencySymbol) @((stats?.RegaliasMinoristaNio ?? 0).ToString("N2"))</span>
+                    <span class="text-nowrap">-@(GetPrimaryPrefix()) @(GetPrimary(stats?.RegaliasMinoristaNio ?? 0, stats?.RegaliasMinoristaUsd ?? 0).ToString("N2"))</span>
                     <span class="text-muted mx-1 fw-light">|</span>
-                    <span class="text-nowrap">-@(AppState.CurrencySymbol) @((stats?.RegaliasMayoristaNio ?? 0).ToString("N2"))</span>
+                    <span class="text-nowrap">-@(GetPrimaryPrefix()) @(GetPrimary(stats?.RegaliasMayoristaNio ?? 0, stats?.RegaliasMayoristaUsd ?? 0).ToString("N2"))</span>
                 </div>
             }
         </div>

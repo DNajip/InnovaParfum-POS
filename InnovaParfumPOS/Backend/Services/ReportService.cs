@@ -42,6 +42,7 @@ public class ReportService : IReportService
     {
         end = end.Date.AddDays(1).AddTicks(-1);
         var currentVentas = await _context.Ventas
+            .AsNoTracking()
             .Include(v => v.VentaDetalles)
                 .ThenInclude(d => d.IdProductoNavigation)
             .Include(v => v.Pagos) // Para metricas de pago
@@ -49,15 +50,18 @@ public class ReportService : IReportService
             .ToListAsync();
 
         var todasLasVentasParaAnulaciones = await _context.Ventas
+            .AsNoTracking()
             .Include(v => v.VentaDetalles)
             .Where(v => v.FechaVenta >= start && v.FechaVenta <= end)
             .ToListAsync();
 
         var reversosMovimientos = await _context.MovimientosVarios
+            .AsNoTracking()
             .Where(m => m.Fecha >= start && m.Fecha <= end && m.Tipo == "EGRESO" && m.Concepto.StartsWith("Reverso"))
             .ToListAsync();
 
         var turnos = await _context.Turnos
+            .AsNoTracking()
             .Where(t => t.FechaApertura >= start && t.FechaApertura <= end && t.IdEstado == 2)
             .ToListAsync();
 
