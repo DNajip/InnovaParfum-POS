@@ -520,8 +520,9 @@ public class ReportService : IReportService
             decimal reversosContadoNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
             decimal reversosContadoUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
             
-            decimal ventasNetasNIO = Math.Max(0, cobrosContadoNIO - vueltoContadoNIO - reversosContadoNIO);
-            decimal ventasNetasUSD = Math.Max(0, cobrosContadoUSD - vueltoContadoUSD - reversosContadoUSD);
+            // Ventas Netas: El cliente solicitó que sea la suma del ingreso total recibido (sin restar el vuelto)
+            decimal ventasNetasNIO = Math.Max(0, cobrosContadoNIO - reversosContadoNIO);
+            decimal ventasNetasUSD = Math.Max(0, cobrosContadoUSD - reversosContadoUSD);
 
             return new ArqueoInsightDTO
             {
