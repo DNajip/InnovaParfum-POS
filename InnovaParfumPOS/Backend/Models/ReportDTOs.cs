@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace InnovaParfumPOS.Backend.Models;
@@ -179,11 +179,11 @@ public class ArqueoInsightDTO
     public DateTime Apertura { get; set; }
     public DateTime? Cierre { get; set; }
 
-    // IDENTIFICACIÃ“N
+    // IDENTIFICACIÃƒâ€œN
     public decimal MontoInicialNIO { get; set; }
     public decimal MontoInicialUSD { get; set; }
 
-    // VENTAS (SÃ³lo base)
+    // VENTAS (SÃƒÂ³lo base)
     public decimal VentasEfectuadasBase { get; set; }
     public int CantVentasEfectuadas { get; set; }
 
@@ -280,6 +280,16 @@ public class CategoryStatDTO
     public decimal Total { get; set; }
 }
 
+public class PagoDetalleTurnoDTO
+{
+    public string MetodoPago { get; set; } = "";
+    public decimal MontoPagado { get; set; }
+    public decimal MontoAplicadoBase { get; set; }
+    public decimal MontoAplicadoFisico { get; set; }
+    public decimal TasaAplicada { get; set; }
+    public string SimboloMoneda { get; set; } = "$";
+}
+
 public class MovimientoTurnoDTO
 {
     public string TipoMovimiento { get; set; } = "";
@@ -299,5 +309,9 @@ public class MovimientoTurnoDTO
     public string MetodoPago { get; set; } = "";
     public string Estado { get; set; } = "";
     public decimal SaldoPendiente { get; set; }
+    
+    public List<PagoDetalleTurnoDTO> PagosDesglose { get; set; } = new();
+    public decimal TasaCambioUsd { get; set; }
 }
+
 

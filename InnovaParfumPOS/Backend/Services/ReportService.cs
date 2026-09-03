@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -235,7 +235,7 @@ public class ReportService : IReportService
             {
                 Fecha = g.Key,
                 VentasBrutas = g.Sum(v => v.TotalBase),
-                Devoluciones = 0, // Por implementar lógica de devoluciones real si existe
+                Devoluciones = 0, // Por implementar lÃ³gica de devoluciones real si existe
                 VentasNetas = g.Sum(v => v.TotalBase),
                 Facturas = g.Count(),
                 TicketPromedio = g.Average(v => v.TotalBase)
@@ -267,7 +267,7 @@ public class ReportService : IReportService
             }
         }
 
-        // Calcular intensidad relativa al máximo del dataset
+        // Calcular intensidad relativa al mÃ¡ximo del dataset
         var maxTotal = result.Any() ? result.Max(r => r.Total) : 0;
         if (maxTotal > 0)
         {
@@ -275,7 +275,7 @@ public class ReportService : IReportService
             {
                 if (item.Total > 0)
                 {
-                    // Escala de 1-10 proporcional al máximo
+                    // Escala de 1-10 proporcional al mÃ¡ximo
                     item.Intensity = Math.Max(1, (int)Math.Ceiling((double)(item.Total / maxTotal * 10)));
                 }
             }
@@ -293,7 +293,7 @@ public class ReportService : IReportService
             {
                 IdProducto = p.IdProducto,
                 Nombre = p.Nombre,
-                Categoria = p.IdCategoriaNavigation != null ? p.IdCategoriaNavigation.Nombre : "Sin categoría",
+                Categoria = p.IdCategoriaNavigation != null ? p.IdCategoriaNavigation.Nombre : "Sin categorÃ­a",
                 Marca = p.Marca ?? "",
                 OrigenTipo = p.IdOrigenNavigation!.Nombre ?? "",
                 Concentracion = p.IdConcentracionNavigation!.Nombre ?? "",
@@ -374,7 +374,7 @@ public class ReportService : IReportService
                 TotalCompras = g.Count(),
                 MontoTotal = g.Sum(v => v.TotalBase),
                 ComprasContado = g.Count(v => v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CONTADO") == true || v.IdCondicionPago == 1),
-                ComprasCredito = g.Count(v => v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CRÉDITO") == true || v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CREDITO") == true || v.IdCondicionPago == 2),
+                ComprasCredito = g.Count(v => v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CRÃ‰DITO") == true || v.IdCondicionPagoNavigation?.Descripcion?.ToUpper().Contains("CREDITO") == true || v.IdCondicionPago == 2),
                 SaldoPendiente = clienteCreditos.Sum(c => c.SaldoPendiente)
             });
         }
@@ -455,13 +455,13 @@ public class ReportService : IReportService
             decimal ventasEfectuadasBase = ventasValidas.Sum(v => v.TotalBase);
             decimal ventasAnuladasBase = ventasAnuladas.Sum(v => v.TotalBase);
 
-            // Cobros y Vueltos físicos (De TODAS las ventas, incluyendo anuladas, porque el dinero entró y salió físicamente de gaveta)
+            // Cobros y Vueltos fÃ­sicos (De TODAS las ventas, incluyendo anuladas, porque el dinero entrÃ³ y saliÃ³ fÃ­sicamente de gaveta)
             var todosPagos = t.Venta.SelectMany(v => v.Pagos).ToList();
             
             // Abonos del turno (Mismo usuario, dentro de la franja horaria)
             var abonosTurno = abonos.Where(a => a.IdUsuario == t.IdUsuario && a.Fecha >= t.FechaApertura && a.Fecha <= (t.FechaCierre ?? DateTime.MaxValue)).ToList();
 
-            // Desglose de Cobros Físicos (Efectivo) + Electrónicos (SIN convertir a base, sumando MontoPagado que es la moneda física)
+            // Desglose de Cobros FÃ­sicos (Efectivo) + ElectrÃ³nicos (SIN convertir a base, sumando MontoPagado que es la moneda fÃ­sica)
             decimal efectivoVentasNIO = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado);
             decimal efectivoVentasUSD = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("EFECTIVO") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
             
@@ -480,11 +480,11 @@ public class ReportService : IReportService
             decimal tarjetaVentasUSD = todosPagos.Where(p => p.IdMetodoPagoNavigation.Nombre.Contains("TARJETA") && p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado);
             decimal tarjetaAbonosUSD = abonosTurno.Where(a => a.MetodoPago.Nombre.Contains("TARJETA") && a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
-            // Abonos a Crédito (Lo que el cliente pagó de sus deudas) - Agrupado por moneda
+            // Abonos a CrÃ©dito (Lo que el cliente pagÃ³ de sus deudas) - Agrupado por moneda
             decimal abonosCreditoNIO = abonosTurno.Where(a => a.MetodoPago.IdMoneda == 1).Sum(a => a.MontoRecibidoMoneda);
             decimal abonosCreditoUSD = abonosTurno.Where(a => a.MetodoPago.IdMoneda == 2).Sum(a => a.MontoRecibidoMoneda);
 
-            // Vuelto / Cambio (Extraemos de TODAS las ventas porque si fue anulada, el vuelto ya se había entregado físicamente)
+            // Vuelto / Cambio (Extraemos de TODAS las ventas porque si fue anulada, el vuelto ya se habÃ­a entregado fÃ­sicamente)
             decimal vueltoVentasNIO = t.Venta.Where(v => v.MonedaVuelto == "NIO").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
             decimal vueltoVentasUSD = t.Venta.Where(v => v.MonedaVuelto == "USD").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
             
@@ -501,7 +501,7 @@ public class ReportService : IReportService
             decimal retirosManualesNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && !(m.Concepto ?? "").Contains("Vuelto de Abono") && !(m.Concepto ?? "").StartsWith("Reverso")).Sum(m => m.Monto);
             decimal retirosManualesUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && !(m.Concepto ?? "").Contains("Vuelto de Abono") && !(m.Concepto ?? "").StartsWith("Reverso")).Sum(m => m.Monto);
 
-            // Caja Teórica (puramente física)
+            // Caja TeÃ³rica (puramente fÃ­sica)
             decimal teoricoNIO = t.MontoInicialBase + efectivoVentasNIO + efectivoAbonosNIO + ingresosManualesNIO - retirosManualesNIO - reversosNIO - vueltoVentasNIO - vueltoAbonosNIO;
             decimal teoricoUSD = t.MontoInicialUsd + efectivoVentasUSD + efectivoAbonosUSD + ingresosManualesUSD - retirosManualesUSD - reversosUSD - vueltoVentasUSD - vueltoAbonosUSD;
             
@@ -511,7 +511,7 @@ public class ReportService : IReportService
             var nombreCompleto = t.IdUsuarioNavigation?.IdEmpleadoNavigation?.IdPersonaNavigation?.NombreCompleto;
             var usuarioFinal = !string.IsNullOrWhiteSpace(nombreCompleto) ? nombreCompleto : (t.IdUsuarioNavigation?.Username ?? "Sistema");
 
-            // --- CÁLCULO DE VENTAS NETAS (CONTADO) ---
+            // --- CÃLCULO DE VENTAS NETAS (CONTADO) ---
             var ventasContado = ventasValidas.Where(v => v.IdCondicionPago == 1).ToList();
             var pagosContado = ventasContado.SelectMany(v => v.Pagos).ToList();
             
@@ -524,7 +524,7 @@ public class ReportService : IReportService
             decimal reversosContadoNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
             decimal reversosContadoUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
             
-            // Ventas Netas: El cliente solicitó que sea la suma del ingreso total recibido (sin restar el vuelto)
+            // Ventas Netas: El cliente solicitÃ³ que sea la suma del ingreso total recibido (sin restar el vuelto)
             decimal ventasNetasNIO = Math.Max(0, cobrosContadoNIO - reversosContadoNIO);
             decimal ventasNetasUSD = Math.Max(0, cobrosContadoUSD - reversosContadoUSD);
 
@@ -621,16 +621,26 @@ public class ReportService : IReportService
             var simboloPago = pagoPrincipal?.IdMetodoPagoNavigation?.IdMoneda == 1 ? "C$" : "$";
             var simboloVuelto = v.MonedaVuelto == "NIO" ? "C$" : "$";
 
-            var reversoMovimientos = movimientos.Where(m => m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith($"Reverso/Devolución de Fac {v.IdVenta} -")).ToList();
+            var reversoMovimientos = movimientos.Where(m => m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith($"Reverso/DevoluciÃ³n de Fac {v.IdVenta} -")).ToList();
             var reversoFisico = reversoMovimientos.Sum(m => m.Monto);
             var motivoReverso = string.Join(" | ", reversoMovimientos.Select(m => {
                 var parts = (m.Concepto ?? "").Split(" - ", 2);
                 return parts.Length > 1 ? parts[1] : m.Concepto;
             }));
 
+            var pagosDesglose = v.Pagos.Select(p => new PagoDetalleTurnoDTO
+            {
+                MetodoPago = p.IdMetodoPagoNavigation?.Nombre ?? "Desconocido",
+                MontoPagado = p.MontoPagado,
+                MontoAplicadoBase = p.MontoEnBase,
+                MontoAplicadoFisico = p.MontoPagado - (p.VueltoMostrado ?? 0),
+                TasaAplicada = p.TasaAplicada ?? v.TasaCambioUsd,
+                SimboloMoneda = (p.IdMetodoPagoNavigation?.IdMoneda == 1) ? "C$" : "$"
+            }).ToList();
+
             result.Add(new MovimientoTurnoDTO
             {
-                TipoMovimiento = v.TotalBase == 0 ? "Regalía" : "Venta",
+                TipoMovimiento = v.TotalBase == 0 ? "RegalÃ­a" : "Venta",
                 Referencia = v.NumeroFactura ?? $"FAC-{v.IdVenta}",
                 Fecha = v.FechaVenta,
                 Cliente = v.IdPersonaNavigation?.NombreCompleto ?? "Cliente de Contado",
@@ -645,7 +655,9 @@ public class ReportService : IReportService
                 SimboloMonedaVuelto = simboloVuelto,
                 SimboloMonedaMonto = "$",
                 MetodoPago = metodoPago,
-                Estado = v.Anulada ? "ANULADA" : "EFECTUADA"
+                Estado = v.Anulada ? "ANULADA" : "EFECTUADA",
+                PagosDesglose = pagosDesglose,
+                TasaCambioUsd = v.TasaCambioUsd
             });
         }
 
@@ -678,7 +690,7 @@ public class ReportService : IReportService
             result.Add(new MovimientoTurnoDTO
             {
                 TipoMovimiento = "Ingreso",
-                Referencia = $"Abono a Crédito #{a.IdCredito}",
+                Referencia = $"Abono a CrÃ©dito #{a.IdCredito}",
                 Fecha = a.Fecha,
                 Cliente = a.Credito?.Persona?.NombreCompleto ?? "N/A",
                 Descuento = 0,
@@ -700,9 +712,9 @@ public class ReportService : IReportService
         }
 
         var otrosMovimientos = movimientos.Where(m => 
-            !(m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith("Reverso/Devolución de Fac ")) &&
-            !(m.Concepto ?? "").StartsWith("Abono a Crédito #") &&
-            !(m.Concepto ?? "").StartsWith("Vuelto de Abono a Crédito #")
+            !(m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith("Reverso/DevoluciÃ³n de Fac ")) &&
+            !(m.Concepto ?? "").StartsWith("Abono a CrÃ©dito #") &&
+            !(m.Concepto ?? "").StartsWith("Vuelto de Abono a CrÃ©dito #")
         );
 
         foreach (var m in otrosMovimientos)
@@ -767,7 +779,7 @@ public class ReportService : IReportService
             .Include(d => d.IdProductoNavigation)
                 .ThenInclude(p => p.IdCategoriaNavigation)
             .Where(d => d.IdVentaNavigation.FechaVenta >= start && d.IdVentaNavigation.FechaVenta <= end && !d.IdVentaNavigation.Anulada)
-            .GroupBy(d => d.IdProductoNavigation.IdCategoriaNavigation != null ? d.IdProductoNavigation.IdCategoriaNavigation.Nombre : "Sin categoría")
+            .GroupBy(d => d.IdProductoNavigation.IdCategoriaNavigation != null ? d.IdProductoNavigation.IdCategoriaNavigation.Nombre : "Sin categorÃ­a")
             .Select(g => new CategoryStatDTO
             {
                 Categoria = g.Key ?? "Otros",
@@ -785,8 +797,8 @@ public class ReportService : IReportService
         if (stockCritico > 0)
         {
             alerts.Add(new SystemAlertDTO {
-                Titulo = "Stock Crítico Detectado",
-                Mensaje = $"Hay {stockCritico} productos por debajo del mínimo.",
+                Titulo = "Stock CrÃ­tico Detectado",
+                Mensaje = $"Hay {stockCritico} productos por debajo del mÃ­nimo.",
                 Tipo = "danger",
                 Fecha = DateTime.Now
             });
@@ -818,6 +830,7 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 }
+
 
 
 

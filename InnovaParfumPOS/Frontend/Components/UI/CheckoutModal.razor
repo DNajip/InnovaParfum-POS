@@ -564,7 +564,7 @@
                     simbolo = p.MetodoNombre.Contains("USD") ? "$" : "C$"
                 }).ToList(),
                 detalles = Items.SelectMany(i => {
-                    var unitPrice = SaleService.IsMayorista ? i.PrecioMayorista : i.PrecioMinorista;
+                    var unitPrice = i.IsRegalia ? 0m : (SaleService.IsMayorista ? i.PrecioMayorista : i.PrecioMinorista);
                     if (i.RequiresImei) {
                         // Si requiere IMEI, creamos una línea por cada unidad
                         return i.Details.Select(d => new {

@@ -289,149 +289,234 @@ else
         </div>
         
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead style="background: #f8f9fa;">
-                    <tr>
-                        <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Tipo</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Referencia</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Hora</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Cliente</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Método Pago</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Descuento</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Monto</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end" title="Monto con el que paga">Pagado</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Reverso</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Total</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center">Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (selectedTurnoId == null)
-                    {
-                        <tr>
-                            <td colspan="12" class="text-center py-5 text-muted">
-                                <i class="fas fa-mouse-pointer fa-2x mb-2 opacity-50"></i>
-                                <p class="mb-0">Haga clic en un turno de la tabla superior para ver sus detalles</p>
-                            </td>
-                        </tr>
-                    }
-                    else if (loadingMovimientos)
-                    {
-                        @for (int i = 0; i < 3; i++)
-                        {
-                            <tr>
-                                <td colspan="12" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
-                            </tr>
-                        }
-                    }
-                    else if (movimientosGenerales == null || !movimientosGenerales.Any())
-                    {
-                        <tr>
-                            <td colspan="12" class="text-center py-5 text-muted">
-                                <i class="fas fa-info-circle fa-2x mb-2 opacity-50"></i>
-                                <p class="mb-0">No se encontraron movimientos para este turno</p>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var v in movimientosGenerales.Skip((currentPageMovimientos - 1) * pageSizeMovimientos).Take(pageSizeMovimientos))
-                        {
-                            <tr>
-                                <td class="ps-4 py-3 fw-bold">
-                                    @if (v.TipoMovimiento == "Venta")
-                                    {
-                                        <span class="badge bg-primary bg-opacity-10 text-primary px-2 rounded">VENTA</span>
-                                    }
-                                    else if (v.TipoMovimiento == "Regalía")
-                                    {
-                                        <span class="badge bg-info bg-opacity-10 text-info px-2 rounded"><i class="fas fa-gift me-1"></i>REGALÍA</span>
-                                    }
-                                    else if (v.TipoMovimiento == "Ingreso")
-                                    {
-                                        <span class="badge bg-success bg-opacity-10 text-success px-2 rounded">INGRESO</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger bg-opacity-10 text-danger px-2 rounded">EGRESO</span>
-                                    }
-                                </td>
-                                <td class="py-3 fw-bold">@v.Referencia</td>
-                                <td class="py-3 text-muted">@v.Fecha.ToString("hh:mm tt")</td>
-                                <td class="py-3">
-                                    @if(v.Cliente == "N/A")
-                                    {
-                                        <span class="text-muted fst-italic">--</span>
-                                    }
-                                    else
-                                    {
-                                        @v.Cliente
-                                    }
-                                </td>
-                                <td class="py-3">
-                                    <span class="small fw-semibold">@v.MetodoPago</span>
-                                </td>
-                                <td class="py-3 text-end fw-bold text-warning">
-                                    @if (v.Descuento > 0)
-                                    {
-                                        <span title="Descuento aplicado">@v.SimboloMonedaMonto @v.Descuento.ToString("N2")</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">--</span>
-                                    }
-                                </td>
-                                <td class="py-3 text-end fw-bold @(v.TipoMovimiento == "Egreso" ? "text-danger" : v.TipoMovimiento == "Regalía" ? "text-info" : "text-primary")">
-                                    @if(v.Monto == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
-                                        <span class="text-muted">--</span>
-                                    } else {
-                                        @(v.TipoMovimiento == "Egreso" ? "-" : "")@v.SimboloMonedaMonto @v.Monto.ToString("N2")
-                                    }
-                                </td>
-                                <td class="py-3 text-end fw-bold text-dark">
-                                    @if(v.MontoPagado == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
-                                        <span class="text-muted">--</span>
-                                    } else {
-                                        @v.SimboloMonedaPago @v.MontoPagado.ToString("N2")
-                                    }
-                                </td>
-                                <td class="py-3 text-end fw-semibold text-success">
-                                    @(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")
-                                </td>
-                                <td class="py-3 text-end fw-semibold text-danger">
-                                    @if(v.MontoReverso > 0)
-                                    {
-                                        <span title="@v.MotivoReverso" style="cursor: help; border-bottom: 1px dotted #dc3545;">
-                                            @v.SimboloMonedaPago @v.MontoReverso.ToString("N2")
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <text>--</text>
-                                    }
-                                </td>
-                                <td class="py-3 text-end fw-bold @(v.MontoTotal < 0 ? "text-danger" : "text-success")">
-                                    @(v.MontoTotal < 0 ? "-" : "")@(v.TipoMovimiento == "Ingreso" ? v.SimboloMonedaMonto : v.SimboloMonedaPago) @Math.Abs(v.MontoTotal).ToString("N2")
-                                </td>
-                                <td class="py-3 pe-4 text-center">
-                                    @if (v.Estado == "ANULADA")
-                                    {
-                                        <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">ANULADA</span>
-                                    }
-                                    else if (v.Estado == "EFECTUADA")
-                                    {
-                                        <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill">EFECTUADA</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill">COMPLETADO</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
+            <table class="table table-hover mb-0" style="font-size: 0.82rem;">
+                                  <thead style="background: #f8f9fa;">
+                      <tr>
+                          <th rowspan="2" class="ps-4 py-3 text-uppercase small fw-bold text-muted align-middle">Tipo</th>
+                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Referencia</th>
+                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Hora</th>
+                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Cliente</th>
+                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Métodos de Pago (Desglose)</th>
+                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #fff8e1;">Venta</th>
+                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #e3f2fd;">Pagado</th>
+                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #e8f5e9;">Aplicado a la Venta</th>
+                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #fce4ec;">Vuelto</th>
+                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted text-center align-middle border-start">Total Venta<br><span style="font-size: 0.75rem;">(En USD)</span></th>
+                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center align-middle">Estado</th>
+                      </tr>
+                      <tr>
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #fff8e1;">Monto</th>
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #fff8e1;">Moneda</th>
+                          
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #e3f2fd;">Monto</th>
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #e3f2fd;">Moneda</th>
+                          
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #e8f5e9;">Monto</th>
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #e8f5e9;">Moneda</th>
+                          
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #fce4ec;">Monto</th>
+                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #fce4ec;">Moneda</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      @if (selectedTurnoId == null)
+                      {
+                          <tr>
+                              <td colspan="15" class="text-center py-5 text-muted">
+                                  <i class="fas fa-mouse-pointer fa-2x mb-2 opacity-50"></i>
+                                  <p class="mb-0">Haga clic en un turno de la tabla superior para ver sus detalles</p>
+                              </td>
+                          </tr>
+                      }
+                      else if (loadingMovimientos)
+                      {
+                          @for (int i = 0; i < 3; i++)
+                          {
+                              <tr>
+                                  <td colspan="15" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
+                              </tr>
+                          }
+                      }
+                      else if (movimientosGenerales == null || !movimientosGenerales.Any())
+                      {
+                          <tr>
+                              <td colspan="15" class="text-center py-5 text-muted">
+                                  <i class="fas fa-info-circle fa-2x mb-2 opacity-50"></i>
+                                  <p class="mb-0">No se encontraron movimientos para este turno</p>
+                              </td>
+                          </tr>
+                      }
+                      else
+                      {
+                          @foreach (var v in movimientosGenerales.Skip((currentPageMovimientos - 1) * pageSizeMovimientos).Take(pageSizeMovimientos))
+                          {
+                              <tr>
+                                  <td class="ps-4 py-3 fw-bold align-middle">
+                                      @if (v.TipoMovimiento == "Venta")
+                                      {
+                                          <span class="badge bg-primary bg-opacity-10 text-primary px-2 rounded">VENTA</span>
+                                      }
+                                      else if (v.TipoMovimiento == "Regalía")
+                                      {
+                                          <span class="badge bg-info bg-opacity-10 text-info px-2 rounded"><i class="fas fa-gift me-1"></i>REGALÍA</span>
+                                      }
+                                      else if (v.TipoMovimiento == "Ingreso")
+                                      {
+                                          <span class="badge bg-success bg-opacity-10 text-success px-2 rounded">INGRESO</span>
+                                      }
+                                      else
+                                      {
+                                          <span class="badge bg-danger bg-opacity-10 text-danger px-2 rounded">EGRESO</span>
+                                      }
+                                  </td>
+                                  <td class="py-3 fw-bold align-middle">@v.Referencia</td>
+                                  <td class="py-3 text-muted align-middle">@v.Fecha.ToString("hh:mm tt")</td>
+                                  <td class="py-3 align-middle">
+                                      @if(v.Cliente == "N/A")
+                                      {
+                                          <span class="text-muted fst-italic">--</span>
+                                      }
+                                      else
+                                      {
+                                          @v.Cliente
+                                      }
+                                  </td>
+                                  
+                                  <!-- MÉTODOS DE PAGO (DESGLOSE) -->
+                                  <td class="py-3 align-middle">
+                                      @if (v.PagosDesglose != null && v.PagosDesglose.Any())
+                                      {
+                                          <ul class="list-unstyled mb-0 small">
+                                          @foreach (var p in v.PagosDesglose)
+                                          {
+                                              <li class="d-flex justify-content-between mb-1">
+                                                  <span class="fw-semibold text-dark text-break"><i class="fas fa-circle me-1" style="font-size: 5px; vertical-align: middle;"></i> @p.MetodoPago</span>
+                                                  <span class="fw-bold ms-2 text-nowrap @(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoPagado.ToString("N2")</span>
+                                              </li>
+                                          }
+                                          </ul>
+                                          @if (v.PagosDesglose.Any(p => p.SimboloMoneda == "C$") && v.TasaCambioUsd > 0)
+                                          {
+                                              <div class="mt-2 p-1 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.75rem;">
+                                                  <i class="fas fa-info-circle me-1"></i> Tipo de cambio utilizado: Venta 1 USD = C$ @v.TasaCambioUsd.ToString("N2")<br/>
+                                                  <span class="ms-3">Equivalente NIO aplicado a la venta: C$ @v.PagosDesglose.Where(p => p.SimboloMoneda == "C$").Sum(p => p.MontoAplicadoFisico).ToString("N2")</span>
+                                              </div>
+                                          }
+                                      }
+                                      else
+                                      {
+                                          <span class="small fw-semibold">@v.MetodoPago</span>
+                                      }
+                                  </td>
+
+                                  <!-- VENTA -->
+                                  <td class="py-3 text-end fw-bold align-middle border-start">
+                                      @if(v.Monto == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
+                                          <span class="text-muted">--</span>
+                                      } else {
+                                          @v.Monto.ToString("N2")
+                                      }
+                                  </td>
+                                  <td class="py-3 text-center fw-bold align-middle text-muted">
+                                      @if(v.Monto == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
+                                          <span class="text-muted">--</span>
+                                      } else {
+                                          <text>USD</text>
+                                      }
+                                  </td>
+
+                                  <!-- PAGADO -->
+                                  <td class="py-3 text-end fw-bold align-middle border-start text-nowrap">
+                                      @if (v.PagosDesglose != null && v.PagosDesglose.Any())
+                                      {
+                                          @foreach (var p in v.PagosDesglose)
+                                          {
+                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoPagado.ToString("N2")</div>
+                                          }
+                                      }
+                                      else
+                                      {
+                                          <div class="text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2")</div>
+                                      }
+                                  </td>
+                                  <td class="py-3 text-center fw-bold align-middle">
+                                      @if (v.PagosDesglose != null && v.PagosDesglose.Any())
+                                      {
+                                          @foreach (var p in v.PagosDesglose)
+                                          {
+                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@(p.SimboloMoneda == "$" ? "USD" : "NIO")</div>
+                                          }
+                                      }
+                                      else
+                                      {
+                                          <div class="text-dark">@(v.SimboloMonedaPago == "$" ? "USD" : "NIO")</div>
+                                      }
+                                  </td>
+
+                                  <!-- APLICADO A LA VENTA -->
+                                  <td class="py-3 text-end fw-bold align-middle border-start text-nowrap">
+                                      @if (v.PagosDesglose != null && v.PagosDesglose.Any())
+                                      {
+                                          @foreach (var p in v.PagosDesglose)
+                                          {
+                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoAplicadoFisico.ToString("N2")</div>
+                                          }
+                                      }
+                                      else
+                                      {
+                                          <div class="text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2")</div>
+                                      }
+                                  </td>
+                                  <td class="py-3 text-center fw-bold align-middle">
+                                      @if (v.PagosDesglose != null && v.PagosDesglose.Any())
+                                      {
+                                          @foreach (var p in v.PagosDesglose)
+                                          {
+                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@(p.SimboloMoneda == "$" ? "USD" : "NIO")</div>
+                                          }
+                                      }
+                                      else
+                                      {
+                                          <div class="text-dark">@(v.SimboloMonedaPago == "$" ? "USD" : "NIO")</div>
+                                      }
+                                  </td>
+
+                                  <!-- VUELTO -->
+                                  <td class="py-3 text-end fw-bold align-middle border-start text-danger text-nowrap">
+                                      @(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")
+                                  </td>
+                                  <td class="py-3 text-center fw-bold align-middle text-danger">
+                                      @(v.Vuelto > 0 ? (v.SimboloMonedaVuelto == "$" ? "USD" : "NIO") : "--")
+                                  </td>
+
+                                  <!-- TOTAL VENTA -->
+                                  <td class="py-3 text-center fw-bold align-middle border-start text-primary">
+                                      @if(v.TipoMovimiento == "Regalía") {
+                                          <span>$0.00</span>
+                                      } else {
+                                          <span>$@Math.Abs(v.Monto).ToString("N2")</span>
+                                      }
+                                  </td>
+
+                                  <!-- ESTADO -->
+                                  <td class="py-3 pe-4 text-center align-middle">
+                                      @if (v.Estado == "ANULADA")
+                                      {
+                                          <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">ANULADA</span>
+                                      }
+                                      else if (v.Estado == "EFECTUADA")
+                                      {
+                                          <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill">EFECTUADA</span>
+                                      }
+                                      else
+                                      {
+                                          <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill">COMPLETADO</span>
+                                      }
+                                  </td>
+                              </tr>
+                          }
+                      }
+                  </tbody>
             </table>
         </div>
         @if (movimientosGenerales != null && movimientosGenerales.Count > pageSizeMovimientos)
