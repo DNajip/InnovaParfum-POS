@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        <div class="inv-kpi-card kpi-yellow">
+        <div class="inv-kpi-card kpi-yellow" style="cursor: pointer;" @onclick="() => showStockBajoOffcanvas = true">
             <div class="kpi-icon">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
@@ -64,7 +64,7 @@
                 <span class="kpi-value">@stats.StockBajo</span>
             </div>
         </div>
-        <div class="inv-kpi-card kpi-red">
+        <div class="inv-kpi-card kpi-red" style="cursor: pointer;" @onclick="() => showSinStockOffcanvas = true">
             <div class="kpi-icon">
                 <i class="fas fa-times-circle"></i>
             </div>
@@ -648,7 +648,21 @@
     </div>
 }
 
+<InnovaParfumPOS.Frontend.Components.UI.StockAlertOffcanvas @bind-IsOpen="showStockBajoOffcanvas" 
+                     Title="Stock Bajo (Crítico)" 
+                     Icon="fas fa-exclamation-triangle" 
+                     HeaderClass="text-warning"
+                     Productos="@(productos?.Where(p => p.StockActual > 0 && p.StockActual <= p.StockMinimo).ToList() ?? new List<Producto>())" />
+
+<InnovaParfumPOS.Frontend.Components.UI.StockAlertOffcanvas @bind-IsOpen="showSinStockOffcanvas" 
+                     Title="Productos Sin Stock" 
+                     Icon="fas fa-times-circle" 
+                     HeaderClass="text-danger"
+                     Productos="@(productos?.Where(p => p.StockActual == 0).ToList() ?? new List<Producto>())" />
+
 @code {
+    private bool showStockBajoOffcanvas = false;
+    private bool showSinStockOffcanvas = false;
     private List<Producto>? productos;
     private List<Producto>? filteredProductos; // Ahora será igual a productos (filtrado en BD)
     private List<Categoria> categorias = new();
@@ -727,18 +741,7 @@
 
         await LoadData();
 
-        // Alerta proactiva de productos agotados
-        if (filteredProductos != null)
-        {
-            var agotados = filteredProductos.Where(p => p.StockActual <= 0).Select(p => p.Nombre).ToList();
-            if (agotados.Any())
-            {
-                string nombres = agotados.Count > 3 
-                    ? string.Join(", ", agotados.Take(3)) + $" y {agotados.Count - 3} más" 
-                    : string.Join(", ", agotados);
-                ToastService.ShowWarning($"{nombres} se encuentran sin stock actualmente.");
-            }
-        }
+
     }
 
     private void OpenRegisterModal()

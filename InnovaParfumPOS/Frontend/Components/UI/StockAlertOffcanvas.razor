@@ -1,0 +1,79 @@
+@using InnovaParfumPOS.Backend.Models
+
+<div class="offcanvas offcanvas-end @(IsOpen ? "show" : "")" tabindex="-1" style="@(IsOpen ? "visibility: visible;" : "visibility: hidden;")" id="offcanvasStockAlert">
+    <div class="offcanvas-header bg-light border-bottom">
+        <h5 class="offcanvas-title d-flex align-items-center gap-2 @HeaderClass">
+            <i class="@Icon"></i> @Title
+        </h5>
+        <button type="button" class="btn-close" @onclick="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        @if (Productos == null || !Productos.Any())
+        {
+            <div class="text-center p-5 text-muted">
+                <i class="fas fa-check-circle fs-1 mb-3 text-success opacity-50"></i>
+                <p>Todo está en orden por aquí. No hay productos con esta alerta.</p>
+            </div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var p in Productos)
+                {
+                    <div class="list-group-item list-group-item-action p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div style="max-width: 75%;">
+                                <h6 class="mb-0 fw-bold text-truncate" title="@p.Nombre">@p.Nombre</h6>
+                                <small class="text-muted"><i class="fas fa-barcode"></i> @(p.CodigoBarras ?? "Sin código")</small>
+                            </div>
+                            <span class="badge @HeaderClass bg-opacity-10 border border-1 shadow-sm px-2 py-1 rounded">
+                                Stock: @p.StockActual / @p.StockMinimo
+                            </span>
+                        </div>
+                        <div class="small d-flex gap-2 mb-1">
+                            @if (p.IdCategoriaNavigation != null)
+                            {
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border">@p.IdCategoriaNavigation.Nombre</span>
+                            }
+                            @if (p.IdOrigenNavigation != null)
+                            {
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border">@p.IdOrigenNavigation.Nombre</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (IsOpen)
+{
+    <div class="offcanvas-backdrop fade show" @onclick="Close"></div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string Icon { get; set; } = "";
+
+    [Parameter]
+    public string HeaderClass { get; set; } = "text-primary";
+
+    [Parameter]
+    public List<Producto>? Productos { get; set; }
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}
