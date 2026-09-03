@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -524,9 +524,9 @@ public class ReportService : IReportService
             decimal reversosContadoNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
             decimal reversosContadoUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
             
-            // Ventas Netas: El cliente solicitÃ³ que sea la suma del ingreso total recibido (sin restar el vuelto)
-            decimal ventasNetasNIO = Math.Max(0, cobrosContadoNIO - reversosContadoNIO);
-            decimal ventasNetasUSD = Math.Max(0, cobrosContadoUSD - reversosContadoUSD);
+            // Ventas Netas: Calculado restando el vuelto para que refleje el monto "aplicado" real a la venta
+            decimal ventasNetasNIO = Math.Max(0, pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado - (p.VueltoMostrado ?? 0)) - reversosContadoNIO);
+            decimal ventasNetasUSD = Math.Max(0, pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado - (p.VueltoMostrado ?? 0)) - reversosContadoUSD);
 
             return new ArqueoInsightDTO
             {
