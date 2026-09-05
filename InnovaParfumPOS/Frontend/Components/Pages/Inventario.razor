@@ -515,18 +515,39 @@
                                 </div>
 
                                 <div class="pricing-card bg-primary bg-opacity-10 p-3 rounded-4 border border-primary border-opacity-10">
-                                    <h6 class="fw-bold text-primary text-uppercase extra-small mb-2">Finanzas</h6>
+                                    <h6 class="fw-bold text-primary text-uppercase extra-small mb-2"><i class="fas fa-coins me-1"></i> Finanzas</h6>
+                                    
+                                    <!-- Visibilidad Pública (Ventas) -->
                                     <div class="d-flex justify-content-between mb-1">
-                                        <span class="extra-small text-muted">Precio Venta</span>
-                                        <span class="fw-bold text-primary small">@AppState.CurrencySymbol @selectedProduct.(PrecioMinorista ?? 0).ToString("N2")</span>
+                                        <span class="extra-small fw-semibold text-muted">Precio Minorista</span>
+                                        <span class="fw-bold text-primary small">@AppState.CurrencySymbol @((selectedProduct.PrecioMinorista ?? 0).ToString("N2"))</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-1">
-                                        <span class="extra-small text-muted">Precio Compra</span>
-                                        <span class="fw-semibold small">@AppState.CurrencySymbol @(selectedProduct.CostoProducto?.ToString("N2") ?? "0.00")</span>
+                                        <span class="extra-small fw-semibold text-muted">Precio Mayorista</span>
+                                        <span class="fw-bold text-info small">@AppState.CurrencySymbol @((selectedProduct.PrecioMayorista ?? 0).ToString("N2"))</span>
                                     </div>
-                                    <div class="border-top pt-1 mt-1 d-flex justify-content-between">
-                                        <span class="extra-small fw-bold">Valor Total</span>
-                                        <span class="fw-bold small">@AppState.CurrencySymbol @(((selectedProduct.PrecioMinorista ?? 0) * selectedProduct.StockActual).ToString("N2"))</span>
+                                    
+                                    <!-- Privacidad: Solo Administradores ven costos -->
+                                    @if (UserSession.Rol == "ADMINISTRADOR")
+                                    {
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="extra-small fw-semibold text-muted">Costo Unitario</span>
+                                            <span class="fw-semibold small text-danger">@AppState.CurrencySymbol @(((selectedProduct.CostoProducto ?? 0) + (selectedProduct.CostoEnvio ?? 0)).ToString("N2"))</span>
+                                        </div>
+                                    }
+
+                                    <div class="border-top pt-2 mt-2">
+                                        @if (UserSession.Rol == "ADMINISTRADOR")
+                                        {
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="extra-small fw-bold">Costo Invertido Total</span>
+                                                <span class="fw-bold small">@AppState.CurrencySymbol @((((selectedProduct.CostoProducto ?? 0) + (selectedProduct.CostoEnvio ?? 0)) * selectedProduct.StockActual).ToString("N2"))</span>
+                                            </div>
+                                        }
+                                        <div class="d-flex justify-content-between">
+                                            <span class="extra-small fw-bold text-success">Proyección Venta (Min.)</span>
+                                            <span class="fw-bold small text-success">@AppState.CurrencySymbol @(((selectedProduct.PrecioMinorista ?? 0) * selectedProduct.StockActual).ToString("N2"))</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
