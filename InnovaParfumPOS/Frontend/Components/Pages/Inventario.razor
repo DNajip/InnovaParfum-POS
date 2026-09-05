@@ -298,12 +298,18 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center">
-                                    <button class="btn-action" title="Ajustar Stock" @onclick="() => OpenAdjustModal(prod)" disabled="@(!prod.Activo)" style="@(!prod.Activo ? "opacity: 0.5; cursor: not-allowed;" : "")">
-                                        <i class="fas fa-exchange-alt"></i>
-                                    </button>
-                                    <button class="btn-action" title="Editar" @onclick="() => OpenEditModal(prod)">
-                                        <i class="fas fa-pen"></i>
-                                    </button>
+                                    @if (UserSession.HasModuleAccess("Inventario - Ajustar Stock"))
+                                    {
+                                        <button class="btn-action" title="Ajustar Stock" @onclick="() => OpenAdjustModal(prod)" disabled="@(!prod.Activo)" style="@(!prod.Activo ? "opacity: 0.5; cursor: not-allowed;" : "")">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>
+                                    }
+                                    @if (UserSession.HasModuleAccess("Inventario - Editar"))
+                                    {
+                                        <button class="btn-action" title="Editar" @onclick="() => OpenEditModal(prod)">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                    }
                                     <button class="btn-action" title="Detalles" @onclick="() => OpenDetailModal(prod)">
                                         <i class="fas fa-info-circle"></i>
                                     </button>
