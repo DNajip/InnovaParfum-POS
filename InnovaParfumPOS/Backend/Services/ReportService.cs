@@ -306,7 +306,10 @@ public class ReportService : IReportService
             .ToListAsync();
         
         var allProducts = await _context.Productos.Where(p => p.Activo).ToListAsync();
+        var totalProductos = allProducts.Count;
+        var totalCantidades = allProducts.Sum(p => p.StockActual);
         var valorCosto = allProducts.Sum(p => (p.CostoProducto ?? 0) * p.StockActual);
+        var valorMayorista = allProducts.Sum(p => (p.PrecioMayorista ?? 0) * p.StockActual);
         var valorVenta = allProducts.Sum(p => (p.PrecioMinorista ?? 0) * p.StockActual);
         
         var fechaLimite = DateTime.Today.AddDays(-30);
@@ -338,7 +341,10 @@ public class ReportService : IReportService
         {
             StockCritico = critico,
             SinMovimiento = result,
+            TotalProductos = totalProductos,
+            TotalCantidades = totalCantidades,
             ValorTotalCosto = valorCosto,
+            ValorTotalMayorista = valorMayorista,
             ValorTotalVenta = valorVenta
         };
     }
@@ -832,6 +838,9 @@ public class ReportService : IReportService
         return await _context.Movimientos
             .Include(m => m.IdProductoNavigation)
             .Include(m => m.IdTipoMovNavigation)
+            .Include(m => m.RegistradoPorNavigation)
+                .ThenInclude(u => u.IdEmpleadoNavigation)
+                    .ThenInclude(e => e.IdPersonaNavigation)
             .Where(m => m.FechaMov >= start && m.FechaMov <= end)
             .OrderByDescending(m => m.FechaMov)
             .ToListAsync();

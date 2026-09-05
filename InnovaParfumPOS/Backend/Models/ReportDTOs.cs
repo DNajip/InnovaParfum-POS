@@ -111,7 +111,10 @@ public class InventoryInsightDTO
 {
     public List<VStockValorizadoDTO> StockCritico { get; set; } = new();
     public List<ProductNoMovementDTO> SinMovimiento { get; set; } = new();
+    public int TotalProductos { get; set; }
+    public int TotalCantidades { get; set; }
     public decimal ValorTotalCosto { get; set; }
+    public decimal ValorTotalMayorista { get; set; }
     public decimal ValorTotalVenta { get; set; }
 }
 
