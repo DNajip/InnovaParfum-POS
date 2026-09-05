@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace InnovaParfumPOS.Backend.Models;
@@ -159,14 +159,15 @@ public class CashierAuditDTO
     
     // Metricas de Riesgo
     public int Anulaciones { get; set; }
-    public decimal DiferenciaArqueos { get; set; }
+    public decimal DiferenciaNIO { get; set; }
+    public decimal DiferenciaUSD { get; set; }
     
     public string NivelRiesgo 
     {
         get
         {
-            if (Anulaciones > 5 || DiferenciaArqueos < -500) return "ROJO";
-            if (Anulaciones > 2 || DiferenciaArqueos < -100) return "AMARILLO";
+            if (Anulaciones > 5 || DiferenciaNIO <= -500 || DiferenciaUSD <= -15) return "ROJO";
+            if (Anulaciones > 2 || DiferenciaNIO <= -100 || DiferenciaUSD <= -5) return "AMARILLO";
             return "VERDE";
         }
     }

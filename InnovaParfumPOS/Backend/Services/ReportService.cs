@@ -388,25 +388,31 @@ public class ReportService : IReportService
         
         var ventas = await _context.Ventas
             .Include(v => v.IdUsuarioNavigation)
+                .ThenInclude(u => u.IdEmpleadoNavigation)
+                    .ThenInclude(e => e.IdPersonaNavigation)
             .Where(v => v.FechaVenta >= start && v.FechaVenta <= end)
             .ToListAsync();
             
-        var turnos = await _context.Turnos
-            .Include(t => t.IdUsuarioNavigation)
-            .Where(t => t.FechaApertura >= start && t.FechaApertura <= end)
-            .ToListAsync();
+        // Llama a la lógica central unificada de arqueos para obtener cálculos dinámicos multimoneda
+        // y con el filtro de fechas correcto (turnos cerrados en el rango)
+        var arqueosDinamicos = await GetArqueoInsightsAsync(start, end);
 
-        var users = ventas.Select(v => v.IdUsuarioNavigation?.Username)
-            .Concat(turnos.Select(t => t.IdUsuarioNavigation?.Username))
-            .Where(u => u != null)
+        var GetNombre = (Venta v) => 
+            !string.IsNullOrWhiteSpace(v.IdUsuarioNavigation?.IdEmpleadoNavigation?.IdPersonaNavigation?.NombreCompleto) 
+            ? v.IdUsuarioNavigation.IdEmpleadoNavigation.IdPersonaNavigation.NombreCompleto 
+            : (v.IdUsuarioNavigation?.Username ?? "Sistema");
+
+        var users = ventas.Select(GetNombre)
+            .Concat(arqueosDinamicos.Select(t => t.Usuario))
+            .Where(u => !string.IsNullOrEmpty(u))
             .Distinct();
 
         var auditList = new List<CashierAuditDTO>();
 
         foreach(var u in users)
         {
-            var userVentas = ventas.Where(v => v.IdUsuarioNavigation?.Username == u).ToList();
-            var userTurnos = turnos.Where(t => t.IdUsuarioNavigation?.Username == u).ToList();
+            var userVentas = ventas.Where(v => GetNombre(v) == u).ToList();
+            var userArqueos = arqueosDinamicos.Where(a => a.Usuario == u).ToList();
             
             auditList.Add(new CashierAuditDTO
             {
@@ -415,7 +421,8 @@ public class ReportService : IReportService
                 TotalVentas = userVentas.Where(v => !v.Anulada).Sum(v => v.TotalBase),
                 Descuentos = userVentas.Where(v => !v.Anulada).Sum(v => v.DescuentoBase),
                 Anulaciones = userVentas.Count(v => v.Anulada),
-                DiferenciaArqueos = userTurnos.Sum(t => t.DiferenciaBase ?? 0)
+                DiferenciaNIO = userArqueos.Sum(a => a.DiferenciaNIO ?? 0),
+                DiferenciaUSD = userArqueos.Sum(a => a.DiferenciaUSD ?? 0)
             });
         }
 

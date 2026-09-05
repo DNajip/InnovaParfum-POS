@@ -40,8 +40,13 @@ else
                             <td class="text-center fw-bold @(c.Anulaciones > 0 ? "text-danger" : "text-muted")">@c.Anulaciones</td>
                             <td class="text-end fw-bold">@AppState.CurrencySymbol @c.TotalVentas.ToString("N2")</td>
                             <td class="text-end text-danger">-@AppState.CurrencySymbol @c.Descuentos.ToString("N2")</td>
-                            <td class="text-end fw-bold @(c.DiferenciaArqueos < 0 ? "text-danger" : c.DiferenciaArqueos > 0 ? "text-warning" : "text-success")">
-                                @AppState.CurrencySymbol @c.DiferenciaArqueos.ToString("N2")
+                            <td class="text-end fw-bold">
+                                <div class="@(c.DiferenciaNIO < 0 ? "text-danger" : c.DiferenciaNIO > 0 ? "text-warning" : "text-success")">
+                                    C$ @c.DiferenciaNIO.ToString("N2")
+                                </div>
+                                <div class="@(c.DiferenciaUSD < 0 ? "text-danger" : c.DiferenciaUSD > 0 ? "text-warning" : "text-success")" style="font-size: 0.85em;">
+                                    $ @c.DiferenciaUSD.ToString("N2")
+                                </div>
                             </td>
                             <td class="text-center">
                                 @if (c.NivelRiesgo == "ROJO")
