@@ -465,7 +465,13 @@ public class ReportService : IReportService
             var ventasAnuladas = t.Venta.Where(v => v.Anulada).ToList();
             
             // Ventas Netas (Base)
-            decimal ventasEfectuadasBase = ventasValidas.Sum(v => v.TotalBase);
+            decimal totalParcialReversosBase = 0;
+            foreach (var v in ventasValidas)
+            {
+                var reversosVenta = t.MovimientosVarios.Where(m => (m.Tipo == "EGRESO" || m.Tipo == "INFO") && (m.Concepto ?? "").StartsWith("Reverso") && (m.Concepto ?? "").Contains($"Fac {v.IdVenta} "));
+                totalParcialReversosBase += reversosVenta.Sum(m => m.IdMoneda == 1 ? (v.TasaCambioUsd > 0 ? m.Monto / v.TasaCambioUsd : 0) : m.Monto);
+            }
+            decimal ventasEfectuadasBase = ventasValidas.Sum(v => v.TotalBase) - totalParcialReversosBase;
             decimal ventasAnuladasBase = ventasAnuladas.Sum(v => v.TotalBase);
 
             // Cobros y Vueltos fÃ­sicos (De TODAS las ventas, incluyendo anuladas, porque el dinero entrÃ³ y saliÃ³ fÃ­sicamente de gaveta)

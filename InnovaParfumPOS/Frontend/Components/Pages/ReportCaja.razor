@@ -289,40 +289,27 @@ else
         </div>
         
         <div class="table-responsive">
-            <table class="table table-hover mb-0" style="font-size: 0.82rem;">
+            <table class="table table-hover table-sm mb-0 align-middle" style="font-size: 0.75rem;">
                                   <thead style="background: #f8f9fa;">
                       <tr>
-                          <th rowspan="2" class="ps-4 py-3 text-uppercase small fw-bold text-muted align-middle">Tipo</th>
-                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Referencia</th>
-                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Hora</th>
-                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Cliente</th>
-                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted align-middle">Métodos de Pago (Desglose)</th>
-                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #fff8e1;">Venta</th>
-                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #e3f2fd;">Pagado</th>
-                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #e8f5e9;">Aplicado a la Venta</th>
-                          <th colspan="2" class="py-2 text-uppercase small fw-bold text-muted text-center border-bottom border-start" style="background: #fce4ec;">Vuelto</th>
-                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted text-center align-middle border-start">Total Venta<br><span style="font-size: 0.75rem;">(En USD)</span></th>
-                          <th rowspan="2" class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center align-middle">Estado</th>
-                      </tr>
-                      <tr>
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #fff8e1;">Monto</th>
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #fff8e1;">Moneda</th>
-                          
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #e3f2fd;">Monto</th>
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #e3f2fd;">Moneda</th>
-                          
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #e8f5e9;">Monto</th>
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #e8f5e9;">Moneda</th>
-                          
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center border-start" style="background: #fce4ec;">Monto</th>
-                          <th class="py-2 text-uppercase small fw-bold text-muted text-center" style="background: #fce4ec;">Moneda</th>
+                          <th class="ps-4 py-3 text-uppercase small fw-bold text-muted align-middle text-nowrap">Tipo</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted align-middle" style="min-width: 200px;">Referencia</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted align-middle text-nowrap">Hora</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted align-middle text-nowrap">Cliente</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted align-middle" style="min-width: 180px;">Métodos de Pago (Desglose)</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted text-center align-middle border-start text-nowrap" style="background: #fff8e1;">Venta</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted text-center align-middle border-start text-nowrap" style="background: #e3f2fd;">Pagado</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted text-center align-middle border-start text-nowrap" style="background: #e8f5e9;">Aplicado</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted text-center align-middle border-start text-nowrap" style="background: #fce4ec;">Vuelto</th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted text-center align-middle border-start text-nowrap">Total Venta<br><span style="font-size: 0.75rem;">(En USD)</span></th>
+                          <th class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center align-middle text-nowrap">Estado</th>
                       </tr>
                   </thead>
                   <tbody>
                       @if (selectedTurnoId == null)
                       {
                           <tr>
-                              <td colspan="15" class="text-center py-5 text-muted">
+                              <td colspan="11" class="text-center py-5 text-muted">
                                   <i class="fas fa-mouse-pointer fa-2x mb-2 opacity-50"></i>
                                   <p class="mb-0">Haga clic en un turno de la tabla superior para ver sus detalles</p>
                               </td>
@@ -333,14 +320,14 @@ else
                           @for (int i = 0; i < 3; i++)
                           {
                               <tr>
-                                  <td colspan="15" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
+                                  <td colspan="11" class="py-3 ps-4"><div class="skeleton" style="height: 20px;"></div></td>
                               </tr>
                           }
                       }
                       else if (movimientosGenerales == null || !movimientosGenerales.Any())
                       {
                           <tr>
-                              <td colspan="15" class="text-center py-5 text-muted">
+                              <td colspan="11" class="text-center py-5 text-muted">
                                   <i class="fas fa-info-circle fa-2x mb-2 opacity-50"></i>
                                   <p class="mb-0">No se encontraron movimientos para este turno</p>
                               </td>
@@ -351,7 +338,7 @@ else
                           @foreach (var v in movimientosGenerales.Skip((currentPageMovimientos - 1) * pageSizeMovimientos).Take(pageSizeMovimientos))
                           {
                               <tr>
-                                  <td class="ps-4 py-3 fw-bold align-middle">
+                                  <td class="ps-4 py-3 fw-bold align-middle text-nowrap">
                                       @if (v.TipoMovimiento == "Venta")
                                       {
                                           <span class="badge bg-primary bg-opacity-10 text-primary px-2 rounded">VENTA</span>
@@ -370,8 +357,8 @@ else
                                       }
                                   </td>
                                   <td class="py-3 fw-bold align-middle">@v.Referencia</td>
-                                  <td class="py-3 text-muted align-middle">@v.Fecha.ToString("hh:mm tt")</td>
-                                  <td class="py-3 align-middle">
+                                  <td class="py-3 text-muted align-middle text-nowrap">@v.Fecha.ToString("hh:mm tt")</td>
+                                  <td class="py-3 align-middle text-nowrap">
                                       @if(v.Cliente == "N/A")
                                       {
                                           <span class="text-muted fst-italic">--</span>
@@ -390,16 +377,16 @@ else
                                           @foreach (var p in v.PagosDesglose)
                                           {
                                               <li class="d-flex justify-content-between mb-1">
-                                                  <span class="fw-semibold text-dark text-break"><i class="fas fa-circle me-1" style="font-size: 5px; vertical-align: middle;"></i> @p.MetodoPago</span>
-                                                  <span class="fw-bold ms-2 text-nowrap @(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoPagado.ToString("N2")</span>
+                                                  <span class="fw-semibold text-dark text-nowrap"><i class="fas fa-circle me-1" style="font-size: 5px; vertical-align: middle;"></i> @p.MetodoPago</span>
+                                                  <span class="fw-bold ms-2 text-nowrap @(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoPagado.ToString("N2") @(p.SimboloMoneda == "$" ? "USD" : "NIO")</span>
                                               </li>
                                           }
                                           </ul>
                                           @if (v.PagosDesglose.Any(p => p.SimboloMoneda == "C$") && v.TasaCambioUsd > 0)
                                           {
                                               <div class="mt-2 p-1 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.75rem;">
-                                                  <i class="fas fa-info-circle me-1"></i> Tipo de cambio utilizado: Venta 1 USD = C$ @v.TasaCambioUsd.ToString("N2")<br/>
-                                                  <span class="ms-3">Equivalente NIO aplicado a la venta: C$ @v.PagosDesglose.Where(p => p.SimboloMoneda == "C$").Sum(p => p.MontoAplicadoFisico).ToString("N2")</span>
+                                                  <i class="fas fa-info-circle me-1"></i> Venta 1 USD = C$ @v.TasaCambioUsd.ToString("N2")<br/>
+                                                  <span class="ms-3">NIO Aplicado: C$ @v.PagosDesglose.Where(p => p.SimboloMoneda == "C$").Sum(p => p.MontoAplicadoFisico).ToString("N2")</span>
                                               </div>
                                           }
                                       }
@@ -410,83 +397,47 @@ else
                                   </td>
 
                                   <!-- VENTA -->
-                                  <td class="py-3 text-end fw-bold align-middle border-start">
-                                      @if(v.Monto == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
+                                  <td class="py-3 text-center fw-bold align-middle border-start text-nowrap">
+                                      @if(v.TipoMovimiento != "Venta" && v.TipoMovimiento != "Regalía") {
                                           <span class="text-muted">--</span>
                                       } else {
-                                          @v.Monto.ToString("N2")
-                                      }
-                                  </td>
-                                  <td class="py-3 text-center fw-bold align-middle text-muted">
-                                      @if(v.Monto == 0 && (v.TipoMovimiento == "Ingreso" || v.TipoMovimiento == "Egreso")) {
-                                          <span class="text-muted">--</span>
-                                      } else {
-                                          <text>USD</text>
+                                          <span>$ @v.Monto.ToString("N2") <span class="text-muted fw-normal ms-1">USD</span></span>
                                       }
                                   </td>
 
                                   <!-- PAGADO -->
-                                  <td class="py-3 text-end fw-bold align-middle border-start text-nowrap">
+                                  <td class="py-3 text-center fw-bold align-middle border-start text-nowrap">
                                       @if (v.PagosDesglose != null && v.PagosDesglose.Any())
                                       {
                                           @foreach (var p in v.PagosDesglose)
                                           {
-                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoPagado.ToString("N2")</div>
+                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoPagado.ToString("N2") <span class="fw-normal ms-1">@(p.SimboloMoneda == "$" ? "USD" : "NIO")</span></div>
                                           }
                                       }
                                       else
                                       {
-                                          <div class="text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2")</div>
-                                      }
-                                  </td>
-                                  <td class="py-3 text-center fw-bold align-middle">
-                                      @if (v.PagosDesglose != null && v.PagosDesglose.Any())
-                                      {
-                                          @foreach (var p in v.PagosDesglose)
-                                          {
-                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@(p.SimboloMoneda == "$" ? "USD" : "NIO")</div>
-                                          }
-                                      }
-                                      else
-                                      {
-                                          <div class="text-dark">@(v.SimboloMonedaPago == "$" ? "USD" : "NIO")</div>
+                                          <div class="text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2") <span class="fw-normal ms-1">@(v.SimboloMonedaPago == "$" ? "USD" : "NIO")</span></div>
                                       }
                                   </td>
 
                                   <!-- APLICADO A LA VENTA -->
-                                  <td class="py-3 text-end fw-bold align-middle border-start text-nowrap">
+                                  <td class="py-3 text-center fw-bold align-middle border-start text-nowrap">
                                       @if (v.PagosDesglose != null && v.PagosDesglose.Any())
                                       {
                                           @foreach (var p in v.PagosDesglose)
                                           {
-                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoAplicadoFisico.ToString("N2")</div>
+                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@p.SimboloMoneda @p.MontoAplicadoFisico.ToString("N2") <span class="fw-normal ms-1">@(p.SimboloMoneda == "$" ? "USD" : "NIO")</span></div>
                                           }
                                       }
                                       else
                                       {
-                                          <div class="text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2")</div>
-                                      }
-                                  </td>
-                                  <td class="py-3 text-center fw-bold align-middle">
-                                      @if (v.PagosDesglose != null && v.PagosDesglose.Any())
-                                      {
-                                          @foreach (var p in v.PagosDesglose)
-                                          {
-                                              <div class="@(p.SimboloMoneda == "$" ? "text-primary" : "text-success")">@(p.SimboloMoneda == "$" ? "USD" : "NIO")</div>
-                                          }
-                                      }
-                                      else
-                                      {
-                                          <div class="text-dark">@(v.SimboloMonedaPago == "$" ? "USD" : "NIO")</div>
+                                          <div class="text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2") <span class="fw-normal ms-1">@(v.SimboloMonedaPago == "$" ? "USD" : "NIO")</span></div>
                                       }
                                   </td>
 
                                   <!-- VUELTO -->
-                                  <td class="py-3 text-end fw-bold align-middle border-start text-danger text-nowrap">
-                                      @(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")
-                                  </td>
-                                  <td class="py-3 text-center fw-bold align-middle text-danger">
-                                      @(v.Vuelto > 0 ? (v.SimboloMonedaVuelto == "$" ? "USD" : "NIO") : "--")
+                                  <td class="py-3 text-center fw-bold align-middle border-start text-danger text-nowrap">
+                                      @(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")} {(v.SimboloMonedaVuelto == "$" ? "USD" : "NIO")}" : "--")
                                   </td>
 
                                   <!-- TOTAL VENTA -->
@@ -586,20 +537,20 @@ else
         </div>
         
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover table-sm mb-0 align-middle" style="font-size: 0.75rem;">
                 <thead style="background: #f8f9fa;">
                     <tr>
-                        <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Tipo</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Referencia</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Hora</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Cliente</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted">Método Pago</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Crédito</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Abono</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end" title="Monto con el que paga">Paga con</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Vuelto</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted text-end">Total</th>
-                        <th class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center">Estado</th>
+                        <th class="ps-4 py-3 text-uppercase small fw-bold text-muted text-nowrap">Tipo</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted" style="min-width: 150px;">Referencia</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-nowrap">Hora</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-nowrap">Cliente</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-nowrap">Método Pago</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-center text-nowrap">Crédito</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-center text-nowrap">Abono</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-center text-nowrap" title="Monto con el que paga">Paga con</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-center text-nowrap">Vuelto</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted text-center text-nowrap">Total</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted pe-4 text-center text-nowrap">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -635,19 +586,19 @@ else
                         @foreach (var v in abonosCredito.Skip((currentPageAbonos - 1) * pageSizeAbonos).Take(pageSizeAbonos))
                         {
                             <tr>
-                                <td class="ps-4 py-3 fw-bold">
+                                <td class="ps-4 py-3 fw-bold text-nowrap">
                                     <span class="badge bg-success bg-opacity-10 text-success px-2 rounded">INGRESO</span>
                                 </td>
                                 <td class="py-3 fw-bold">@v.Referencia</td>
-                                <td class="py-3 text-muted">@v.Fecha.ToString("hh:mm tt")</td>
-                                <td class="py-3">@v.Cliente</td>
-                                <td class="py-3"><span class="small fw-semibold">@v.MetodoPago</span></td>
-                                <td class="py-3 text-end fw-bold text-warning">@v.SimboloMonedaMonto @v.SaldoPendiente.ToString("N2")</td>
-                                <td class="py-3 text-end fw-bold text-success">@v.SimboloMonedaMonto @v.Monto.ToString("N2")</td>
-                                <td class="py-3 text-end fw-bold text-dark">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2")</td>
-                                <td class="py-3 text-end fw-semibold text-danger">@(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")</td>
-                                <td class="py-3 text-end fw-bold">@v.SimboloMonedaMonto @v.MontoTotal.ToString("N2")</td>
-                                <td class="py-3 text-center pe-4"><span class="badge rounded-pill bg-success fw-bold">@v.Estado</span></td>
+                                <td class="py-3 text-muted text-nowrap">@v.Fecha.ToString("hh:mm tt")</td>
+                                <td class="py-3 text-nowrap">@v.Cliente</td>
+                                <td class="py-3 text-nowrap"><span class="small fw-semibold">@v.MetodoPago</span></td>
+                                <td class="py-3 text-center fw-bold text-warning text-nowrap">@v.SimboloMonedaMonto @v.SaldoPendiente.ToString("N2")</td>
+                                <td class="py-3 text-center fw-bold text-success text-nowrap">@v.SimboloMonedaMonto @v.Monto.ToString("N2")</td>
+                                <td class="py-3 text-center fw-bold text-dark text-nowrap">@v.SimboloMonedaPago @v.MontoPagado.ToString("N2")</td>
+                                <td class="py-3 text-center fw-semibold text-danger text-nowrap">@(v.Vuelto > 0 ? $"{v.SimboloMonedaVuelto} {v.Vuelto.ToString("N2")}" : "--")</td>
+                                <td class="py-3 text-center fw-bold text-nowrap">@v.SimboloMonedaMonto @v.MontoTotal.ToString("N2")</td>
+                                <td class="py-3 text-center pe-4 text-nowrap"><span class="badge rounded-pill bg-success fw-bold">@v.Estado</span></td>
                             </tr>
                         }
                     }
