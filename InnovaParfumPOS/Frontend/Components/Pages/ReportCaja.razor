@@ -491,8 +491,8 @@ else
 
                                   <!-- TOTAL VENTA -->
                                   <td class="py-3 text-center fw-bold align-middle border-start text-primary">
-                                      @if(v.TipoMovimiento == "Regalía") {
-                                          <span>$0.00</span>
+                                      @if(v.TipoMovimiento != "Venta") {
+                                          <span class="text-muted">--</span>
                                       } else {
                                           <span>$@Math.Abs(v.Monto).ToString("N2")</span>
                                       }
@@ -503,6 +503,10 @@ else
                                       @if (v.Estado == "ANULADA")
                                       {
                                           <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">ANULADA</span>
+                                      }
+                                      else if (v.Estado == "REVERSADO")
+                                      {
+                                          <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill"><i class="fas fa-undo-alt me-1"></i>REVERSADO</span>
                                       }
                                       else if (v.Estado == "EFECTUADA")
                                       {

@@ -8,7 +8,7 @@ public interface ICheckoutService
     Task<Venta> ProcessCheckoutAsync(int userId, int? idPersona, int idTipoVenta, int idCondicionPago, decimal discount, decimal tasaCambioUsd, List<CartItem> items, List<PaymentInput> payments, string monedaVuelto = "NIO");
     Task<List<PeriodosGarantium>> GetPeriodosGarantiaAsync();
     Task<List<MetodosPago>> GetMetodosPagoAsync();
-    Task ReversarTransaccionAsync(int idVenta, int idUsuario, string motivo, string? detalleJson);
+    Task ReversarTransaccionAsync(int idVenta, int idUsuario, string motivo, string? detalleJson, int? idMonedaReverso = null, bool afectaCaja = true);
 }
 
 public class CheckoutService : ICheckoutService
@@ -112,14 +112,14 @@ public class CheckoutService : ICheckoutService
         }
     }
 
-    public async Task ReversarTransaccionAsync(int idVenta, int idUsuario, string motivo, string? detalleJson)
+    public async Task ReversarTransaccionAsync(int idVenta, int idUsuario, string motivo, string? detalleJson, int? idMonedaReverso = null, bool afectaCaja = true)
     {
         using var context = await _factory.CreateDbContextAsync();
         try
         {
             await context.Database.ExecuteSqlRawAsync(
-                "SET QUOTED_IDENTIFIER ON; EXEC VEN.sp_ReversoTransaccion @IdVenta={0}, @IdUsuario={1}, @Motivo={2}, @DetalleJson={3}",
-                idVenta, idUsuario, motivo, detalleJson ?? "[]");
+                "SET QUOTED_IDENTIFIER ON; EXEC VEN.sp_ReversoTransaccion @IdVenta={0}, @IdUsuario={1}, @Motivo={2}, @DetalleJson={3}, @IdMonedaReverso={4}, @AfectaCaja={5}",
+                idVenta, idUsuario, motivo, detalleJson ?? "[]", idMonedaReverso, afectaCaja);
         }
         catch (Exception ex)
         {

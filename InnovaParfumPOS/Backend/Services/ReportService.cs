@@ -534,12 +534,12 @@ public class ReportService : IReportService
             decimal vueltoContadoNIO = ventasContado.Where(v => v.MonedaVuelto == "NIO").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
             decimal vueltoContadoUSD = ventasContado.Where(v => v.MonedaVuelto == "USD").Sum(v => v.Pagos.Sum(p => p.VueltoMostrado ?? 0));
             
-            decimal reversosContadoNIO = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 1 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
-            decimal reversosContadoUSD = t.MovimientosVarios.Where(m => m.Tipo == "EGRESO" && m.IdMoneda == 2 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} -"))).Sum(m => m.Monto);
+            decimal reversosContadoNIO = t.MovimientosVarios.Where(m => (m.Tipo == "EGRESO" || m.Tipo == "INFO") && m.IdMoneda == 1 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} "))).Sum(m => m.Monto);
+            decimal reversosContadoUSD = t.MovimientosVarios.Where(m => (m.Tipo == "EGRESO" || m.Tipo == "INFO") && m.IdMoneda == 2 && (m.Concepto ?? "").StartsWith("Reverso") && ventasContado.Any(v => (m.Concepto ?? "").Contains($"Fac {v.IdVenta} "))).Sum(m => m.Monto);
             
             // Ventas Netas: Calculado restando el vuelto para que refleje el monto "aplicado" real a la venta
-            decimal ventasNetasNIO = Math.Max(0, pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado - (p.VueltoMostrado ?? 0)) - reversosContadoNIO);
-            decimal ventasNetasUSD = Math.Max(0, pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado - (p.VueltoMostrado ?? 0)) - reversosContadoUSD);
+            decimal ventasNetasNIO = Math.Max(0, pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 1).Sum(p => p.MontoPagado) - vueltoContadoNIO - reversosContadoNIO);
+            decimal ventasNetasUSD = Math.Max(0, pagosContado.Where(p => p.IdMetodoPagoNavigation.IdMoneda == 2).Sum(p => p.MontoPagado) - vueltoContadoUSD - reversosContadoUSD);
 
             return new ArqueoInsightDTO
             {
@@ -629,26 +629,39 @@ public class ReportService : IReportService
                 metodoPago = string.Join(", ", metodos);
             }
 
-            var montoPagadoFisico = v.Pagos.Sum(p => p.MontoPagado);
-            var vueltoMostradoFisico = v.Pagos.Sum(p => p.VueltoMostrado ?? 0);
-            var simboloPago = pagoPrincipal?.IdMetodoPagoNavigation?.IdMoneda == 1 ? "C$" : "$";
-            var simboloVuelto = v.MonedaVuelto == "NIO" ? "C$" : "$";
+            var montoPagadoFisico = v.Pagos.Sum(p => p.MontoEnBase);
+            var vueltoSumaFisico = v.Pagos.Sum(p => p.VueltoMostrado ?? 0);
+            var vueltoMostradoFisico = v.MonedaVuelto == "NIO" ? (v.TasaCambioUsd > 0 ? vueltoSumaFisico / v.TasaCambioUsd : 0) : vueltoSumaFisico;
+            var simboloPago = "$";
+            var simboloVuelto = "$";
 
-            var reversoMovimientos = movimientos.Where(m => m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith($"Reverso/DevoluciÃ³n de Fac {v.IdVenta} -")).ToList();
-            var reversoFisico = reversoMovimientos.Sum(m => m.Monto);
+            var reversoMovimientos = movimientos.Where(m => (m.Tipo == "EGRESO" || m.Tipo == "INFO") && (m.Concepto ?? "").StartsWith("Reverso") && (m.Concepto ?? "").Contains($"Fac {v.IdVenta} ")).ToList();
+            var reversoFisico = reversoMovimientos.Sum(m => m.IdMoneda == 1 ? (v.TasaCambioUsd > 0 ? m.Monto / v.TasaCambioUsd : 0) : m.Monto);
             var motivoReverso = string.Join(" | ", reversoMovimientos.Select(m => {
                 var parts = (m.Concepto ?? "").Split(" - ", 2);
                 return parts.Length > 1 ? parts[1] : m.Concepto;
             }));
 
-            var pagosDesglose = v.Pagos.Select(p => new PagoDetalleTurnoDTO
-            {
-                MetodoPago = p.IdMetodoPagoNavigation?.Nombre ?? "Desconocido",
-                MontoPagado = p.MontoPagado,
-                MontoAplicadoBase = p.MontoEnBase,
-                MontoAplicadoFisico = p.MontoPagado - (p.VueltoMostrado ?? 0),
-                TasaAplicada = p.TasaAplicada ?? v.TasaCambioUsd,
-                SimboloMoneda = (p.IdMetodoPagoNavigation?.IdMoneda == 1) ? "C$" : "$"
+            var pagosDesglose = v.Pagos.Select(p => {
+                decimal changeInPaymentCurrency = 0;
+                if ((p.VueltoMostrado ?? 0) > 0)
+                {
+                    if (v.MonedaVuelto == "NIO" && p.IdMetodoPagoNavigation?.IdMoneda == 2)
+                        changeInPaymentCurrency = (v.TasaCambioUsd > 0) ? p.VueltoMostrado.Value / v.TasaCambioUsd : 0;
+                    else if (v.MonedaVuelto == "USD" && p.IdMetodoPagoNavigation?.IdMoneda == 1)
+                        changeInPaymentCurrency = p.VueltoMostrado.Value * v.TasaCambioUsd;
+                    else
+                        changeInPaymentCurrency = p.VueltoMostrado.Value;
+                }
+                return new PagoDetalleTurnoDTO
+                {
+                    MetodoPago = p.IdMetodoPagoNavigation?.Nombre ?? "Desconocido",
+                    MontoPagado = p.MontoPagado,
+                    MontoAplicadoBase = p.MontoEnBase,
+                    MontoAplicadoFisico = p.MontoPagado - changeInPaymentCurrency,
+                    TasaAplicada = p.TasaAplicada ?? v.TasaCambioUsd,
+                    SimboloMoneda = (p.IdMetodoPagoNavigation?.IdMoneda == 1) ? "C$" : "$"
+                };
             }).ToList();
 
             result.Add(new MovimientoTurnoDTO
@@ -663,7 +676,7 @@ public class ReportService : IReportService
                 Vuelto = vueltoMostradoFisico,
                 MontoReverso = reversoFisico,
                 MotivoReverso = motivoReverso,
-                MontoTotal = montoPagadoFisico - vueltoMostradoFisico - reversoFisico,
+                MontoTotal = v.TotalBase - reversoFisico,
                 SimboloMonedaPago = simboloPago,
                 SimboloMonedaVuelto = simboloVuelto,
                 SimboloMonedaMonto = "$",
@@ -725,7 +738,6 @@ public class ReportService : IReportService
         }
 
         var otrosMovimientos = movimientos.Where(m => 
-            !(m.Tipo == "EGRESO" && (m.Concepto ?? "").StartsWith("Reverso/DevoluciÃ³n de Fac ")) &&
             !(m.Concepto ?? "").StartsWith("Abono a CrÃ©dito #") &&
             !(m.Concepto ?? "").StartsWith("Vuelto de Abono a CrÃ©dito #")
         );
@@ -733,23 +745,27 @@ public class ReportService : IReportService
         foreach (var m in otrosMovimientos)
         {
             var simboloMov = m.IdMoneda == 1 ? "C$" : "$";
+            
+            bool isReverso = (m.Concepto ?? "").StartsWith("Reverso");
+            string tipoMov = m.Tipo == "INGRESO" ? "Ingreso" : (isReverso ? "Reverso" : "Egreso");
+
             result.Add(new MovimientoTurnoDTO
             {
-                TipoMovimiento = m.Tipo == "INGRESO" ? "Ingreso" : "Egreso",
+                TipoMovimiento = tipoMov,
                 Referencia = m.Concepto,
                 Fecha = m.Fecha,
                 Cliente = "N/A",
                 Descuento = 0,
                 Monto = 0,
-                MontoPagado = 0,
+                MontoPagado = m.Monto,
                 Vuelto = 0,
                 MontoReverso = 0,
                 MontoTotal = m.Tipo == "INGRESO" ? m.Monto : -m.Monto,
                 SimboloMonedaPago = simboloMov,
                 SimboloMonedaVuelto = simboloMov,
                 SimboloMonedaMonto = simboloMov,
-                MetodoPago = "EFECTIVO",
-                Estado = "COMPLETADO"
+                MetodoPago = "Efectivo",
+                Estado = isReverso ? "REVERSADO" : "COMPLETADO"
             });
         }
 

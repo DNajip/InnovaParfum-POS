@@ -410,6 +410,18 @@
                     }
 
                     <div class="mb-3">
+                        <label class="form-label fw-bold">¿Cómo se entregará el dinero devuelto?</label>
+                        <select class="form-select rounded" @bind="metodoDevolucion">
+                            <option value="1">Efectivo en Caja (C$ CÓRDOBAS)</option>
+                            <option value="2">Efectivo en Caja ($ DÓLARES)</option>
+                            <option value="3">Transferencia Externa / Vía Administrador (No afecta caja)</option>
+                        </select>
+                        <div class="form-text text-muted">
+                            Si selecciona "Transferencia Externa", no se descontará el dinero del cajero en turno.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label fw-bold">Motivo / Justificación:</label>
                         <textarea class="form-control rounded" rows="3" @bind="reversoMotivo" placeholder="Escriba la razón de la devolución o anulación..."></textarea>
                     </div>
@@ -466,6 +478,7 @@
     private bool showReversoModal = false;
     private string reversoMotivo = "";
     private bool isReversoParcial = false;
+    private int metodoDevolucion = 1;
     private List<VentaDetalle> reversoDetalles = new();
     private List<int> selectedDetallesParaReverso = new();
 
@@ -559,6 +572,7 @@
         reversoVenta = v;
         reversoMotivo = "";
         isReversoParcial = false;
+        metodoDevolucion = 1;
         reversoDetalles = v.VentaDetalles.ToList();
         selectedDetallesParaReverso.Clear();
         showReversoModal = true;
@@ -602,7 +616,10 @@
                 jsonDetalles = System.Text.Json.JsonSerializer.Serialize(selectedDetallesParaReverso);
             }
 
-            await CheckoutService.ReversarTransaccionAsync(reversoVenta!.IdVenta, UserSession.UserId ?? 0, reversoMotivo, jsonDetalles);
+            int? idMonedaReverso = metodoDevolucion == 1 ? 1 : (metodoDevolucion == 2 ? 2 : null);
+            bool afectaCaja = metodoDevolucion != 3;
+
+            await CheckoutService.ReversarTransaccionAsync(reversoVenta!.IdVenta, UserSession.UserId ?? 0, reversoMotivo, jsonDetalles, idMonedaReverso, afectaCaja);
             ToastService.ShowSuccess("Transacción reversada con éxito.");
             showReversoModal = false;
             await LoadData();
