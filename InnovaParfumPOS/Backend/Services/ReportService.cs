@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -57,7 +57,7 @@ public class ReportService : IReportService
 
         var reversosMovimientos = await _context.MovimientosVarios
             .AsNoTracking()
-            .Where(m => m.Fecha >= start && m.Fecha <= end && m.Tipo == "EGRESO" && m.Concepto.StartsWith("Reverso"))
+            .Where(m => m.Fecha >= start && m.Fecha <= end && (m.Tipo == "EGRESO" || m.Tipo == "INFO") && m.Concepto.StartsWith("Reverso"))
             .ToListAsync();
 
         var turnos = await _context.Turnos
@@ -83,10 +83,29 @@ public class ReportService : IReportService
         var configMoneda = await _context.Configuracions.FirstOrDefaultAsync(c => c.Clave == "Moneda_Principal");
         bool isBaseUsd = configMoneda?.Valor == "USD";
 
+        var validSaleIds = currentVentas.Select(v => v.IdVenta.ToString()).ToList();
+        
+        decimal totalParcialReversosNio = reversosMovimientos
+            .Where(m => validSaleIds.Any(id => m.Concepto.Contains($"Fac {id} ")))
+            .Sum(m => {
+                if (m.IdMoneda == 1) return m.Monto;
+                var v = currentVentas.FirstOrDefault(v => m.Concepto.Contains($"Fac {v.IdVenta} "));
+                return m.Monto * (v?.TasaCambioUsd ?? _appState.ExchangeRateBuy);
+            });
+            
+        decimal totalParcialReversosUsd = reversosMovimientos
+            .Where(m => validSaleIds.Any(id => m.Concepto.Contains($"Fac {id} ")))
+            .Sum(m => {
+                if (m.IdMoneda == 2) return m.Monto;
+                var v = currentVentas.FirstOrDefault(v => m.Concepto.Contains($"Fac {v.IdVenta} "));
+                decimal rate = v?.TasaCambioUsd > 0 ? v.TasaCambioUsd : _appState.ExchangeRateBuy;
+                return rate > 0 ? m.Monto / rate : 0;
+            });
+
         var stats = new DashboardStatsDTO
         {
-            VentasBrutas = currentVentas.Sum(v => isBaseUsd ? v.TotalBase * v.TasaCambioUsd : v.TotalBase),
-            VentasBrutasUsd = currentVentas.Sum(v => isBaseUsd ? v.TotalBase : (v.TasaCambioUsd > 0 ? v.TotalBase / v.TasaCambioUsd : 0)),
+            VentasBrutas = currentVentas.Sum(v => isBaseUsd ? v.TotalBase * v.TasaCambioUsd : v.TotalBase) - totalParcialReversosNio,
+            VentasBrutasUsd = currentVentas.Sum(v => isBaseUsd ? v.TotalBase : (v.TasaCambioUsd > 0 ? v.TotalBase / v.TasaCambioUsd : 0)) - totalParcialReversosUsd,
             TotalFacturas = currentVentas.Count,
             ProductosVendidos = currentVentas.SelectMany(v => v.VentaDetalles).Sum(d => d.Cantidad),
             TicketPromedio = currentVentas.Any() ? currentVentas.Average(v => isBaseUsd ? v.TotalBase * v.TasaCambioUsd : v.TotalBase) : 0,
@@ -223,22 +242,54 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 
-    public async Task<List<ResumenDiarioDTO>> GetResumenDiarioAsync(DateTime start, DateTime end)
+        public async Task<List<ResumenDiarioDTO>> GetResumenDiarioAsync(DateTime start, DateTime end)
     {
         end = end.Date.AddDays(1).AddTicks(-1);
         var ventas = await _context.Ventas
             .Where(v => v.FechaVenta >= start && v.FechaVenta <= end && !v.Anulada)
             .ToListAsync();
 
+        var configMoneda = await _context.Configuracions.FirstOrDefaultAsync(c => c.Clave == "Moneda_Principal");
+        bool isBaseUsd = configMoneda?.Valor == "USD";
+
+        var reversosMovimientos = await _context.MovimientosVarios
+            .AsNoTracking()
+            .Where(m => m.Fecha >= start && m.Fecha <= end && (m.Tipo == "EGRESO" || m.Tipo == "INFO") && m.Concepto.StartsWith("Reverso"))
+            .ToListAsync();
+
+        var validSaleIds = ventas.Select(v => v.IdVenta.ToString()).ToList();
+        
+        var reversosVinculados = reversosMovimientos
+            .Where(m => validSaleIds.Any(id => m.Concepto.Contains($"Fac {id} ")))
+            .ToList();
+
         return ventas.GroupBy(v => v.FechaVenta.Date)
-            .Select(g => new ResumenDiarioDTO
-            {
-                Fecha = g.Key,
-                VentasBrutas = g.Sum(v => v.TotalBase),
-                Devoluciones = 0, // Por implementar lÃ³gica de devoluciones real si existe
-                VentasNetas = g.Sum(v => v.TotalBase),
-                Facturas = g.Count(),
-                TicketPromedio = g.Average(v => v.TotalBase)
+            .Select(g => {
+                var saleIdsInGroup = g.Select(v => v.IdVenta.ToString()).ToList();
+                var reversosForGroup = reversosVinculados.Where(m => saleIdsInGroup.Any(id => m.Concepto.Contains($"Fac {id} "))).ToList();
+                
+                decimal devoluciones = reversosForGroup.Sum(m => {
+                    var v = g.FirstOrDefault(v => m.Concepto.Contains($"Fac {v.IdVenta} "));
+                    decimal rate = v?.TasaCambioUsd > 0 ? v.TasaCambioUsd : _appState.ExchangeRateBuy;
+                    if (isBaseUsd) {
+                        return m.IdMoneda == 2 ? m.Monto : (rate > 0 ? m.Monto / rate : 0);
+                    } else {
+                        return m.IdMoneda == 1 ? m.Monto : (m.Monto * rate);
+                    }
+                });
+
+                decimal ventasBrutasBrutas = g.Sum(v => v.TotalBase);
+                decimal ventasNetas = ventasBrutasBrutas - devoluciones;
+                
+                return new ResumenDiarioDTO
+                {
+                    Fecha = g.Key,
+                    VentasBrutas = ventasNetas,
+                    Devoluciones = devoluciones,
+                    VentasNetas = ventasNetas,
+                    Facturas = g.Count(),
+                    TicketPromedio = g.Any() ? ventasNetas / g.Count() : 0
+                };
             })
             .OrderByDescending(x => x.Fecha)
             .ToList();
@@ -388,7 +439,7 @@ public class ReportService : IReportService
         return result.OrderByDescending(x => x.MontoTotal).Take(10).ToList();
     }
 
-    public async Task<List<CashierAuditDTO>> GetCashierAuditAsync(DateTime start, DateTime end)
+        public async Task<List<CashierAuditDTO>> GetCashierAuditAsync(DateTime start, DateTime end)
     {
         end = end.Date.AddDays(1).AddTicks(-1);
         
@@ -398,8 +449,21 @@ public class ReportService : IReportService
                     .ThenInclude(e => e.IdPersonaNavigation)
             .Where(v => v.FechaVenta >= start && v.FechaVenta <= end)
             .ToListAsync();
+
+        var configMoneda = await _context.Configuracions.FirstOrDefaultAsync(c => c.Clave == "Moneda_Principal");
+        bool isBaseUsd = configMoneda?.Valor == "USD";
+        
+        var reversosMovimientos = await _context.MovimientosVarios
+            .AsNoTracking()
+            .Where(m => m.Fecha >= start && m.Fecha <= end && (m.Tipo == "EGRESO" || m.Tipo == "INFO") && m.Concepto.StartsWith("Reverso"))
+            .ToListAsync();
+
+        var validSaleIds = ventas.Where(v => !v.Anulada).Select(v => v.IdVenta.ToString()).ToList();
+        var reversosVinculados = reversosMovimientos
+            .Where(m => validSaleIds.Any(id => m.Concepto.Contains($"Fac {id} ")))
+            .ToList();
             
-        // Llama a la lógica central unificada de arqueos para obtener cálculos dinámicos multimoneda
+        // Llama a la logica central unificada de arqueos para obtener calculos dinamicos multimoneda
         // y con el filtro de fechas correcto (turnos cerrados en el rango)
         var arqueosDinamicos = await GetArqueoInsightsAsync(start, end);
 
@@ -417,16 +481,32 @@ public class ReportService : IReportService
 
         foreach(var u in users)
         {
-            var userVentas = ventas.Where(v => GetNombre(v) == u).ToList();
+            var userVentas = ventas.Where(v => GetNombre(v) == u && !v.Anulada).ToList();
             var userArqueos = arqueosDinamicos.Where(a => a.Usuario == u).ToList();
+            
+            var userSaleIds = userVentas.Select(v => v.IdVenta.ToString()).ToList();
+            var userReversos = reversosVinculados.Where(m => userSaleIds.Any(id => m.Concepto.Contains($"Fac {id} "))).ToList();
+            
+            decimal devoluciones = userReversos.Sum(m => {
+                var v = userVentas.FirstOrDefault(v => m.Concepto.Contains($"Fac {v.IdVenta} "));
+                decimal rate = v?.TasaCambioUsd > 0 ? v.TasaCambioUsd : _appState.ExchangeRateBuy;
+                if (isBaseUsd) {
+                    return m.IdMoneda == 2 ? m.Monto : (rate > 0 ? m.Monto / rate : 0);
+                } else {
+                    return m.IdMoneda == 1 ? m.Monto : (m.Monto * rate);
+                }
+            });
+
+            decimal ventasBrutasBrutas = userVentas.Sum(v => v.TotalBase);
+            decimal ventasNetas = ventasBrutasBrutas - devoluciones;
             
             auditList.Add(new CashierAuditDTO
             {
                 Cajero = u ?? "Sistema",
-                Facturas = userVentas.Count(v => !v.Anulada),
-                TotalVentas = userVentas.Where(v => !v.Anulada).Sum(v => v.TotalBase),
-                Descuentos = userVentas.Where(v => !v.Anulada).Sum(v => v.DescuentoBase),
-                Anulaciones = userVentas.Count(v => v.Anulada),
+                Facturas = userVentas.Count(),
+                TotalVentas = ventasNetas,
+                Descuentos = userVentas.Sum(v => v.DescuentoBase),
+                Anulaciones = ventas.Count(v => GetNombre(v) == u && v.Anulada),
                 DiferenciaNIO = userArqueos.Sum(a => a.DiferenciaNIO ?? 0),
                 DiferenciaUSD = userArqueos.Sum(a => a.DiferenciaUSD ?? 0)
             });
@@ -868,6 +948,10 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 }
+
+
+
+
 
 
 
