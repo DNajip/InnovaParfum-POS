@@ -1,4 +1,4 @@
-name: Deploy to Hostinger VPS
+﻿name: Deploy to Hostinger VPS
 
 on:
   push:
@@ -14,13 +14,13 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup .NET 8
+    - name: Setup .NET 10
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
 
     - name: Publish App
-      run: dotnet publish InnovaTecPOS/InnovaTecPOS.csproj -c Release -o ./publish
+      run: dotnet publish InnovaParfumPOS/InnovaParfumPOS.csproj -c Release -o ./publish
 
     - name: Deploy to VPS
       uses: appleboy/scp-action@v0.1.7
@@ -29,7 +29,7 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         password: ${{ secrets.VPS_PASSWORD }}
         source: "publish/*"
-        target: "/var/www/innovatecpos"
+        target: "/var/www/innovaparfumpos"
         strip_components: 1
 
     - name: Restart Systemd Service
@@ -39,5 +39,5 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         password: ${{ secrets.VPS_PASSWORD }}
         script: |
-          systemctl restart innovatec
-          systemctl status innovatec --no-pager
+          systemctl restart innovaparfumpos
+          systemctl status innovaparfumpos --no-pager
