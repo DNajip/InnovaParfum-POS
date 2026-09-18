@@ -1,4 +1,4 @@
-using InnovaParfumPOS.Frontend.Components;
+﻿using InnovaParfumPOS.Frontend.Components;
 using InnovaParfumPOS.Backend.Models;
 using InnovaParfumPOS.Backend.Services;
 using InnovaParfumPOS.Frontend.Services;
@@ -15,7 +15,7 @@ builder.Services.AddRazorComponents()
         options.DetailedErrors = builder.Environment.IsDevelopment();
     });
 
-// Registramos la Factoría de Contexto para evitar errores de concurrencia en Blazor Server
+// Registramos la FactorÃ­a de Contexto para evitar errores de concurrencia en Blazor Server
 builder.Services.AddDbContextFactory<InnovaParfumDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
            .AddInterceptors(new SqlSettingInterceptor()));
@@ -40,10 +40,10 @@ builder.Services.AddScoped<DailyReportPdfService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddHostedService<DailyReportScheduler>();
 
-// Configurar Kestrel para producción
+// Configurar Kestrel para producciÃ³n
 if (!builder.Environment.IsDevelopment())
 {
-    builder.WebHost.UseUrls("http://0.0.0.0:5000");
+    
 }
 
 var app = builder.Build();
@@ -84,4 +84,5 @@ app.MapGet("/favicon.png", async (ConfiguracionService config, IWebHostEnvironme
     return Results.File(System.IO.Path.Combine(env.WebRootPath, "default_favicon.png"), "image/png");
 });
 app.Run();
+
 
