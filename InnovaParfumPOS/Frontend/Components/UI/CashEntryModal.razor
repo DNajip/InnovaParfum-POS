@@ -1,4 +1,4 @@
-@using InnovaParfumPOS.Backend.Services
+﻿@using InnovaParfumPOS.Backend.Services
 @using InnovaParfumPOS.Backend.Models
 @inject InnovaParfumPOS.Backend.Services.AppState AppState
 @inject IShiftService ShiftService
@@ -15,7 +15,7 @@
                     </div>
                     <div>
                         <h4 class="fw-bold m-0">Ingresar Cambio</h4>
-                        <p class="text-muted small m-0">Inyección de efectivo para sencillo.</p>
+                        <p class="text-muted small m-0">InyecciÃ³n de efectivo para sencillo.</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close" @onclick="OnClose"></button>
@@ -25,22 +25,22 @@
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-muted">Moneda</label>
                     <div class="d-flex gap-2">
-                        <button class="btn @(selectedMonedaId == 1 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 1">Córdobas (@AppState.CurrencySymbol)</button>
-                        <button class="btn @(selectedMonedaId == 2 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 2">Dólares ($)</button>
+                        <button class="btn @(selectedMonedaId == 1 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 1">CÃ³rdobas (@AppState.CurrencySymbol)</button>
+                        <button class="btn @(selectedMonedaId == 2 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 2">DÃ³lares ($)</button>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-muted">Monto a Ingresar</label>
                     <div class="input-group input-group-lg">
-                        <span class="input-group-text border-0 bg-light">@(selectedMonedaId == 1 ? "@AppState.CurrencySymbol" : "$")</span>
+                        <span class="input-group-text border-0 bg-light">@(selectedMonedaId == 1 ? AppState.CurrencySymbol : "$")</span>
                         <input type="number" class="form-control border-0 bg-light fw-bold" @bind="monto" @bind:event="oninput" min="0.01" step="0.01" placeholder="0.00" style="border-radius: 0 12px 12px 0;" />
                     </div>
                 </div>
 
                 <div class="mb-0">
                     <label class="form-label small fw-bold text-muted">Concepto / Referencia</label>
-                    <input type="text" class="form-control border-0 bg-light" @bind="concepto" placeholder="Ej: Cambio para el día, Refuerzo de caja..." style="border-radius: 12px;" />
+                    <input type="text" class="form-control border-0 bg-light" @bind="concepto" placeholder="Ej: Cambio para el dÃ­a, Refuerzo de caja..." style="border-radius: 12px;" />
                 </div>
             </div>
 
