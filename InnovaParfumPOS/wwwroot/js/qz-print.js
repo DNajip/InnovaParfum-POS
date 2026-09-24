@@ -1,4 +1,4 @@
-// Configuración de Seguridad para QZ Tray (Impresión Silenciosa)
+﻿// Configuración de Seguridad para QZ Tray (Impresión Silenciosa)
 const qzCertificate = `-----BEGIN CERTIFICATE-----
 MIICrjCCAZagAwIBAgIIBeJKdkgYhD8wDQYJKoZIhvcNAQELBQAwFzEVMBMGA1UEAxMMSW5ub3Zh
 VGVjUE9TMB4XDTI2MDQyOTAzNTYwNVoXDTM2MDQyOTAzNTYwNVowFzEVMBMGA1UEAxMMSW5ub3Zh
@@ -348,25 +348,25 @@ window.qzPrintShiftClosing = async (shift, config_negocio) => {
         data.push("------------------------------------------------\n");
         
         data.push(boldOn + "RESUMEN DE VENTAS\n" + boldOff);
-        data.push(`Total Ventas:      C$ ${shift.totalVentasNio.toFixed(2)}\n`);
-        data.push(`Efectivo NIO:      C$ ${shift.totalEfectivoNio.toFixed(2)}\n`);
+        data.push(`Total Ventas:      C$ ${shift.totalVentasBase.toFixed(2)}\n`);
+        data.push(`Efectivo NIO:      C$ ${shift.totalEfectivoBase.toFixed(2)}\n`);
         data.push(`Efectivo USD:      $  ${shift.totalEfectivoUsd.toFixed(2)}\n`);
         data.push(`Tarjeta:           C$ ${shift.totalTarjeta.toFixed(2)}\n`);
         data.push(`Transferencia:     C$ ${shift.totalTransferencia.toFixed(2)}\n`);
         data.push("------------------------------------------------\n");
 
         data.push(boldOn + "CUADRE DE CAJA\n" + boldOff);
-        data.push(`Monto Inicial:     C$ ${shift.montoInicialNio.toFixed(2)} | $ ${shift.montoInicialUsd.toFixed(2)}\n`);
-        data.push(`Ingresos Manuales: C$ ${(shift.montoManualNio || 0).toFixed(2)} | $ ${(shift.montoManualUsd || 0).toFixed(2)}\n`);
+        data.push(`Monto Inicial:     C$ ${shift.montoInicialBase.toFixed(2)} | $ ${shift.montoInicialUsd.toFixed(2)}\n`);
+        data.push(`Ingresos Manuales: C$ ${(shift.montoManualBase || 0).toFixed(2)} | $ ${(shift.montoManualUsd || 0).toFixed(2)}\n`);
         
-        const esperadoNio = shift.montoInicialNio + shift.totalEfectivoNio + (shift.montoManualNio || 0);
+        const esperadoBase = shift.montoInicialBase + shift.totalEfectivoBase + (shift.montoManualBase || 0);
         const esperadoUsd = shift.montoInicialUsd + shift.totalEfectivoUsd + (shift.montoManualUsd || 0);
         
-        data.push(`Total Esperado:    C$ ${esperadoNio.toFixed(2)} | $ ${esperadoUsd.toFixed(2)}\n`);
-        data.push(`Total Contado:     C$ ${shift.montoContadoNio.toFixed(2)} | $ ${shift.montoContadoUsd.toFixed(2)}\n`);
+        data.push(`Total Esperado:    C$ ${esperadoBase.toFixed(2)} | $ ${esperadoUsd.toFixed(2)}\n`);
+        data.push(`Total Contado:     C$ ${shift.montoContadoBase.toFixed(2)} | $ ${shift.montoContadoUsd.toFixed(2)}\n`);
         
         data.push(boldOn);
-        data.push(`DIFERENCIA NIO:    C$ ${(shift.diferenciaNio || 0).toFixed(2)}\n`);
+        data.push(`DIFERENCIA NIO:    C$ ${(shift.diferenciaBase || 0).toFixed(2)}\n`);
         data.push(`DIFERENCIA USD:    $  ${(shift.diferenciaUsd || 0).toFixed(2)}\n`);
         data.push(boldOff);
         
