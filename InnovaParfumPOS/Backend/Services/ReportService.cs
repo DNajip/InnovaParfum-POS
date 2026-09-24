@@ -161,10 +161,10 @@ public class ReportService : IReportService
             MontoReversadoUsd = reversosMovimientos.Where(m => m.IdMoneda == 2).Sum(m => m.Monto),
             ArticulosReversados = todasLasVentasParaAnulaciones.SelectMany(v => v.VentaDetalles).Count(d => d.Devuelto),
 
-            FaltantesNio = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? _appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
-            FaltantesUsd = turnos.Where(t => t.EstadoCuadre == "Faltante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0)),
-            SobrantesNio = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (turnos.FirstOrDefault()?.Venta?.FirstOrDefault()?.TasaCambioUsd ?? _appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
-            SobrantesUsd = turnos.Where(t => t.EstadoCuadre == "Sobrante").Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0))
+            FaltantesNio = turnos.Where(t => (t.DiferenciaBase ?? 0) < 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (_appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
+            FaltantesUsd = turnos.Where(t => (t.DiferenciaUsd ?? 0) < 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0)),
+            SobrantesNio = turnos.Where(t => (t.DiferenciaBase ?? 0) > 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (_appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
+            SobrantesUsd = turnos.Where(t => (t.DiferenciaUsd ?? 0) > 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0))
         };
 
         // Calcular porcentajes
