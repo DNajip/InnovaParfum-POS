@@ -102,6 +102,7 @@ public class ReportService : IReportService
                 return rate > 0 ? m.Monto / rate : 0;
             });
 
+        var arqueosDinamicos = await GetArqueoInsightsAsync(start, end);
         var stats = new DashboardStatsDTO
         {
             VentasBrutas = currentVentas.Sum(v => isBaseUsd ? v.TotalBase * v.TasaCambioUsd : v.TotalBase) - totalParcialReversosNio,
@@ -161,10 +162,10 @@ public class ReportService : IReportService
             MontoReversadoUsd = reversosMovimientos.Where(m => m.IdMoneda == 2).Sum(m => m.Monto),
             ArticulosReversados = todasLasVentasParaAnulaciones.SelectMany(v => v.VentaDetalles).Count(d => d.Devuelto),
 
-            FaltantesNio = turnos.Where(t => (t.DiferenciaBase ?? 0) < 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (_appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
-            FaltantesUsd = turnos.Where(t => (t.DiferenciaUsd ?? 0) < 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0)),
-            SobrantesNio = turnos.Where(t => (t.DiferenciaBase ?? 0) > 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) * (_appState.ExchangeRateBuy) : Math.Abs(t.DiferenciaBase ?? 0)),
-            SobrantesUsd = turnos.Where(t => (t.DiferenciaUsd ?? 0) > 0).Sum(t => isBaseUsd ? Math.Abs(t.DiferenciaBase ?? 0) : Math.Abs(t.DiferenciaUsd ?? 0))
+            FaltantesNio = arqueosDinamicos.Where(a => (a.DiferenciaNIO ?? 0) < 0).Sum(a => Math.Abs(a.DiferenciaNIO ?? 0)),
+            FaltantesUsd = arqueosDinamicos.Where(a => (a.DiferenciaUSD ?? 0) < 0).Sum(a => Math.Abs(a.DiferenciaUSD ?? 0)),
+            SobrantesNio = arqueosDinamicos.Where(a => (a.DiferenciaNIO ?? 0) > 0).Sum(a => Math.Abs(a.DiferenciaNIO ?? 0)),
+            SobrantesUsd = arqueosDinamicos.Where(a => (a.DiferenciaUSD ?? 0) > 0).Sum(a => Math.Abs(a.DiferenciaUSD ?? 0))
         };
 
         // Calcular porcentajes
