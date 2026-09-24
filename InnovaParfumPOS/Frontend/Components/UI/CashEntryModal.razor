@@ -15,7 +15,7 @@
                     </div>
                     <div>
                         <h4 class="fw-bold m-0">Ingresar Cambio</h4>
-                        <p class="text-muted small m-0">InyecciÃ³n de efectivo para sencillo.</p>
+                        <p class="text-muted small m-0">Inyección de efectivo para sencillo.</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close" @onclick="OnClose"></button>
@@ -25,8 +25,8 @@
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-muted">Moneda</label>
                     <div class="d-flex gap-2">
-                        <button class="btn @(selectedMonedaId == 1 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 1">CÃ³rdobas (@AppState.CurrencySymbol)</button>
-                        <button class="btn @(selectedMonedaId == 2 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 2">DÃ³lares ($)</button>
+                        <button class="btn @(selectedMonedaId == 1 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 1">Córdobas (@AppState.CurrencySymbol)</button>
+                        <button class="btn @(selectedMonedaId == 2 ? "btn-primary" : "btn-outline-primary") flex-grow-1" @onclick="() => selectedMonedaId = 2">Dólares ($)</button>
                     </div>
                 </div>
 
